@@ -62,23 +62,27 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 		// Pull the remaining events from the sorted set
 		events, _ := rl.Store.ZRange(r.Context(), clientIP, 0, -1).Result()
 
-		// Get the earliest event time
-		earliestMicro, _ := strconv.ParseInt(events[0], 10, 64)
-		earliest := time.UnixMicro(earliestMicro)
+		if len(events) > 0 {
+			// Get the earliest event time
+			earliestMicro, _ := strconv.ParseInt(events[0], 10, 64)
+			earliest := time.UnixMicro(earliestMicro)
 
-		// Calculate how long until it resets and how many events have occurred
-		resets := rl.Period - time.Since(earliest)
-		eventCount := int64(len(events))
+			// Calculate how long until it resets and how many events have occurred
+			resets := rl.Period - time.Since(earliest)
+			eventCount := int64(len(events))
 
-		// write the rate limit headers
-		rl.writeRateLimitHeaders(w, eventCount, resets)
+			// write the rate limit headers
+			rl.writeRateLimitHeaders(w, eventCount, resets)
 
-		// Check if client has exceeded the max rate
-		if eventCount > rl.MaxRate {
-			w.WriteHeader(http.StatusTooManyRequests)
-			return
+			// Check if client has exceeded the max rate
+			if eventCount > rl.MaxRate {
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+		} else {
+			// Handle the case where there are no events
+			rl.writeRateLimitHeaders(w, 0, rl.Period)
 		}
-
 		// Call the next handler if rate is not exceeded
 		next.ServeHTTP(w, r)
 	})

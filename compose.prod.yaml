@@ -43,6 +43,7 @@ services:
       - POSTGRES_DB=guestbook
       - POSTGRES_PORT=5432
       - POSTGRES_SSLMODE=disable
+      - ETH_API_KEY=/run/secrets/eth-api-key
     deploy:
       mode: replicated
       replicas: 3

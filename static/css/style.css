@@ -1229,3 +1229,19 @@ input {
     padding-right: 2rem;
   }
 }
+
+/* Add this to your CSS file (e.g., style.css) */
+
+/* Default light mode styles */
+body {
+  background-color: white;
+  color: black;
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: black;
+    color: white;
+  }
+}
