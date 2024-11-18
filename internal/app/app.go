@@ -57,7 +57,7 @@ func (a *App) Start(ctx context.Context) error {
 	a.loadRoutes()
 
 	server := http.Server{
-		Addr:    "127.0.0.1:8080",
+		Addr:    "0.0.0.0:8080",
 		Handler: middleware.Logging(a.logger, middleware.HandleBadCode(tmpl, a.router)),
 	}
 
@@ -84,6 +84,10 @@ func (a *App) Start(ctx context.Context) error {
 }
 
 func ethTxHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
 	if r.Method == http.MethodPost {
 		txHash := r.FormValue("txhash")
 		details, err := fetchTxDetails(txHash)
