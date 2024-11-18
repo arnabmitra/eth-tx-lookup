@@ -54,7 +54,7 @@ func (a *App) Start(ctx context.Context) error {
 
 	tmpl := template.Must(template.New("").ParseGlob("./templates/*"))
 
-	a.loadRoutes(tmpl)
+	a.loadRoutes()
 
 	server := http.Server{
 		Addr:    "127.0.0.1:8080",

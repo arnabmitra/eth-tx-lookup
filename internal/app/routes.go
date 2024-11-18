@@ -1,27 +1,17 @@
 package app
 
 import (
-	"github.com/arnabmitra/eth-proxy/internal/handler"
-	"github.com/arnabmitra/eth-proxy/internal/middleware"
-	"html/template"
 	"net/http"
-	"time"
 )
 
-func (a *App) loadRoutes(tmpl *template.Template) {
-	guestbook := handler.New(a.logger, a.db, tmpl)
-	ratelimiter := middleware.RateLimiter{
-		Period:  time.Minute,
-		MaxRate: 2,
-		Store:   a.rdb,
-	}
-
+func (a *App) loadRoutes() {
+	// Serve static files from the "static" directory
 	files := http.FileServer(http.Dir("./static"))
-	a.router.Handle("GET /static/", http.StripPrefix("/static", files))
+	a.router.Handle("/static/", http.StripPrefix("/static", files))
 
-	a.router.Handle("GET /{$}", http.HandlerFunc(guestbook.Home))
-
-	a.router.Handle("POST /{$}", ratelimiter.Middleware(
-		http.HandlerFunc(guestbook.Create),
-	))
+	// Register the handler function before starting the server
+	a.router.HandleFunc("/eth-tx", ethTxHandler)
+	a.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/eth-tx", http.StatusSeeOther)
+	})
 }
