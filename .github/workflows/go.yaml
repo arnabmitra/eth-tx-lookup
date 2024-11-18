@@ -5,6 +5,7 @@ on:
      - 'main'
 
 permissions:
+  contents: read
   packages: write
 
 jobs:
@@ -48,4 +49,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/eth-proxy:latest
+          tags: ghcr.io/arnabmitra/eth-proxy:latest

@@ -1,4 +1,4 @@
-module github.com/dreamsofcode-io/guestbook
+module github.com/arnabmitra/eth-proxy
 
 go 1.23.0
 
