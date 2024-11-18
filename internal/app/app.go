@@ -156,7 +156,11 @@ func (h *HexInt) UnmarshalJSON(data []byte) error {
 
 func fetchTxDetails(txHash string) (*AlchemyResponse, error) {
 
-	apiKey := os.Getenv("ETH_API_KEY")
+	apiKey, ok := os.LookupEnv("ETH_API_KEY")
+	if ok {
+		return nil, errors.New("ETH_API_KEY not set")
+	}
+
 	// print out the api key in the logs temporarily
 	fmt.Printf("The api key is %s \n", apiKey)
 	url := fmt.Sprintf("https://eth-mainnet.alchemyapi.io/v2/%s", apiKey)
