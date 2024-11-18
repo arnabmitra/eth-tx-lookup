@@ -5,6 +5,10 @@ import (
 )
 
 func (a *App) loadRoutes() {
+	a.router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 	// Serve static files from the "static" directory
 	files := http.FileServer(http.Dir("./static"))
 	a.router.Handle("/static/", http.StripPrefix("/static", files))
