@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dreamsofcode-io/guestbook/internal/app"
+	"github.com/arnabmitra/eth-proxy/internal/app"
 	"github.com/joho/godotenv"
 )
 

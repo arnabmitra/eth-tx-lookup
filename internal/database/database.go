@@ -12,7 +12,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/dreamsofcode-io/guestbook/internal/config"
+	"github.com/arnabmitra/eth-proxy/internal/config"
 )
 
 var (

@@ -12,8 +12,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	// "github.com/x-way/crawlerdetect"
 
-	"github.com/dreamsofcode-io/guestbook/internal/guest"
-	"github.com/dreamsofcode-io/guestbook/internal/repository"
+	"github.com/arnabmitra/eth-proxy/internal/guest"
+	"github.com/arnabmitra/eth-proxy/internal/repository"
 )
 
 type Guestbook struct {

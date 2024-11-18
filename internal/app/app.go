@@ -13,8 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/dreamsofcode-io/guestbook/internal/database"
-	"github.com/dreamsofcode-io/guestbook/internal/middleware"
+	"github.com/arnabmitra/eth-proxy/internal/database"
+	"github.com/arnabmitra/eth-proxy/internal/middleware"
 )
 
 type App struct {

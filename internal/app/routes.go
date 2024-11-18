@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dreamsofcode-io/guestbook/internal/handler"
-	"github.com/dreamsofcode-io/guestbook/internal/middleware"
+	"github.com/arnabmitra/eth-proxy/internal/handler"
+	"github.com/arnabmitra/eth-proxy/internal/middleware"
 )
 
 func (a *App) loadRoutes(tmpl *template.Template) {
