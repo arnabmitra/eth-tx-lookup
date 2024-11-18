@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/arnabmitra/eth-proxy/internal/database"
+	"github.com/arnabmitra/eth-proxy/internal/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -12,12 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
-
-	"github.com/arnabmitra/eth-proxy/internal/database"
-	"github.com/arnabmitra/eth-proxy/internal/middleware"
 )
 
 type App struct {
@@ -56,12 +54,13 @@ func (a *App) Start(ctx context.Context) error {
 
 	tmpl := template.Must(template.New("").ParseGlob("./templates/*"))
 
-	a.loadRoutes()
+	a.loadRoutes(tmpl)
 
 	server := http.Server{
 		Addr:    "127.0.0.1:8080",
 		Handler: middleware.Logging(a.logger, middleware.HandleBadCode(tmpl, a.router)),
 	}
+
 	done := make(chan struct{})
 	go func() {
 		err := server.ListenAndServe()
@@ -71,7 +70,7 @@ func (a *App) Start(ctx context.Context) error {
 		close(done)
 	}()
 
-	a.logger.Info("Server listening!!!", slog.String("addr", ":8080"))
+	a.logger.Info("Server listening", slog.String("addr", ":8080"))
 	select {
 	case <-done:
 		break
@@ -83,6 +82,7 @@ func (a *App) Start(ctx context.Context) error {
 
 	return nil
 }
+
 func ethTxHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		txHash := r.FormValue("txhash")
