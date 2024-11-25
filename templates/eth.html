@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/style.css" />
-    <title>Ethereum Transaction Details</title>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
 </head>
 <body class="min-h-screen bg-gray-950 font-mono">
 <main class="">
@@ -18,22 +18,16 @@
                         </div>
                     </div>
                     <div class="mt-10">
-                        <form action="/eth-tx" method="POST">
+                        <form hx-post="/eth-tx" hx-target="#transaction-details" hx-swap="innerHTML">
                             <div class="flex flex-row">
-                                <input type="text" name="txhash" id="txhash" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6" placeholder="Enter Ethereum transaction hash" value="{{.TxHash}}">
+                                <input type="text" name="txhash" id="txhash" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6" placeholder="Enter Ethereum transaction hash">
                                 <button type="submit" class="block rounded-md rounded-l-none bg-blue-800 w-min text-nowrap px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Get Transaction Details</button>
                             </div>
                         </form>
                     </div>
-                    {{ if .Details }}
-                    <div class="mt-10">
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Transaction Details:</h2>
-                        <p class="text-gray-300">Block Number: {{ .Details.Result.BlockNumber }}</p>
-                        <p class="text-gray-300">From: {{ .Details.Result.From }}</p>
-                        <p class="text-gray-300">To: {{ .Details.Result.To }}</p>
-                        <p class="text-gray-300">Value: {{ .Details.Result.Value }}</p>
+                    <div id="transaction-details" class="mt-10">
+                        {{ template "transaction-details" . }}
                     </div>
-                    {{ end }}
                 </div>
             </div>
         </div>
@@ -41,3 +35,20 @@
 </main>
 </body>
 </html>
+
+{{ define "transaction-details" }}
+{{ if .Details }}
+<h2 class="text-2xl font-semibold leading-6 text-white">Transaction Details:</h2>
+<p class="text-gray-300">Block Number: {{ .Details.Result.BlockNumber }}</p>
+<p class="text-gray-300">From: {{ .Details.Result.From }}</p>
+<p class="text-gray-300">To: {{ .Details.Result.To }}</p>
+<p class="text-gray-300">Value: {{ .Details.Result.Value }}</p>
+<p class="text-gray-300">Gas: {{ .Details.Result.Gas }}</p>
+<p class="text-gray-300">Gas Price: {{ .Details.Result.GasPrice }}</p>
+<p class="text-gray-300">Nonce: {{ .Details.Result.Nonce }}</p>
+<p class="text-gray-300">Transaction Index: {{ .Details.Result.TransactionIndex }}</p>
+<p class="text-gray-300">Input: {{ .Details.Result.Input }}</p>
+<p class="text-gray-300">Hash: {{ .Details.Result.Hash }}</p>
+<p class="text-gray-300">Block Hash: {{ .Details.Result.BlockHash }}</p>
+{{ end }}
+{{ end }}

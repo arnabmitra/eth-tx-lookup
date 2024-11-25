@@ -88,6 +88,11 @@ func ethTxHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
+	tmpl, err := template.ParseFiles("templates/eth.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
 	if r.Method == http.MethodPost {
 		txHash := r.FormValue("txhash")
 		details, err := fetchTxDetails(txHash)
@@ -96,23 +101,11 @@ func ethTxHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tmpl, err := template.ParseFiles("templates/eth.html")
-		if err != nil {
-			http.Error(w, "Failed to load template", http.StatusInternalServerError)
-			return
-		}
-
-		tmpl.Execute(w, struct {
+		tmpl.ExecuteTemplate(w, "transaction-details", struct {
 			TxHash  string
 			Details *AlchemyResponse
 		}{TxHash: txHash, Details: details})
 	} else {
-		tmpl, err := template.ParseFiles("templates/eth.html")
-		if err != nil {
-			http.Error(w, "Failed to load template", http.StatusInternalServerError)
-			return
-		}
-
 		tmpl.Execute(w, nil)
 	}
 }
@@ -124,13 +117,13 @@ type AlchemyResponse struct {
 		BlockHash        string `json:"blockHash"`
 		BlockNumber      HexInt `json:"blockNumber"`
 		From             string `json:"from"`
-		Gas              string `json:"gas"`
-		GasPrice         string `json:"gasPrice"`
+		Gas              HexInt `json:"gas"`
+		GasPrice         HexInt `json:"gasPrice"`
 		Hash             string `json:"hash"`
 		Input            string `json:"input"`
-		Nonce            string `json:"nonce"`
+		Nonce            HexInt `json:"nonce"`
 		To               string `json:"to"`
-		TransactionIndex string `json:"transactionIndex"`
+		TransactionIndex HexInt `json:"transactionIndex"`
 		Value            HexInt `json:"value"`
 		V                string `json:"v"`
 		R                string `json:"r"`
@@ -159,7 +152,6 @@ func fetchTxDetails(txHash string) (*AlchemyResponse, error) {
 	apiKey := os.Getenv("ETH_API_KEY")
 
 	// print out the api key in the logs temporarily
-	fmt.Printf("The api key is %s \n", apiKey)
 	url := fmt.Sprintf("https://eth-mainnet.alchemyapi.io/v2/%s", apiKey)
 
 	payload := fmt.Sprintf(`{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["%s"],"id":1}`, txHash)
