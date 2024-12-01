@@ -9,6 +9,7 @@ func (a *App) loadRoutes() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+	a.router.HandleFunc("/btc-etf", btcEtfHandler)
 	// Serve static files from the "static" directory
 	files := http.FileServer(http.Dir("./static"))
 	a.router.Handle("/static/", http.StripPrefix("/static", files))

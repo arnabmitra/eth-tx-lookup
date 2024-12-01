@@ -82,6 +82,19 @@ func (a *App) Start(ctx context.Context) error {
 
 	return nil
 }
+func btcEtfHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
+	tmpl, err := template.ParseFiles("templates/btc_etf.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
 
 func ethTxHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
