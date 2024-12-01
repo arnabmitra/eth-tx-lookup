@@ -10,6 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"html/template"
+	"io/ioutil"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -162,10 +164,16 @@ func (h *HexInt) UnmarshalJSON(data []byte) error {
 
 func fetchTxDetails(txHash string) (*AlchemyResponse, error) {
 
-	apiKey := os.Getenv("ETH_API_KEY")
+	//apiKey := os.Getenv("ETH_API_KEY")
+
+	ethAPIKeyFile := os.Getenv("ETH_API_KEY_FILE")
+	ethAPIKey, err := ioutil.ReadFile(ethAPIKeyFile)
+	if err != nil {
+		log.Fatalf("failed to read ETH_API_KEY: %v", err)
+	}
 
 	// print out the api key in the logs temporarily
-	url := fmt.Sprintf("https://eth-mainnet.alchemyapi.io/v2/%s", apiKey)
+	url := fmt.Sprintf("https://eth-mainnet.alchemyapi.io/v2/%s", ethAPIKey)
 
 	payload := fmt.Sprintf(`{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["%s"],"id":1}`, txHash)
 	resp, err := http.Post(url, "application/json", strings.NewReader(payload))
