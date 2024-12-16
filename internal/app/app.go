@@ -171,9 +171,9 @@ func fetchTxDetails(txHash string) (*AlchemyResponse, error) {
 	if err != nil {
 		log.Fatalf("failed to read ETH_API_KEY_FILE: %v", err)
 	}
-
+	trimmedAPIKey := strings.TrimSpace(string(ethAPIKey))
 	// print out the api key in the logs temporarily
-	url := fmt.Sprintf("https://eth-mainnet.alchemyapi.io/v2/%s", ethAPIKey)
+	url := fmt.Sprintf("https://eth-mainnet.alchemyapi.io/v2/%s", trimmedAPIKey)
 
 	payload := fmt.Sprintf(`{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["%s"],"id":1}`, txHash)
 	resp, err := http.Post(url, "application/json", strings.NewReader(payload))
