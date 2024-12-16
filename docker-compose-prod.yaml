@@ -19,6 +19,7 @@ services:
       - "traefik.http.routers.blockchain-dashboard.tls.certresolver=myresolver"
     secrets:
       - db-password
+      - eth-password
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password

@@ -169,7 +169,7 @@ func fetchTxDetails(txHash string) (*AlchemyResponse, error) {
 	ethAPIKeyFile := os.Getenv("ETH_API_KEY_FILE")
 	ethAPIKey, err := ioutil.ReadFile(ethAPIKeyFile)
 	if err != nil {
-		log.Fatalf("failed to read ETH_API_KEY: %v", err)
+		log.Fatalf("failed to read ETH_API_KEY_FILE: %v", err)
 	}
 
 	// print out the api key in the logs temporarily
