@@ -59,7 +59,13 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, strike := range strikePrices {
 			fmt.Printf("Strike: %.2f, GEX: %.2f\n", strike, gexByStrike[strike])
 		}
-
+		gexData := make([]map[string]float64, len(strikePrices))
+		for i, strike := range strikePrices {
+			gexData[i] = map[string]float64{
+				"Strike": strike,
+				"GEX":    gexByStrike[strike],
+			}
+		}
 		outputPath := filepath.Join("static", "images", "gex_chart_"+symbol+".png")
 		err = gex.CreateGEXPlot(gexByStrike, symbol, outputPath)
 		if err != nil {
@@ -67,8 +73,9 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.tmpl.ExecuteTemplate(w, "gex.html", map[string]string{
+		h.tmpl.ExecuteTemplate(w, "gex.html", map[string]interface{}{
 			"ImagePath": "/" + outputPath,
+			"GEXData":   gexData,
 		})
 		return
 	}
