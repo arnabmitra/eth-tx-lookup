@@ -21,7 +21,7 @@ services:
       - db-password
       - eth-password
     volumes:
-      - static-data:static/images
+      - static-data:/app/static # Maps a named volume to /app/static
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password

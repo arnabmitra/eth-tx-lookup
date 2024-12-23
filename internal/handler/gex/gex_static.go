@@ -13,7 +13,6 @@ import (
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 )
 
@@ -142,7 +141,6 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 }
 
 func main() {
-	// Load the JSON file
 
 	// API Key from environment variable
 	apiKey := os.Getenv("TRADIER_API_KEY")
@@ -254,51 +252,6 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 	p.NominalX(makeXAxisLabels(strikes)...)
 
 	return p.Save(16*vg.Inch, 8*vg.Inch, path)
-}
-
-// PlotGEXBarChart plots the GEX per strike price as a bar chart
-func PlotGEXBarChart(gexByStrike map[float64]float64, outputPath string) error {
-	// Convert map to sorted slices
-	strikePrices := make([]float64, 0, len(gexByStrike))
-	for strike := range gexByStrike {
-		strikePrices = append(strikePrices, strike)
-	}
-
-	filteredStrikePrices := make([]float64, 0)
-	for strike, gex := range gexByStrike {
-		if gex < -100 || gex > 100 {
-			filteredStrikePrices = append(filteredStrikePrices, strike)
-		}
-	}
-
-	sort.Float64s(filteredStrikePrices)
-
-	values := make(plotter.Values, len(filteredStrikePrices))
-	for i, strike := range filteredStrikePrices {
-		values[i] = gexByStrike[strike]
-	}
-
-	// Create a new plot
-	p := plot.New()
-	p.Title.Text = "Gamma Exposure (GEX) per Strike Price"
-	p.X.Label.Text = "Strike Price"
-	p.Y.Label.Text = "GEX"
-
-	// Create bar chart
-	bar, err := plotter.NewBarChart(values, vg.Points(10))
-	if err != nil {
-		return err
-	}
-	bar.Color = plotutil.Color(1)
-
-	// Set X-axis labels
-	p.NominalX(makeXAxisLabels(filteredStrikePrices)...)
-
-	// Add the bar chart to the plot
-	p.Add(bar)
-
-	// Save the plot to a file
-	return p.Save(20*vg.Inch, 10*vg.Inch, outputPath)
 }
 
 // makeXAxisLabels converts strike prices to formatted labels
