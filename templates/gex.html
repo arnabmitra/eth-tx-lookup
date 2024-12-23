@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" class="min-h-screen h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+</head>
+<body class="min-h-screen bg-gray-950 font-mono">
+<main class="">
+    <div class="bg-gray-950">
+        <div class="mx-auto max-w-7xl">
+            <div class="bg-gray-950 py-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h1 class="text-4xl font-semibold leading-6 text-white">GEX Chart</h1>
+                        </div>
+                    </div>
+                    <div class="mt-10">
+                        <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
+                            <div class="flex flex-row">
+                                <input type="text" name="symbol" id="symbol" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6" placeholder="Enter Symbol">
+                                <input type="date" name="expiration" id="expiration" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6">
+                                <button type="submit" class="block rounded-md rounded-l-none bg-blue-800 w-min text-nowrap px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Generate Chart</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="gex-chart" class="mt-10">
+                        {{ if .ImagePath }}
+                        <img src="{{ .ImagePath }}" alt="GEX Chart" class="mx-auto">
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
