@@ -20,6 +20,8 @@ services:
     secrets:
       - db-password
       - eth-password
+    volumes:
+      - static-data:static/images
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
@@ -78,6 +80,7 @@ services:
 volumes:
   db-data:
   letsencrypt:
+  static-data:
 secrets:
   db-password:
     file: db/password.txt
