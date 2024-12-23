@@ -21,7 +21,7 @@ services:
       - db-password
       - eth-password
     volumes:
-      - static-data:/app/static # Maps a named volume to /app/static
+      - ${HOME}/static/images:/static/images
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
@@ -80,7 +80,6 @@ services:
 volumes:
   db-data:
   letsencrypt:
-  static-data:
 secrets:
   db-password:
     file: db/password.txt
