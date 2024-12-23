@@ -28,6 +28,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_SSLMODE=disable
       - ETH_API_KEY_FILE=/run/secrets/eth-password
+      - TRADIER_API_KEY=dummykey
     depends_on:
       db:
         condition: service_healthy
