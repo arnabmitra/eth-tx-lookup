@@ -249,14 +249,16 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 	p.Add(posBar, negBar)
 
 	// Set X axis labels
-	p.NominalX(makeXAxisLabels(strikes)...)
+	p.NominalX(labels...)
+	p.X.Tick.Label.Rotation = 1.0 // Rotate labels by 1 radian (~57 degrees)
+	p.X.Tick.Label.XAlign = 1.0   // Align labels to the right
 
 	return p.Save(16*vg.Inch, 8*vg.Inch, path)
 }
 
 // makeXAxisLabels converts strike prices to formatted labels
 func makeXAxisLabels(strikePrices []float64) []string {
-	step := 10 // Show every 5th strike price (adjust as needed)
+	step := 5 // Show every 5th strike price (adjust as needed)
 	labels := make([]string, len(strikePrices))
 	for i, strike := range strikePrices {
 		if i%step == 0 {

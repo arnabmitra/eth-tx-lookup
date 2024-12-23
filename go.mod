@@ -23,6 +23,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-fonts/liberation v0.3.3 // indirect
 	github.com/go-latex/latex v0.0.0-20240709081214-31cef3c7570e // indirect
 	github.com/go-pdf/fpdf v0.9.0 // indirect

@@ -2,7 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"html/template"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -59,11 +61,37 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, strike := range strikePrices {
 			fmt.Printf("Strike: %.2f, GEX: %.2f\n", strike, gexByStrike[strike])
 		}
-		gexData := make([]map[string]float64, len(strikePrices))
+		// Create a slice of structs to hold strike prices and GEX values
+		type GEXEntry struct {
+			Strike float64
+			GEX    float64
+		}
+
+		gexEntries := make([]GEXEntry, len(strikePrices))
 		for i, strike := range strikePrices {
-			gexData[i] = map[string]float64{
-				"Strike": strike,
-				"GEX":    gexByStrike[strike],
+			gexEntries[i] = GEXEntry{
+				Strike: strike,
+				GEX:    gexByStrike[strike],
+			}
+		}
+
+		// Sort the slice by GEX values in descending order
+		sort.Slice(gexEntries, func(i, j int) bool {
+			return math.Abs(gexEntries[i].GEX) > math.Abs(gexEntries[j].GEX)
+		})
+
+		// Print the sorted GEX data
+		fmt.Println("Gamma Exposure (GEX) per Strike Price (Sorted by GEX):")
+		for _, entry := range gexEntries {
+			fmt.Printf("Strike: %.2f, GEX: %.2f\n", entry.Strike, entry.GEX)
+		}
+
+		// Prepare data for template
+		gexData := make([]map[string]string, len(gexEntries))
+		for i, entry := range gexEntries {
+			gexData[i] = map[string]string{
+				"Strike": fmt.Sprintf("%.2f", entry.Strike),
+				"GEX":    humanize.Commaf(entry.GEX),
 			}
 		}
 		outputPath := filepath.Join("static", "images", "gex_chart_"+symbol+".png")

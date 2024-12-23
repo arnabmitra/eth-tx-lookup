@@ -38,6 +38,8 @@ github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4
 github.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/dreamsofcode-io/guestbook v0.0.0-20241115050022-d00a11e53539 h1:oAeoCDkmrHwa282MHdGKc0LqHiNrnPIG1JMSBzkqmI4=
 github.com/dreamsofcode-io/guestbook v0.0.0-20241115050022-d00a11e53539/go.mod h1:lpJDMr3jHjMDdp4UoQg5EeWZIGv6GuuSi53K86M+6PA=
+github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
+github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/go-fonts/dejavu v0.3.4 h1:Qqyx9IOs5CQFxyWTdvddeWzrX0VNwUAvbmAzL0fpjbc=
 github.com/go-fonts/dejavu v0.3.4/go.mod h1:D1z0DglIz+lmpeNYMYlxW4r22IhcdOYnt+R3PShU/Kg=
 github.com/go-fonts/latin-modern v0.3.3 h1:g2xNgI8yzdNzIVm+qvbMryB6yGPe0pSMss8QT3QwlJ0=
