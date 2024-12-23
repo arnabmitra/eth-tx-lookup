@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 	"log/slog"
@@ -47,6 +48,17 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		gexByStrike := gex.CalculateGEXPerStrike(options, price)
+
+		strikePrices := make([]float64, 0, len(gexByStrike))
+		for strike := range gexByStrike {
+			strikePrices = append(strikePrices, strike)
+		}
+		sort.Float64s(strikePrices)
+		// Print GEX per strike in sorted order
+		fmt.Println("Gamma Exposure (GEX) per Strike Price (Sorted):")
+		for _, strike := range strikePrices {
+			fmt.Printf("Strike: %.2f, GEX: %.2f\n", strike, gexByStrike[strike])
+		}
 
 		outputPath := filepath.Join("static", "images", "gex_chart_"+symbol+".png")
 		err = gex.CreateGEXPlot(gexByStrike, symbol, outputPath)
