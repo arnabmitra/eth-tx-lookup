@@ -72,7 +72,7 @@ RUN adduser \
 # Create directories and set permissions before copying files
 RUN mkdir -p /static/images && \
     chown -R appuser:appuser /static && \
-    chmod -R 755 /static
+    chmod -R 777 /static
 
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/server /bin/
@@ -82,7 +82,7 @@ COPY ./static ./static
 
 # Ensure proper permissions after copying
 RUN chown -R appuser:appuser /static && \
-    chmod -R 755 /static
+    chmod -R 777 /static
 
 USER appuser
 
