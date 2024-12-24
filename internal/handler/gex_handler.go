@@ -94,7 +94,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"GEX":    humanize.Commaf(entry.GEX),
 			}
 		}
-		outputPath := filepath.Join("static", "images", "gex_chart_"+symbol+".png")
+		outputPath := filepath.Join("static", "gex_chart_"+symbol+".png")
 		err = gex.CreateGEXPlot(gexByStrike, symbol, outputPath)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error creating bar chart: %v", err), http.StatusInternalServerError)
