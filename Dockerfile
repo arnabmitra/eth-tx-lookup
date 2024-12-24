@@ -68,13 +68,23 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
-USER appuser
+
+# Create directories and set permissions before copying files
+RUN mkdir -p /static/images && \
+    chown -R appuser:appuser /static && \
+    chmod -R 755 /static
 
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/server /bin/
 COPY ./migrations ./migrations
 COPY ./templates ./templates
 COPY ./static ./static
+
+# Ensure proper permissions after copying
+RUN chown -R appuser:appuser /static && \
+    chmod -R 755 /static
+
+USER appuser
 
 ENV MIGRATIONS_URL=file://migrations
 
