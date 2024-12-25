@@ -20,9 +20,11 @@ func (a *App) loadRoutes() {
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 
 	// Register the GEX handler
-
-	// Register the GEX handler
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	a.router.HandleFunc("/gex", handler.NewGEXHandler(a.logger, tmpl).ServeHTTP)
+
+	a.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/gex", http.StatusSeeOther)
+	})
 
 }

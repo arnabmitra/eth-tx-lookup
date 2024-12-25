@@ -101,12 +101,27 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.tmpl.ExecuteTemplate(w, "gex.html", map[string]interface{}{
+		err = h.tmpl.ExecuteTemplate(w, "gex.html", map[string]interface{}{
 			"ImagePath": "/" + outputPath,
 			"GEXData":   gexData,
 		})
+		if err != nil {
+			h.renderError(w, fmt.Sprintf("Error fetching options chain: %v", err))
+			return
+		}
 		return
 	}
 
 	h.tmpl.ExecuteTemplate(w, "gex.html", nil)
+}
+
+func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {
+	err := h.tmpl.ExecuteTemplate(w, "error.html", map[string]interface{}{
+		"Error": errMsg,
+	})
+
+	if err != nil {
+		h.renderError(w, fmt.Sprintf("Error executing template: %v", err))
+		return
+	}
 }

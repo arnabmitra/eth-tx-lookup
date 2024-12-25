@@ -221,10 +221,13 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 	for _, strike := range strikes {
 		gex := gexByStrike[strike]
 		if gex >= 0 && gex > 100 {
+			//print labels and values
+			fmt.Printf("Strike: %.2f, GEX: %.2f\n", strike, gex)
 			labels = append(labels, fmt.Sprintf("%.2f", strike))
 			posPoints = append(posPoints, gex)
 			negPoints = append(negPoints, 0)
 		} else if gex < -100 {
+			fmt.Printf("Strike: %.2f, GEX: %.2f\n", strike, gex)
 			labels = append(labels, fmt.Sprintf("%.2f", strike))
 			posPoints = append(posPoints, 0)
 			negPoints = append(negPoints, gex)
@@ -232,27 +235,38 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 	}
 
 	// Create positive bars (green)
-	posBar, err := plotter.NewBarChart(posPoints, vg.Points(20))
+	posBar, err := plotter.NewBarChart(posPoints, vg.Points(10))
 	if err != nil {
 		return err
 	}
 	posBar.Color = color.RGBA{G: 255, A: 255}
-	posBar.Offset = 0
+	posBar.Offset = -vg.Points(5)
 
 	// Create negative bars (red)
-	negBar, err := plotter.NewBarChart(negPoints, vg.Points(20))
+	negBar, err := plotter.NewBarChart(negPoints, vg.Points(10))
 	if err != nil {
 		return err
 	}
 	negBar.Color = color.RGBA{R: 255, A: 255}
-	negBar.Offset = 0
+	negBar.Offset = vg.Points(5)
 
 	p.Add(posBar, negBar)
 
 	// Set X axis labels
 	p.NominalX(labels...)
-	p.X.Tick.Label.Rotation = 1.0 // Rotate labels by 1 radian (~57 degrees)
-	p.X.Tick.Label.XAlign = 1.0   // Align labels to the right
+	p.X.Tick.Label.Rotation = 1.5708         // Rotate labels by 1 radian (~57 degrees)
+	p.X.Tick.Label.XAlign = 0.5              // Center labels
+	p.X.Tick.Label.YAlign = 2.0              // Align labels to the middle
+	p.X.Tick.Label.Font.Size = vg.Points(10) // Move labels closer to the x-axis
+
+	// Custom y-axis ticker
+	p.Y.Tick.Marker = plot.TickerFunc(func(min, max float64) []plot.Tick {
+		ticks := plot.DefaultTicks{}.Ticks(min, max)
+		for i := range ticks {
+			ticks[i].Label = fmt.Sprintf("$%.9f", ticks[i].Value)
+		}
+		return ticks
+	})
 
 	return p.Save(16*vg.Inch, 8*vg.Inch, path)
 }
