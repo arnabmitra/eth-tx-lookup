@@ -14,16 +14,20 @@
                 <div class="px-4 sm:px-6 lg:px-8">
                     <div class="sm:flex sm:items-center">
                         <div class="sm:flex-auto">
+                            {{ if not .ImagePath }}
                             <h1 class="text-4xl font-semibold leading-6 text-white">GEX Chart</h1>
+                            {{ end }}
                         </div>
                     </div>
                     <div class="mt-10">
                         {{ if not .ImagePath }}
                         <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
-                            <div class="flex flex-row">
-                                <input type="text" name="symbol" id="symbol" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6" placeholder="Enter Symbol">
-                                <input type="date" name="expiration" id="expiration" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6">
-                                <button type="submit" class="block rounded-md rounded-l-none bg-blue-800 w-min text-nowrap px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Generate Chart</button>
+                            <div class="flex flex-col space-y-4 max-w-md mx-auto">
+                                <input type="text" name="symbol" id="symbol" class="block w-32 rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6" placeholder="Enter Symbol">
+                                <br/>
+                                <input type="date" name="expiration" id="expiration" class="block w-64 rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6">
+                                <br/>
+                                <button type="submit" class="block rounded-md bg-blue-800 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Generate Chart</button>
                             </div>
                         </form>
                         {{ end }}
