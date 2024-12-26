@@ -220,13 +220,13 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 	// Split data into positive and negative values
 	for _, strike := range strikes {
 		gex := gexByStrike[strike]
-		if gex >= 0 && gex > 100 {
+		if gex >= 0 && gex > 5000 {
 			//print labels and values
 			fmt.Printf(" +ve Strike: %.2f, GEX: %.2f\n", strike, gex)
 			labels = append(labels, fmt.Sprintf("%.2f", strike))
 			posPoints = append(posPoints, gex)
 			negPoints = append(negPoints, 0)
-		} else if gex < -100 {
+		} else if gex < -5000 {
 			fmt.Printf(" -ve Strike: %.2f, GEX: %.2f\n", strike, gex)
 			labels = append(labels, fmt.Sprintf("%.2f", strike))
 			posPoints = append(posPoints, 0)
