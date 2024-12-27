@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 	"log/slog"
@@ -102,7 +103,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.tmpl.ExecuteTemplate(w, "gex.html", map[string]interface{}{
-			"ImagePath": "/" + outputPath,
+			"ImagePath": fmt.Sprintf("/%s?nocache=%d", outputPath, time.Now().Unix()),
 			"GEXData":   gexData,
 		})
 		if err != nil {
