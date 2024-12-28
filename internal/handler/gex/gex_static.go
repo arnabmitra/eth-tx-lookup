@@ -291,3 +291,55 @@ func makeXAxisLabels(strikePrices []float64) []string {
 	}
 	return labels
 }
+
+// Expiration date for the options chain
+// ExpirationDates represents the API response structure
+type ExpirationResponse struct {
+	Expirations struct {
+		Expiration []struct {
+			Date           string `json:"date"`
+			ExpirationType string `json:"expiration_type"`
+		} `json:"expiration"`
+	} `json:"expirations"`
+}
+
+func GetExpirationDates(apiToken, symbol string) ([]string, error) {
+	url := fmt.Sprintf("https://api.tradier.com/v1/markets/options/expirations?symbol=%s&expirationType=true", symbol)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error executing request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+	}
+
+	var data ExpirationResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("error decoding response: %v", err)
+	}
+
+	dates := make([]string, 0, len(data.Expirations.Expiration))
+	for _, exp := range data.Expirations.Expiration {
+		dates = append(dates, exp.Date)
+	}
+
+	// print expiration dates
+	fmt.Println("Expiration Dates:")
+	for _, date := range dates {
+		fmt.Println(date)
+	}
+
+	return dates, nil
+}

@@ -38,6 +38,8 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		gex.GetExpirationDates(apiKey, symbol)
+
 		price, err := gex.GetSpotPrice(apiKey, symbol)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
