@@ -14,7 +14,7 @@ services:
     container_name: blockchain-dashboard
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.blockchain-dashboard.rule=Host(`maxpain.site`)"
+      - "traefik.http.routers.blockchain-dashboard.rule=Host(`maxpain.site`) || Host(`gextracker.site`)"
       - "traefik.http.routers.blockchain-dashboard.entrypoints=websecure"
       - "traefik.http.routers.blockchain-dashboard.tls.certresolver=myresolver"
     secrets:
