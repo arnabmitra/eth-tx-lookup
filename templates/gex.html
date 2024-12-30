@@ -10,6 +10,7 @@
 
 </head>
 <body class="min-h-screen bg-gray-950 font-mono">
+{{ if not .ImagePath }}
     <header class="bg-gray-800 text-white py-4">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-3xl font-bold">  GEX Tool</h1>
@@ -22,6 +23,7 @@
             </nav>
         </div>
     </header>
+{{ end }}
 <main class="">
     <div class="bg-gray-950">
         <div class="mx-auto max-w-7xl">
@@ -39,10 +41,10 @@
                         <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
                             <div class="flex flex-col space-y-6 max-w-md mx-auto">
                                 <label for="symbol">Symbol:</label>
-                               <input type="text" 
-       name="symbol" 
+                               <input type="text"
+       name="symbol"
        id="symbol"
-       class="block w-64 rounded-md border-0 py-2 text-gray-900 
+       class="block w-64 rounded-md border-0 py-2 text-gray-900
               shadow-sm ring-1 ring-inset ring-gray-300
               placeholder:text-gray-400 focus:ring-2 focus:ring-inset
               focus:ring-indigo-600 sm:text-md sm:leading-6"
@@ -51,8 +53,8 @@
                                 <input type="date"
                                 name="expiration"
                                 id="expiration"
-                                class="block w-64 bg-blue-800 rounded-md border-0 
-                                       py-2 text-gray-900 shadow-sm ring-1 ring-inset 
+                                class="block w-64 bg-blue-800 rounded-md border-0
+                                       py-2 text-gray-900 shadow-sm ring-1 ring-inset
                                        ring-gray-300 placeholder:text-gray-900
                                        focus:ring-indigo-600 sm:text-md sm:leading-6">
                             </div>
