@@ -18,7 +18,7 @@ func (a *App) loadRoutes() {
 
 	// Register the handler function before starting the server
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
-
+	a.router.HandleFunc("/about", gexTradingHandler)
 	// Register the GEX handler
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	a.router.HandleFunc("/gex", handler.NewGEXHandler(a.logger, tmpl).ServeHTTP)
