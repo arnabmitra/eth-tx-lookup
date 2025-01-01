@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /gex
+Allow: /about
+Allow: /eth-tx
+Disallow: /static/
+Disallow: /static/images/
+
+Sitemap: https://gextracker.site/sitemap.xml
