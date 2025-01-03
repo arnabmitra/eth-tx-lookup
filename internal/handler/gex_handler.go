@@ -38,7 +38,10 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		gex.GetExpirationDates(apiKey, symbol)
+		_, err := gex.GetExpirationDates(apiKey, symbol)
+		if err != nil {
+			return
+		}
 
 		price, err := gex.GetSpotPrice(apiKey, symbol)
 		if err != nil {
@@ -98,7 +101,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		outputPath := filepath.Join("static", "gex_chart_"+symbol+".png")
-		err = gex.CreateGEXPlot(gexByStrike, symbol, outputPath)
+		err = gex.CreateGEXPlot(gexByStrike, symbol, outputPath, price)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error creating bar chart: %v", err), http.StatusInternalServerError)
 			return
@@ -115,7 +118,10 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.tmpl.ExecuteTemplate(w, "gex.html", nil)
+	err := h.tmpl.ExecuteTemplate(w, "gex.html", nil)
+	if err != nil {
+		return
+	}
 }
 
 func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {

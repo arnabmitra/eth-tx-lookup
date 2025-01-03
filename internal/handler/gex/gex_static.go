@@ -3,17 +3,13 @@ package gex
 import (
 	"encoding/json"
 	"fmt"
-	"image/color"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"sort"
-	"time"
-
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
+	"image/color"
+	"io/ioutil"
+	"net/http"
+	"sort"
 )
 
 // Option represents an individual option in the chain
@@ -140,73 +136,16 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 	return gexByStrike
 }
 
-func main() {
-
-	// API Key from environment variable
-	apiKey := os.Getenv("TRADIER_API_KEY")
-	if apiKey == "" {
-		log.Fatal("TRADIER_API_KEY environment variable is not set")
-	}
-
-	// Parameters for API call
-	symbol := "TSLA"           // Replace with your desired symbol
-	expiration := "2024-12-27" // Replace with the desired expiration date
-
-	// Fetch options chain
-	price, err := GetSpotPrice(apiKey, symbol)
-	if err != nil {
-		log.Fatalf("Error fetching price: %v", err)
-	}
-	options, err := FetchOptionsChain(symbol, expiration, apiKey)
-
-	if err != nil {
-		log.Fatalf("Error fetching options chain: %v", err)
-	}
-
-	gexByStrike := CalculateGEXPerStrike(options, price)
-
-	// Calculate GEX per strike
-	// Sort the strike prices
-	strikePrices := make([]float64, 0, len(gexByStrike))
-	for strike := range gexByStrike {
-		strikePrices = append(strikePrices, strike)
-	}
-	sort.Float64s(strikePrices)
-	// Print GEX per strike in sorted order
-	fmt.Println("Gamma Exposure (GEX) per Strike Price (Sorted):")
-	for _, strike := range strikePrices {
-		fmt.Printf("Strike: %.2f, GEX: %.2f\n", strike, gexByStrike[strike])
-	}
-
-	// Create a plot
+func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, spotPrice float64) error {
 	p := plot.New()
-	p.Title.Text = "Gamma Exposure (GEX) per Strike Price"
-	p.X.Label.Text = "Strike Price"
-	p.Y.Label.Text = "GEX"
-
-	// Plot GEX as a bar chart
-	outputPath := "gex_chart_" + symbol + time.Now().String() + ".png"
-
-	// Create the GEX plot
-	err = CreateGEXPlot(gexByStrike, symbol, outputPath)
-	if err != nil {
-		log.Fatal("Error creating GEX plot:", err)
-	}
-
-	fmt.Println("GEX plot has been saved as 'gex_plot.png'")
-
-}
-
-func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) error {
-	p := plot.New()
-	p.Title.Text = fmt.Sprintf("GEX Distribution for %s", symbol)
+	p.Title.Text = fmt.Sprintf("GEX Distribution for %s, Spot Price %f", symbol, spotPrice)
 	p.X.Label.Text = "Strike Price"
 	p.Y.Label.Text = "GEX"
 
 	// Convert map to sorted slices
 	var strikes []float64
-	for strike := range gexByStrike {
-		if strike < -100 || strike > 100 {
+	for strike, gex := range gexByStrike {
+		if gex < -100 || gex > 100 {
 			strikes = append(strikes, strike)
 		}
 	}
@@ -274,6 +213,8 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 		}
 		return ticks
 	})
+	// Set X axis labels
+	p.NominalX(makeXAxisLabels(strikes)...)
 
 	return p.Save(16*vg.Inch, 8*vg.Inch, path)
 }
@@ -282,9 +223,10 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string) 
 func makeXAxisLabels(strikePrices []float64) []string {
 	step := 5 // Show every 5th strike price (adjust as needed)
 	labels := make([]string, len(strikePrices))
-	for i, strike := range strikePrices {
+	for i, _ := range strikePrices {
 		if i%step == 0 {
-			labels[i] = fmt.Sprintf("%.2f", strike) // Add label
+			// labels[i] = fmt.Sprintf("%.2f", strike) // Add label
+			labels[i] = ""
 		} else {
 			labels[i] = "" // Leave blank for others
 		}
@@ -293,7 +235,6 @@ func makeXAxisLabels(strikePrices []float64) []string {
 }
 
 // Expiration date for the options chain
-// ExpirationDates represents the API response structure
 type ExpirationResponse struct {
 	Expirations struct {
 		Expiration []struct {
