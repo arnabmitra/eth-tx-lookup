@@ -11,14 +11,15 @@
 </head>
 <script>
     let debounceTimeout;
+
     function debounce(func, delay) {
-        return function(...args) {
+        return function (...args) {
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => func.apply(this, args), delay);
         };
     }
 
-    const debouncedFetchExpiryDates = debounce(function() {
+    const debouncedFetchExpiryDates = debounce(function () {
         const symbol = document.getElementById('symbol').value;
         if (symbol.length === 0) {
             return;
@@ -43,18 +44,19 @@
 </script>
 <body class="min-h-screen bg-gray-950 font-mono">
 {{ if not .ImagePath }}
-    <header class="bg-gray-800 text-white py-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-bold">  GEX Tool</h1>
-            <nav>
-                <ul class="flex space-x-4">
-                    <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
-                    <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
-                    <li><a href="https://patreon.com/foobar791" target="_blank" class="hover:text-indigo-400">Patreon</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<header class="bg-gray-800 text-white py-4">
+    <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-3xl font-bold"> GEX Tool</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
+                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
+                <li><a href="https://patreon.com/foobar791" target="_blank" class="hover:text-indigo-400">Patreon</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
 {{ end }}
 <main class="">
     <div class="bg-gray-950">
@@ -65,25 +67,29 @@
                         <div class="sm:flex-auto">
                             {{ if not .ImagePath }}
                             <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
+                            {{ else }}
                             {{ end }}
                         </div>
                     </div>
                     <div class="mt-10">
                         {{ if not .ImagePath }}
+                        <p class="mt-2 text-lg leading-8 text-gray-300">This tool tracks current dealers' notional
+                            gamma exposure (GEX). </p>
+                        <p class="mt-2 text-lg leading-8 text-gray-300">Enter a symbol and an expiration date to
+                            generate a GEX chart.</p>
+                        <br/>
                         <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
                             <div class="flex flex-col space-y-6 max-w-md mx-auto">
                                 <label for="symbol">Symbol:</label>
-                               <input type="text"
-       name="symbol"
-       id="symbol" required oninput="debouncedFetchExpiryDates()"
-       class="block w-64 rounded-md border-0 py-2 text-gray-900
-              shadow-sm ring-1 ring-inset ring-gray-300
+                                <input type="text" name="symbol" id="symbol" required
+                                       oninput="debouncedFetchExpiryDates()"
+                                       class="block w-64 rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300
               placeholder:text-gray-400 focus:ring-2 focus:ring-inset
               focus:ring-indigo-600 sm:text-md sm:leading-6"
-       placeholder="Enter Symbol">
+                                       placeholder="Enter Symbol">
                                 <label for="expiration">Options Expiration Date:</label>
 
-                                <select id="expiration" name="expiration" required     class="block w-64 rounded-md border-0 py-2 text-gray-900
+                                <select id="expiration" name="expiration" required class="block w-64 rounded-md border-0 py-2 text-gray-900
               shadow-sm ring-1 ring-inset ring-gray-300
               placeholder:text-gray-400 focus:ring-2 focus:ring-inset
               focus:ring-indigo-600 sm:text-md sm:leading-6">
@@ -124,7 +130,7 @@
                             {{ range .GEXData }}
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300">{{ .Strike
-                                    }}
+                                        }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ .GEX }}</td>
                             </tr>

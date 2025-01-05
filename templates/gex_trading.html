@@ -74,7 +74,14 @@
                         <p class="text-gray-300">By analyzing gamma levels, traders can gain a clearer picture of
                             structural flows and market dynamics. Tools that track net gamma exposure can be
                             particularly useful for making informed trading decisions.</p>
-
+                        <h2 class="text-2xl font-semibold leading-6 text-white">How is this Gamma Exposure(GEX) calculated</h2>
+                        <p class="text-gray-300">
+                            Gamma Exposure is calculated using the following formula:
+                            <br>
+                            spot * spot * gamma * open_interest * contract_size * 0.01
+                            <br>
+                            Then add up all Call and Put Gamma at each strike level, and present the net Gamma Exposure for that level.
+                        </p>
                         <h2 class="text-2xl font-semibold leading-6 text-white">What Does this GEX calculator do</h2>
                         <p class="text-gray-300">Firstly this is a free tool,
                             traders can calculate the gex levels for a given symbol at a given expiry date.
