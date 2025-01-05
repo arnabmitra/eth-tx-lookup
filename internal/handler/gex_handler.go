@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/dustin/go-humanize"
+	"github.com/jackc/pgx/v5/pgtype"
 	"html/template"
 	"math"
 	"net/http"
@@ -11,19 +13,27 @@ import (
 	"sort"
 	"time"
 
-	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
+	"github.com/arnabmitra/eth-proxy/internal/repository"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/dustin/go-humanize"
+
 	"log/slog"
+
+	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 )
 
 type GEXHandler struct {
 	logger *slog.Logger
 	tmpl   *template.Template
+	repo   *repository.Queries
 }
 
-func NewGEXHandler(logger *slog.Logger, tmpl *template.Template) *GEXHandler {
+func NewGEXHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Pool) *GEXHandler {
 	return &GEXHandler{
 		logger: logger,
 		tmpl:   tmpl,
+		repo:   repository.New(db),
 	}
 }
 
@@ -38,7 +48,19 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err := gex.GetExpirationDates(apiKey, symbol)
+		expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
+		if err != nil {
+			return
+		}
+
+		expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
+		if err != nil {
+			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
+			return
+		}
+		fmt.Println(string(expirationDatesJSON))
+
+		err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
 		if err != nil {
 			return
 		}
@@ -49,10 +71,21 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		options, err := gex.FetchOptionsChain(symbol, expiration, apiKey)
+		options, jsonOption, err := gex.FetchOptionsChain(symbol, expiration, apiKey)
+
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
 			return
+		}
+		err = h.storeExpiryDates(r.Context(), options, symbol, *jsonOption)
+		if err != nil {
+			return
+		}
+		//print the options chain
+		fmt.Println("Options Chain:")
+		for _, option := range options {
+			fmt.Printf("Strike: %.2f, Type: %s, Expiration: %s, Open Interest: %d, Expiration Type : %s\n",
+				option.Strike, option.OptionType, option.ExpirationDate, option.OpenInterest, option.ExpirationType)
 		}
 
 		gexByStrike := gex.CalculateGEXPerStrike(options, price)
@@ -133,4 +166,58 @@ func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {
 		h.renderError(w, fmt.Sprintf("Error executing template: %v", err))
 		return
 	}
+}
+
+func (h *GEXHandler) storeExpiryDates(ctx context.Context, options []gex.Option, symbol string, jsonData string) error {
+
+	var expirationType string
+	var expiryDate pgtype.Date
+	if len(options) > 0 {
+		expirationType = options[0].ExpirationType
+		date, err := stringToPgDate(options[0].ExpirationDate)
+		if err != nil {
+			return err
+		}
+		expiryDate = date
+	}
+
+	_, err := h.repo.UpsertOptionExpiry(ctx, repository.UpsertOptionExpiryParams{
+		Symbol:      symbol,
+		ExpiryDate:  expiryDate,
+		ExpiryType:  expirationType,
+		OptionChain: []byte(jsonData),
+	})
+	if err != nil {
+		h.logger.Error("failed to store option expiry", "error", err)
+		return err
+	}
+	return nil
+}
+
+func stringToPgDate(dateStr string) (pgtype.Date, error) {
+	// Parse string to time.Time
+	t, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return pgtype.Date{}, fmt.Errorf("parse date: %w", err)
+	}
+
+	// Convert to pgtype.Date
+	date := pgtype.Date{
+		Time:  t,
+		Valid: true,
+	}
+
+	return date, nil
+}
+
+func (h *GEXHandler) storeExpiryDatesInOptionExpiryDates(ctx context.Context, symbol string, expiryDates []byte) error {
+	_, err := h.repo.UpsertOptionExpiryDates(ctx, repository.UpsertOptionExpiryDatesParams{
+		Symbol:      symbol,
+		ExpiryDates: expiryDates,
+	})
+	if err != nil {
+		h.logger.Error("failed to store option expiry dates", "error", err)
+		return err
+	}
+	return nil
 }

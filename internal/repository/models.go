@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Guest struct {
@@ -17,4 +18,22 @@ type Guest struct {
 	Ip        net.IP
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type OptionExpiry struct {
+	ID          uuid.UUID
+	Symbol      string
+	ExpiryDate  pgtype.Date
+	ExpiryType  string
+	OptionChain []byte
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type OptionExpiryDate struct {
+	ID          uuid.UUID
+	Symbol      string
+	ExpiryDates []byte
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }

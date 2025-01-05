@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const count = `-- name: Count :one
@@ -57,6 +58,58 @@ func (q *Queries) FindAll(ctx context.Context, limit int32) ([]Guest, error) {
 	return items, nil
 }
 
+const getOptionExpiryBySymbol = `-- name: GetOptionExpiryBySymbol :many
+SELECT id, symbol, expiry_date, expiry_type, option_chain, created_at, updated_at FROM option_expiry
+WHERE symbol = $1
+ORDER BY expiry_date ASC
+`
+
+func (q *Queries) GetOptionExpiryBySymbol(ctx context.Context, symbol string) ([]OptionExpiry, error) {
+	rows, err := q.db.Query(ctx, getOptionExpiryBySymbol, symbol)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OptionExpiry
+	for rows.Next() {
+		var i OptionExpiry
+		if err := rows.Scan(
+			&i.ID,
+			&i.Symbol,
+			&i.ExpiryDate,
+			&i.ExpiryType,
+			&i.OptionChain,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOptionExpiryDatesBySymbol = `-- name: GetOptionExpiryDatesBySymbol :one
+SELECT id, symbol, expiry_dates, created_at, updated_at FROM option_expiry_dates
+WHERE symbol = $1
+`
+
+func (q *Queries) GetOptionExpiryDatesBySymbol(ctx context.Context, symbol string) (OptionExpiryDate, error) {
+	row := q.db.QueryRow(ctx, getOptionExpiryDatesBySymbol, symbol)
+	var i OptionExpiryDate
+	err := row.Scan(
+		&i.ID,
+		&i.Symbol,
+		&i.ExpiryDates,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insert = `-- name: Insert :one
 INSERT INTO guest (id, message, created_at, updated_at, ip)
 VALUES ($1, $2, $3, $3, $4)
@@ -82,6 +135,77 @@ func (q *Queries) Insert(ctx context.Context, arg InsertParams) (Guest, error) {
 		&i.ID,
 		&i.Message,
 		&i.Ip,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const upsertOptionExpiry = `-- name: UpsertOptionExpiry :one
+INSERT INTO option_expiry (
+    symbol,
+    expiry_date,
+    expiry_type,
+    option_chain
+) VALUES ($1, $2, $3, $4)
+ON CONFLICT (symbol, expiry_date)
+DO UPDATE SET
+    option_chain = EXCLUDED.option_chain,
+    updated_at = now()
+RETURNING id, symbol, expiry_date, expiry_type, option_chain, created_at, updated_at
+`
+
+type UpsertOptionExpiryParams struct {
+	Symbol      string
+	ExpiryDate  pgtype.Date
+	ExpiryType  string
+	OptionChain []byte
+}
+
+func (q *Queries) UpsertOptionExpiry(ctx context.Context, arg UpsertOptionExpiryParams) (OptionExpiry, error) {
+	row := q.db.QueryRow(ctx, upsertOptionExpiry,
+		arg.Symbol,
+		arg.ExpiryDate,
+		arg.ExpiryType,
+		arg.OptionChain,
+	)
+	var i OptionExpiry
+	err := row.Scan(
+		&i.ID,
+		&i.Symbol,
+		&i.ExpiryDate,
+		&i.ExpiryType,
+		&i.OptionChain,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const upsertOptionExpiryDates = `-- name: UpsertOptionExpiryDates :one
+INSERT INTO option_expiry_dates (
+    symbol,
+    expiry_dates
+) VALUES ($1, $2)
+ON CONFLICT (symbol)
+    DO UPDATE SET
+                  expiry_dates = EXCLUDED.expiry_dates,
+                  updated_at = now()
+RETURNING id, symbol, expiry_dates, created_at, updated_at
+`
+
+type UpsertOptionExpiryDatesParams struct {
+	Symbol      string
+	ExpiryDates []byte
+}
+
+func (q *Queries) UpsertOptionExpiryDates(ctx context.Context, arg UpsertOptionExpiryDatesParams) (OptionExpiryDate, error) {
+	row := q.db.QueryRow(ctx, upsertOptionExpiryDates, arg.Symbol, arg.ExpiryDates)
+	var i OptionExpiryDate
+	err := row.Scan(
+		&i.ID,
+		&i.Symbol,
+		&i.ExpiryDates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

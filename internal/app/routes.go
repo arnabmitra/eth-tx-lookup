@@ -12,16 +12,13 @@ func (a *App) loadRoutes() {
 		w.Write([]byte("OK"))
 	})
 	a.router.HandleFunc("/btc-etf", btcEtfHandler)
-	// Serve static files from the "static" directory
-	files := http.FileServer(http.Dir("./static"))
-	a.router.Handle("/static/", http.StripPrefix("/static", files))
-
-	// Register the handler function before starting the server
+	a.router.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
 	// Register the GEX handler
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
-	a.router.HandleFunc("/gex", handler.NewGEXHandler(a.logger, tmpl).ServeHTTP)
-	a.router.HandleFunc("/", handler.NewGEXHandler(a.logger, tmpl).ServeHTTP)
+	gexHandler := handler.NewGEXHandler(a.logger, tmpl, a.db)
+	a.router.HandleFunc("/gex", gexHandler.ServeHTTP)
+	a.router.HandleFunc("/", gexHandler.ServeHTTP)
 
 }

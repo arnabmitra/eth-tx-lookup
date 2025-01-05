@@ -20,6 +20,8 @@ type Option struct {
 	Greeks       struct {
 		Gamma float64 `json:"gamma"`
 	} `json:"greeks"`
+	ExpirationDate string `json:"expiration_date"`
+	ExpirationType string `json:"expiration_type"`
 }
 
 // Response represents the JSON structure of the option chain
@@ -77,13 +79,14 @@ func GetSpotPrice(apiToken, symbol string) (float64, error) {
 }
 
 // FetchOptionsChain fetches the options chain for the given symbol and expiration date
-func FetchOptionsChain(symbol, expiration string, apiKey string) ([]Option, error) {
+// also now return the raw json also please
+func FetchOptionsChain(symbol, expiration string, apiKey string) ([]Option, *string, error) {
 	url := fmt.Sprintf("https://api.tradier.com/v1/markets/options/chains?symbol=%s&expiration=%s&greeks=true", symbol, expiration)
 
 	// Create HTTP request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Accept", "application/json")
@@ -92,28 +95,29 @@ func FetchOptionsChain(symbol, expiration string, apiKey string) ([]Option, erro
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
 	// Check HTTP response status
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to fetch data: %s", resp.Status)
+		return nil, nil, fmt.Errorf("failed to fetch data: %s", resp.Status)
 	}
 
 	// Parse response body
 	var response Response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return response.Options.Option, nil
+	bodyStr := string(body)
+	return response.Options.Option, &bodyStr, nil
 }
 
 func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]float64 {
