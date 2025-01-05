@@ -250,11 +250,8 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	expiryDates, err := h.getExpiryDates(r.Context(), symbol)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching expiry dates: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if expiryDates == nil {
+
+	if err != nil || expiryDates == nil {
 		apiKey := os.Getenv("TRADIER_API_KEY")
 		if apiKey == "" {
 			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
