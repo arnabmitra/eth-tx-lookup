@@ -48,21 +48,28 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
-		if err != nil {
-			return
-		}
+		expiryDates, err := h.getExpiryDates(r.Context(), symbol)
+		if err != nil || len(expiryDates) == 0 {
+			expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
+			if err != nil {
+				return
+			}
 
-		expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
-		if err != nil {
-			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
-			return
-		}
-		fmt.Println(string(expirationDatesJSON))
+			expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
+			if err != nil {
+				fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(expirationDatesJSON))
 
-		err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
-		if err != nil {
-			return
+			err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
+			if err != nil {
+				return
+			}
+			expiryDates, err = h.getExpiryDates(r.Context(), symbol)
+			if err != nil {
+				return
+			}
 		}
 
 		price, err := gex.GetSpotPrice(apiKey, symbol)
@@ -220,4 +227,62 @@ func (h *GEXHandler) storeExpiryDatesInOptionExpiryDates(ctx context.Context, sy
 		return err
 	}
 	return nil
+}
+
+func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]string, error) {
+	expiryDates, err := h.repo.GetOptionExpiryDatesBySymbol(ctx, symbol)
+	if err != nil {
+		return nil, err
+	}
+	var dates []string
+	err = json.Unmarshal(expiryDates.ExpiryDates, &dates)
+	if err != nil {
+		return nil, err
+	}
+	return dates, nil
+}
+
+func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Request) {
+	symbol := r.URL.Query().Get("symbol")
+	if symbol == "" || len(symbol) < 4 {
+		http.Error(w, "Symbol is required", http.StatusBadRequest)
+		return
+	}
+
+	expiryDates, err := h.getExpiryDates(r.Context(), symbol)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching expiry dates: %v", err), http.StatusInternalServerError)
+		return
+	}
+	if expiryDates == nil {
+		apiKey := os.Getenv("TRADIER_API_KEY")
+		if apiKey == "" {
+			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
+			return
+		}
+
+		expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
+		if err != nil {
+			return
+		}
+
+		expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
+		if err != nil {
+			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
+			return
+		}
+		fmt.Println(string(expirationDatesJSON))
+
+		err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
+		if err != nil {
+			return
+		}
+		expiryDates, err = h.getExpiryDates(r.Context(), symbol)
+		if err != nil {
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(expiryDates)
 }

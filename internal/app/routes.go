@@ -20,5 +20,6 @@ func (a *App) loadRoutes() {
 	gexHandler := handler.NewGEXHandler(a.logger, tmpl, a.db)
 	a.router.HandleFunc("/gex", gexHandler.ServeHTTP)
 	a.router.HandleFunc("/", gexHandler.ServeHTTP)
-
+	// Register the expiry dates handler
+	a.router.HandleFunc("/expiry-dates", gexHandler.GetExpiryDatesHandler)
 }
