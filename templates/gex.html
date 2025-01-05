@@ -10,7 +10,15 @@
 
 </head>
 <script>
-    function fetchExpiryDates() {
+    let debounceTimeout;
+    function debounce(func, delay) {
+        return function(...args) {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    const debouncedFetchExpiryDates = debounce(function() {
         const symbol = document.getElementById('symbol').value;
         if (symbol.length === 0) {
             return;
@@ -29,7 +37,9 @@
                 });
             })
             .catch(error => console.error('Error fetching expiry dates:', error));
-    }
+    }, 500);
+
+    document.getElementById('symbol').oninput = debouncedFetchExpiryDates;
 </script>
 <body class="min-h-screen bg-gray-950 font-mono">
 {{ if not .ImagePath }}
@@ -65,7 +75,7 @@
                                 <label for="symbol">Symbol:</label>
                                <input type="text"
        name="symbol"
-       id="symbol" required oninput="fetchExpiryDates()"
+       id="symbol" required oninput="debouncedFetchExpiryDates()"
        class="block w-64 rounded-md border-0 py-2 text-gray-900
               shadow-sm ring-1 ring-inset ring-gray-300
               placeholder:text-gray-400 focus:ring-2 focus:ring-inset

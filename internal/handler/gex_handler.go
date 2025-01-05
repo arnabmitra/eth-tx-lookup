@@ -244,7 +244,7 @@ func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]strin
 
 func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Request) {
 	symbol := r.URL.Query().Get("symbol")
-	if symbol == "" || len(symbol) < 4 {
+	if symbol == "" {
 		http.Error(w, "Symbol is required", http.StatusBadRequest)
 		return
 	}
@@ -268,7 +268,6 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
 			return
 		}
-		fmt.Println(string(expirationDatesJSON))
 
 		err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
 		if err != nil {
