@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/arnabmitra/eth-proxy/internal/repository"
@@ -72,21 +73,49 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		price, err := gex.GetSpotPrice(apiKey, symbol)
+		expirationDatePgType, err := stringToPgDate(expiration)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
 			return
 		}
-
-		options, jsonOption, err := gex.FetchOptionsChain(symbol, expiration, apiKey)
-
+		var options []gex.Option
+		var jsonOption *string
+		var price float64
+		expiry, err := h.repo.GetOptionChainBySymbolAndExpiry(r.Context(), repository.GetOptionChainBySymbolAndExpiryParams{Symbol: symbol, ExpiryDate: expirationDatePgType})
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
-			return
+			h.logger.Error("failed to get option chain", "error", err)
 		}
-		err = h.storeExpiryDates(r.Context(), options, symbol, *jsonOption)
-		if err != nil {
-			return
+
+		if &expiry != nil && time.Since(expiry.UpdatedAt) <= 10*time.Minute {
+			var response gex.Response
+			err = json.Unmarshal(expiry.OptionChain, &response)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error unmarshalling options chain: %v", err), http.StatusInternalServerError)
+				return
+			}
+			options = response.Options.Option
+			priceFloat, err := strconv.ParseFloat(expiry.SpotPrice, 64)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error converting spot price to float64: %v", err), http.StatusInternalServerError)
+				return
+			}
+			price = priceFloat
+		} else {
+			//always get the spot price
+			price, err = gex.GetSpotPrice(apiKey, symbol)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
+				return
+			}
+			options, jsonOption, err = gex.FetchOptionsChain(symbol, expiration, apiKey)
+
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
+				return
+			}
+			err = h.storeExpiryDates(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
+			if err != nil {
+				return
+			}
 		}
 		//print the options chain
 		fmt.Println("Options Chain:")
@@ -175,7 +204,7 @@ func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {
 	}
 }
 
-func (h *GEXHandler) storeExpiryDates(ctx context.Context, options []gex.Option, symbol string, jsonData string) error {
+func (h *GEXHandler) storeExpiryDates(ctx context.Context, options []gex.Option, symbol string, jsonData string, price string) error {
 
 	var expirationType string
 	var expiryDate pgtype.Date
@@ -188,11 +217,12 @@ func (h *GEXHandler) storeExpiryDates(ctx context.Context, options []gex.Option,
 		expiryDate = date
 	}
 
-	_, err := h.repo.UpsertOptionExpiry(ctx, repository.UpsertOptionExpiryParams{
+	_, err := h.repo.UpsertOptionChain(ctx, repository.UpsertOptionChainParams{
 		Symbol:      symbol,
 		ExpiryDate:  expiryDate,
 		ExpiryType:  expirationType,
 		OptionChain: []byte(jsonData),
+		SpotPrice:   price,
 	})
 	if err != nil {
 		h.logger.Error("failed to store option expiry", "error", err)

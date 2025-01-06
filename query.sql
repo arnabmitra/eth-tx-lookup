@@ -25,9 +25,9 @@ DO UPDATE SET
     updated_at = now()
 RETURNING *;
 
--- name: GetOptionExpiryBySymbol :many
+-- name: GetOptionExpiryBySymbolAndExpiry :many
 SELECT * FROM option_expiry
-WHERE symbol = $1
+WHERE symbol = $1 AND expiry_date = $2
 ORDER BY expiry_date ASC;
 
 -- name: UpsertOptionExpiryDates :one
@@ -44,3 +44,22 @@ RETURNING *;
 -- name: GetOptionExpiryDatesBySymbol :one
 SELECT * FROM option_expiry_dates
 WHERE symbol = $1;
+
+-- name: UpsertOptionChain :one
+INSERT INTO option_chain (
+    symbol,
+    spot_price,
+    expiry_date,
+    expiry_type,
+    option_chain
+) VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (symbol, expiry_date)
+DO UPDATE SET
+    spot_price = EXCLUDED.spot_price,
+    option_chain = EXCLUDED.option_chain,
+    updated_at = now()
+RETURNING *;
+
+-- name: GetOptionChainBySymbolAndExpiry :one
+SELECT * FROM option_chain
+WHERE symbol = $1 and expiry_date = $2;

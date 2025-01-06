@@ -20,6 +20,17 @@ type Guest struct {
 	UpdatedAt time.Time
 }
 
+type OptionChain struct {
+	ID          uuid.UUID
+	Symbol      string
+	SpotPrice   string
+	ExpiryDate  pgtype.Date
+	ExpiryType  string
+	OptionChain []byte
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
 type OptionExpiry struct {
 	ID          uuid.UUID
 	Symbol      string
