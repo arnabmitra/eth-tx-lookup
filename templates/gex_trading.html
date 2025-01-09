@@ -4,11 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css?v=123"/>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/sample-project.css" /> <!-- Add this line -->
     <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-    <style>
-
-    </style>
+    <script src="/static/js/sample-project.js"></script> <!-- Add this line -->
 </head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"></script>
 <script>
@@ -26,7 +25,6 @@
             <ul class="flex space-x-4">
                 <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
                 <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
-                <li><a href="https://patreon.com/foobar791" target="_blank" class="hover:text-indigo-400">Patreon</a></li>
             </ul>
         </nav>
     </div>
@@ -49,23 +47,24 @@
                             Gamma Exposure (GEX) and its related concepts can offer valuable insights. This guide
                             simplifies GEX, Delta Hedging, and how they influence trading strategies.</p>
 
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">Delta Hedging and Market Liquidity</h2>
                         <p class="text-gray-300">Delta hedging is a strategy used by market makers to manage risks from
                             price changes in underlying assets. By trading the underlying asset as markets fluctuate,
                             they maintain balanced positions, ensuring market stability and liquidity.</p>
-
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">The Role of Liquidity in Trading</h2>
                         <p class="text-gray-300">Liquidity refers to how easily assets can be traded without causing
                             significant price changes. In liquid markets with tight spreads, market makers can hedge
                             risks more efficiently. Low liquidity, however, results in higher implied volatility, making
                             markets more sensitive to large trades.</p>
-
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">Understanding Gamma and Delta
                             Hedging</h2>
                         <p class="text-gray-300">Gamma measures how much delta changes concerning price movements in the
                             underlying asset. It provides insight into potential market maker activities, helping
                             traders anticipate market trends.</p>
-
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">Long Gamma vs. Short Gamma
                             Positions</h2>
                         <ul class="list-disc list-inside text-gray-300">
@@ -76,12 +75,13 @@
                                 increases and sell during price decreases.
                             </li>
                         </ul>
-
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">Using Gamma Exposure in Your
                             Trading</h2>
                         <p class="text-gray-300">By analyzing gamma levels, traders can gain a clearer picture of
                             structural flows and market dynamics. Tools that track net gamma exposure can be
                             particularly useful for making informed trading decisions.</p>
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">How is this Gamma Exposure(GEX) calculated</h2>
                         <p class="text-gray-300">
                             Gamma Exposure is calculated using the following formula:
@@ -90,6 +90,7 @@
                             <br>
                             Then add up all Call and Put Gamma at each strike level, and present the net Gamma Exposure for that level.
                         </p>
+                        <br/>
                         <h2 class="text-2xl font-semibold leading-6 text-white">What Does this GEX calculator do</h2>
                         <p class="text-gray-300">Firstly this is a free tool,
                             traders can calculate the gex levels for a given symbol at a given expiry date.
