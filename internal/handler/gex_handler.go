@@ -50,6 +50,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		expiryDates, err := h.getExpiryDates(r.Context(), symbol)
+
 		if err != nil || len(expiryDates) == 0 {
 			expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
 			if err != nil {
@@ -264,7 +265,12 @@ func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]strin
 	if err != nil {
 		return nil, err
 	}
+
 	var dates []string
+
+	if expiryDates.UpdatedAt.Before(time.Now().Add(-7 * 24 * time.Hour)) {
+		return dates, nil
+	}
 	err = json.Unmarshal(expiryDates.ExpiryDates, &dates)
 	if err != nil {
 		return nil, err
