@@ -177,7 +177,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = h.tmpl.ExecuteTemplate(w, "gex.html", map[string]interface{}{
+		err = h.tmpl.ExecuteTemplate(w, "gex_chart.html", map[string]interface{}{
 			"ImagePath": fmt.Sprintf("/%s?nocache=%d", outputPath, time.Now().Unix()),
 			"GEXData":   gexData,
 		})
