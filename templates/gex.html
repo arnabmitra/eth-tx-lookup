@@ -50,7 +50,6 @@
     document.getElementById('symbol').oninput = debouncedFetchExpiryDates;
 </script>
 <body class="min-h-screen bg-gray-950 font-mono">
-{{ if not .ImagePath }}
 <header class="bg-gray-800 text-white py-4">
     <div class="container mx-auto flex justify-between items-center">
         <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
@@ -63,7 +62,6 @@
         </nav>
     </div>
 </header>
-{{ end }}
 <main class="">
     <div class="bg-gray-950">
         <div class="mx-auto max-w-7xl">
