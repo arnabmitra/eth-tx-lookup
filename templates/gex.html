@@ -1,11 +1,16 @@
-<!DOCTYPE html>
-<html lang="en" class="min-h-screen h-full">
+<!DOCTYPE HTML>
+<!--
+	Editorial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css?v=123"/>
+    <title>Gex Tracker</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="static/assets/css/main.css" />
     <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"></script>
@@ -49,98 +54,164 @@
 
     document.getElementById('symbol').oninput = debouncedFetchExpiryDates;
 </script>
-<body class="min-h-screen bg-gray-950 font-mono">
-{{ if not .ImagePath }}
-<header class="bg-gray-800 text-white py-4">
-    <div class="container mx-auto flex justify-between items-center">
-        <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
-        <nav>
-            <ul class="flex space-x-4">
-                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
-                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
-                </li>
-            </ul>
-        </nav>
-    </div>
-</header>
-{{ end }}
-<main class="">
-    <div class="bg-gray-950">
-        <div class="mx-auto max-w-7xl">
-            <div class="bg-gray-950 py-10">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="">
-                        {{ if not .ImagePath }}
-                        <p class="mt-2 text-lg leading-8 text-gray-300">This tool tracks current dealers' notional
-                            gamma exposure (GEX). </p>
-                        <p class="mt-2 text-lg leading-6 text-gray-400">Enter a symbol and an expiration date to
-                            generate a GEX chart.</p>
-                        <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
-                            <div class="flex flex-col space-y-6 max-w-md mx-auto">
-                                <label for="symbol">Symbol:</label>
-                                <input type="text" name="symbol" id="symbol" required
-                                       oninput="debouncedFetchExpiryDates()"
-                                       class="block w-64 rounded-md border-0 py-2 text-gray-900
+<body class="is-preload">
+
+<!-- Wrapper -->
+<div id="wrapper">
+
+    <!-- Main -->
+    <div id="main">
+        <div class="inner">
+
+            <!-- Header -->
+           <!-- <header id="header">
+                <a href="gex_trading.html" class="logo"><strong>GEX</strong> tracker tool</a>
+                <ul class="icons">
+                    <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+                    <li><a href="#" class="icon brands fa-medium-m"><span class="label">Medium</span></a></li>
+                </ul>
+            </header> -->
+
+
+
+
+            <!-- Section -->
+            <section>
+                {{ if not .ImagePath }}
+                <header class="major">
+                    <h2>Gex Tracker tool</h2>
+                </header>
+                {{ end }}
+                <div class="bg-gray-950">
+                    <div class="mx-auto max-w-7xl">
+                        <div class="bg-gray-950 py-10">
+                            <div class="px-4 sm:px-6 lg:px-8">
+                                <div class="">
+                                    {{ if not .ImagePath }}
+                                    <p class="mt-2 text-lg leading-8 text-gray-300">This tool tracks current dealers' notional
+                                        gamma exposure (GEX). </p>
+                                    <p class="mt-2 text-lg leading-6 text-gray-400">Enter a symbol and an expiration date to
+                                        generate a GEX chart.</p>
+                                    <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
+                                        <div class="flex flex-col space-y-6 max-w-md mx-auto">
+                                            <label for="symbol">Symbol:</label>
+                                            <input type="text" name="symbol" id="symbol" required
+                                                   oninput="debouncedFetchExpiryDates()"
+                                                   class="block w-64 rounded-md border-0 py-2 text-gray-900
               shadow-sm ring-1 ring-inset ring-gray-300
               placeholder:text-gray-400 focus:ring-2 focus:ring-inset
-              focus:ring-indigo-600 sm:text-md sm:leading-6"    
-                                       placeholder="Enter Symbol">
-                                <label for="expiration">Options Expiration Date:</label>
+              focus:ring-indigo-600 sm:text-md sm:leading-6"
+                                                   placeholder="Enter Symbol">
+                                            <label for="expiration">Options Expiration Date:</label>
 
-                                <select id="expiration" name="expiration" required class="block w-64 rounded-md border-0 py-2 text-gray-900
+                                            <select id="expiration" name="expiration" required class="block w-64 rounded-md border-0 py-2 text-gray-900
               shadow-sm ring-1 ring-inset ring-gray-300
               placeholder:text-gray-400 focus:ring-2 focus:ring-inset
               focus:ring-indigo-600 sm:text-md sm:leading-6">
-                                    <!-- Options will be populated dynamically -->
-                                </select>
+                                                <!-- Options will be populated dynamically -->
+                                            </select>
+                                        </div>
+                                        <br/>
+                                        <button type="submit"
+                                                class="block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                                            Generate Chart
+                                        </button>
+                                    </form>
+                                    {{ end }}
+                                </div>
+                                <div id="gex-chart" >
+                                    {{ if .ImagePath }}
+                                    <img src="{{ .ImagePath }}" alt="GEX Chart Tool" class="mx-auto">
+                                    {{ end }}
+                                </div>
+                                {{ if .GEXData }}
+                                <div class="mt-10">
+                                    <h2 class="text-2xl font-semibold leading-6 text-white">Gamma Exposure (GEX) per Strike Price
+                                        (Sorted):</h2>
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-800">
+                                        <tr>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                                Strike Price
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                                GEX
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="bg-gray-700 divide-y divide-gray-600">
+                                        {{ range .GEXData }}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300">{{ .Strike
+                                                    }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ .GEX }}</td>
+                                        </tr>
+                                        {{ end }}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {{ end }}
                             </div>
-                            <br/>
-                            <button type="submit"
-                                    class="block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                                Generate Chart
-                            </button>
-                        </form>
-                        {{ end }}
+                        </div>
                     </div>
-                    <div id="gex-chart" class="mt-10">
-                        {{ if .ImagePath }}
-                        <img src="{{ .ImagePath }}" alt="GEX Chart Tool" class="mx-auto">
-                        {{ end }}
-                    </div>
-                    {{ if .GEXData }}
-                    <div class="mt-10">
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Gamma Exposure (GEX) per Strike Price
-                            (Sorted):</h2>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-800">
-                            <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Strike Price
-                                </th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    GEX
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody class="bg-gray-700 divide-y divide-gray-600">
-                            {{ range .GEXData }}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300">{{ .Strike
-                                        }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ .GEX }}</td>
-                            </tr>
-                            {{ end }}
-                            </tbody>
-                        </table>
-                    </div>
-                    {{ end }}
                 </div>
-            </div>
+
+            </section>
         </div>
     </div>
-</main>
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="inner">
+
+            <!-- Search -->
+            <section id="search" class="alt">
+                <form method="post" action="#">
+                    <input type="text" name="query" id="query" placeholder="Search" />
+                </form>
+            </section>
+
+            <!-- Menu -->
+            <nav id="menu">
+                <header class="major">
+                    <h2>Menu</h2>
+                </header>
+                <ul>
+                    <li><a href="index.html">Gex Tracker</a></li>
+                    <li><a href="generic.html">Gex Trading</a></li>
+                </ul>
+            </nav>
+
+
+
+            <!-- Section -->
+            <section>
+                <header class="major">
+                    <h2>Get in touch</h2>
+                </header>
+                <p>Gex Tracker</p>
+                <ul class="contact">
+                    <li class="icon solid fa-envelope"><a href="#">arnabmitra1329@gmail.com</a></li>
+                </ul>
+            </section>
+
+            <!-- Footer -->
+            <footer id="footer">
+                <p class="copyright">&copy; Untitled. All rights reserved. Demo Images: <a href="https://unsplash.com">Unsplash</a>. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
+            </footer>
+
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
 </body>
 </html>
