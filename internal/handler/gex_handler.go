@@ -306,7 +306,7 @@ func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]strin
 		if err != nil {
 			return nil, err
 		}
-		if time.Until(earliestDate) > 24*time.Hour {
+		if time.Until(earliestDate) < 24*time.Hour {
 			return nil, nil
 		}
 	}
