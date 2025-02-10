@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"html/template"
 	"math"
@@ -113,7 +114,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
 				return
 			}
-			err = h.storeExpiryDates(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
+			err = h.storeOptionChain(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
 			if err != nil {
 				return
 			}
@@ -205,7 +206,7 @@ func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {
 	}
 }
 
-func (h *GEXHandler) storeExpiryDates(ctx context.Context, options []gex.Option, symbol string, jsonData string, price string) error {
+func (h *GEXHandler) storeOptionChain(ctx context.Context, options []gex.Option, symbol string, jsonData string, price string) error {
 
 	var expirationType string
 	var expiryDate pgtype.Date
@@ -227,6 +228,29 @@ func (h *GEXHandler) storeExpiryDates(ctx context.Context, options []gex.Option,
 	})
 	if err != nil {
 		h.logger.Error("failed to store option expiry", "error", err)
+		return err
+	}
+
+	var gexValue pgtype.Numeric
+	// Set a string value
+	err = gexValue.Scan(price)
+	if err != nil {
+		fmt.Println("Error setting value:", err)
+	} else {
+		fmt.Println("GexValue set successfully:", gexValue)
+	}
+	recordedAt := time.Now()
+	_, err = h.repo.InsertGexHistory(ctx, repository.InsertGexHistoryParams{
+		ID:          uuid.New(),
+		Symbol:      symbol,
+		ExpiryDate:  expiryDate,
+		ExpiryType:  expirationType,
+		OptionChain: []byte(jsonData),
+		GexValue:    gexValue,
+		RecordedAt:  recordedAt,
+	})
+	if err != nil {
+		h.logger.Error("failed to insert GEX history", "error", err)
 		return err
 	}
 	return nil
@@ -275,6 +299,18 @@ func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]strin
 	if err != nil {
 		return nil, err
 	}
+
+	// Check if the earliest date is greater than a day from today's date
+	if len(dates) > 0 {
+		earliestDate, err := time.Parse("2006-01-02", dates[0])
+		if err != nil {
+			return nil, err
+		}
+		if time.Until(earliestDate) > 24*time.Hour {
+			return nil, nil
+		}
+	}
+
 	return dates, nil
 }
 

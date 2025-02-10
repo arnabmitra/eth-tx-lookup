@@ -12,6 +12,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type GexHistory struct {
+	ID          uuid.UUID
+	Symbol      string
+	ExpiryDate  pgtype.Date
+	ExpiryType  string
+	OptionChain []byte
+	GexValue    pgtype.Numeric
+	RecordedAt  time.Time
+}
+
 type Guest struct {
 	ID        uuid.UUID
 	Message   string

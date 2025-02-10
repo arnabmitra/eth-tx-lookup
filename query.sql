@@ -63,3 +63,14 @@ RETURNING *;
 -- name: GetOptionChainBySymbolAndExpiry :one
 SELECT * FROM option_chain
 WHERE symbol = $1 and expiry_date = $2;
+
+-- name: InsertGexHistory :one
+INSERT INTO gex_history (
+    id, symbol, expiry_date, expiry_type, option_chain, gex_value, recorded_at
+) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *;
+
+-- name: GetGexHistoryBySymbolAndExpiry :many
+SELECT * FROM gex_history
+WHERE symbol = $1 AND expiry_date = $2
+ORDER BY recorded_at ASC;

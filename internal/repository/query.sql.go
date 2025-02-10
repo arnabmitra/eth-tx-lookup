@@ -58,6 +58,45 @@ func (q *Queries) FindAll(ctx context.Context, limit int32) ([]Guest, error) {
 	return items, nil
 }
 
+const getGexHistoryBySymbolAndExpiry = `-- name: GetGexHistoryBySymbolAndExpiry :many
+SELECT id, symbol, expiry_date, expiry_type, option_chain, gex_value, recorded_at FROM gex_history
+WHERE symbol = $1 AND expiry_date = $2
+ORDER BY recorded_at ASC
+`
+
+type GetGexHistoryBySymbolAndExpiryParams struct {
+	Symbol     string
+	ExpiryDate pgtype.Date
+}
+
+func (q *Queries) GetGexHistoryBySymbolAndExpiry(ctx context.Context, arg GetGexHistoryBySymbolAndExpiryParams) ([]GexHistory, error) {
+	rows, err := q.db.Query(ctx, getGexHistoryBySymbolAndExpiry, arg.Symbol, arg.ExpiryDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GexHistory
+	for rows.Next() {
+		var i GexHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.Symbol,
+			&i.ExpiryDate,
+			&i.ExpiryType,
+			&i.OptionChain,
+			&i.GexValue,
+			&i.RecordedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOptionChainBySymbolAndExpiry = `-- name: GetOptionChainBySymbolAndExpiry :one
 SELECT id, symbol, spot_price, expiry_date, expiry_type, option_chain, created_at, updated_at FROM option_chain
 WHERE symbol = $1 and expiry_date = $2
@@ -168,6 +207,46 @@ func (q *Queries) Insert(ctx context.Context, arg InsertParams) (Guest, error) {
 		&i.Ip,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const insertGexHistory = `-- name: InsertGexHistory :one
+INSERT INTO gex_history (
+    id, symbol, expiry_date, expiry_type, option_chain, gex_value, recorded_at
+) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING id, symbol, expiry_date, expiry_type, option_chain, gex_value, recorded_at
+`
+
+type InsertGexHistoryParams struct {
+	ID          uuid.UUID
+	Symbol      string
+	ExpiryDate  pgtype.Date
+	ExpiryType  string
+	OptionChain []byte
+	GexValue    pgtype.Numeric
+	RecordedAt  time.Time
+}
+
+func (q *Queries) InsertGexHistory(ctx context.Context, arg InsertGexHistoryParams) (GexHistory, error) {
+	row := q.db.QueryRow(ctx, insertGexHistory,
+		arg.ID,
+		arg.Symbol,
+		arg.ExpiryDate,
+		arg.ExpiryType,
+		arg.OptionChain,
+		arg.GexValue,
+		arg.RecordedAt,
+	)
+	var i GexHistory
+	err := row.Scan(
+		&i.ID,
+		&i.Symbol,
+		&i.ExpiryDate,
+		&i.ExpiryType,
+		&i.OptionChain,
+		&i.GexValue,
+		&i.RecordedAt,
 	)
 	return i, err
 }
