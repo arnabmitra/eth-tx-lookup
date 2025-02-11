@@ -292,23 +292,12 @@ func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]strin
 
 	var dates []string
 
-	if expiryDates.UpdatedAt.Before(time.Now().Add(-7 * 24 * time.Hour)) {
+	if expiryDates.UpdatedAt.Before(time.Now().Add(-1 * 24 * time.Hour)) {
 		return dates, nil
 	}
 	err = json.Unmarshal(expiryDates.ExpiryDates, &dates)
 	if err != nil {
 		return nil, err
-	}
-
-	// Check if the earliest date is greater than a day from today's date
-	if len(dates) > 0 {
-		earliestDate, err := time.Parse("2006-01-02", dates[0])
-		if err != nil {
-			return nil, err
-		}
-		if time.Until(earliestDate) < 24*time.Hour {
-			return nil, nil
-		}
 	}
 
 	return dates, nil
