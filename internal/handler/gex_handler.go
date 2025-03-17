@@ -39,6 +39,74 @@ func NewGEXHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Poo
 	}
 }
 
+// CalculateGEXForAllExpiries calculates GEX across all expiry dates for a symbol
+func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol string) (map[float64]float64, error) {
+	expiryDates, err := h.getExpiryDates(ctx, symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	apiKey := os.Getenv("TRADIER_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("TRADIER_API_KEY environment variable is not set")
+	}
+
+	// Get current price
+	price, err := gex.GetSpotPrice(apiKey, symbol)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching price: %v", err)
+	}
+
+	// Initialize combined GEX map
+	combinedGEXByStrike := make(map[float64]float64)
+
+	h.logger.Info(fmt.Sprintf("Processing %d expiry dates for %s", len(expiryDates), symbol))
+
+	// Process each expiry date
+	for _, expiryDate := range expiryDates {
+		var options []gex.Option
+
+		expirationDatePgType, err := stringToPgDate(expiryDate)
+		if err != nil {
+			continue
+		}
+
+		// Try to get cached options data first
+		expiry, err := h.repo.GetOptionChainBySymbolAndExpiry(ctx, repository.GetOptionChainBySymbolAndExpiryParams{
+			Symbol:     symbol,
+			ExpiryDate: expirationDatePgType,
+		})
+
+		if err == nil && time.Since(expiry.UpdatedAt) <= 10*time.Minute {
+			// Use cached data
+			var response gex.Response
+			err = json.Unmarshal(expiry.OptionChain, &response)
+			if err == nil {
+				options = response.Options.Option
+			}
+		} else {
+			// Fetch fresh data
+			options, jsonOption, err := gex.FetchOptionsChain(symbol, expiryDate, apiKey)
+			if err != nil || jsonOption == nil {
+				continue // Skip this expiry if there's an error
+			}
+
+			err = h.storeOptionChain(ctx, options, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
+			if err != nil {
+				continue
+			}
+		}
+
+		// Calculate GEX for this expiry and add to combined total
+		gexByStrike := gex.CalculateGEXPerStrike(options, price)
+		for strike, gexValue := range gexByStrike {
+			combinedGEXByStrike[strike] += gexValue
+		}
+	}
+
+	return combinedGEXByStrike, nil
+}
+
 func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		symbol := r.FormValue("symbol")
@@ -157,8 +225,14 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return math.Abs(gexEntries[i].GEX) > math.Abs(gexEntries[j].GEX)
 		})
 
-		// Print the sorted GEX data
-		fmt.Println("Gamma Exposure (GEX) per Strike Price (Sorted by GEX):")
+		// Limit to top 20 strike prices
+		if len(gexEntries) > 20 {
+			gexEntries = gexEntries[:20]
+		}
+
+		// // Print the sorted and limited GEX data
+
+		fmt.Println("Top 20 Gamma Exposure (GEX) per Strike Price (Sorted by GEX):")
 		for _, entry := range gexEntries {
 			fmt.Printf("Strike: %.2f, GEX: %.2f\n", entry.Strike, entry.GEX)
 		}
