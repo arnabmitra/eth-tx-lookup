@@ -171,8 +171,7 @@
                         </form>
                         {{ end }}
                     </div>
-                    <!-- Add this div after the gex-chart div -->
-                    <div id="tradingview_chart" class="mt-10" style="height: 800px; width: 100%; max-width: 1400px; margin: 0 auto;"></div>
+
                     <div id="gex-chart" class="mt-10">
                         {{ if .ImagePath }}
                         <img src="{{ .ImagePath }}" alt="GEX Chart Tool" class="mx-auto">
@@ -208,6 +207,8 @@
                         </table>
                     </div>
                     {{ end }}
+                    <!-- Add this div after the gex-chart div -->
+                    <div id="tradingview_chart" class="mt-10" style="height: 800px; width: 100%; max-width: 1400px; margin: 0 auto;"></div>
                 </div>
             </div>
         </div>
