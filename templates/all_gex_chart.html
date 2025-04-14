@@ -1,0 +1,34 @@
+// Create this file at templates/all_gex_chart.html
+<div>
+    {{ if .ImagePath }}
+    <img src="{{ .ImagePath }}" alt="GEX Chart All Expiries" class="mx-auto">
+    {{ end }}
+
+    {{ if .GEXData }}
+    <div class="mt-10">
+        <h2 class="text-2xl font-semibold leading-6 text-white">Gamma Exposure (GEX) Across All Expiries:</h2>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-800">
+            <tr>
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Strike Price
+                </th>
+                <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    GEX
+                </th>
+            </tr>
+            </thead>
+            <tbody class="bg-gray-700 divide-y divide-gray-600">
+            {{ range .GEXData }}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300">{{ .Strike }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ .GEX }}</td>
+            </tr>
+            {{ end }}
+            </tbody>
+        </table>
+    </div>
+    {{ end }}
+</div>

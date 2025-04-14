@@ -22,4 +22,6 @@ func (a *App) loadRoutes() {
 	a.router.HandleFunc("/", gexHandler.ServeHTTP)
 	// Register the expiry dates handler
 	a.router.HandleFunc("/expiry-dates", gexHandler.GetExpiryDatesHandler)
+	// Add this new route for the all-expiry GEX page
+	a.router.HandleFunc("/all-gex", gexHandler.AllGEXHandler)
 }

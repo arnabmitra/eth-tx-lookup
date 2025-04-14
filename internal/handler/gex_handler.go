@@ -41,14 +41,27 @@ func NewGEXHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Poo
 
 // CalculateGEXForAllExpiries calculates GEX across all expiry dates for a symbol
 func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol string) (map[float64]float64, error) {
-	expiryDates, err := h.getExpiryDates(ctx, symbol)
-	if err != nil {
-		return nil, err
-	}
-
 	apiKey := os.Getenv("TRADIER_API_KEY")
 	if apiKey == "" {
 		return nil, fmt.Errorf("TRADIER_API_KEY environment variable is not set")
+	}
+	expiryDates, err := h.getExpiryDates(ctx, symbol)
+
+	if err != nil || expiryDates == nil {
+
+		expiryDates, err = gex.GetExpirationDates(apiKey, symbol)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get expiration dates: %v", err)
+		}
+
+		expirationDatesJSON, err := json.MarshalIndent(expiryDates, "", "  ")
+		if err != nil {
+			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
+			return nil, fmt.Errorf("cannot get expiration dates: %v", err)
+		}
+
+		err = h.storeExpiryDatesInOptionExpiryDates(ctx, symbol, expirationDatesJSON)
+
 	}
 
 	// Get current price
@@ -105,6 +118,91 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	}
 
 	return combinedGEXByStrike, nil
+}
+
+func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		symbol := r.FormValue("symbol")
+
+		apiKey := os.Getenv("TRADIER_API_KEY")
+		if apiKey == "" {
+			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
+			return
+		}
+
+		// Calculate GEX for all expiry dates
+		gexByStrike, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error calculating GEX for all expiries: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Get current price
+		price, err := gex.GetSpotPrice(apiKey, symbol)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Process GEX data
+		strikePrices := make([]float64, 0, len(gexByStrike))
+		for strike := range gexByStrike {
+			strikePrices = append(strikePrices, strike)
+		}
+		sort.Float64s(strikePrices)
+
+		type GEXEntry struct {
+			Strike float64
+			GEX    float64
+		}
+
+		gexEntries := make([]GEXEntry, len(strikePrices))
+		for i, strike := range strikePrices {
+			gexEntries[i] = GEXEntry{Strike: strike, GEX: gexByStrike[strike]}
+		}
+
+		// Sort by absolute GEX value and limit to top 20
+		sort.Slice(gexEntries, func(i, j int) bool {
+			return math.Abs(gexEntries[i].GEX) > math.Abs(gexEntries[j].GEX)
+		})
+
+		if len(gexEntries) > 20 {
+			gexEntries = gexEntries[:20]
+		}
+
+		// Prepare template data
+		gexData := make([]map[string]string, len(gexEntries))
+		for i, entry := range gexEntries {
+			gexData[i] = map[string]string{
+				"Strike": fmt.Sprintf("%.2f", entry.Strike),
+				"GEX":    humanize.Commaf(entry.GEX),
+			}
+		}
+
+		outputPath := filepath.Join("static", "all_gex_chart_"+symbol+".png")
+		err = gex.CreateGEXPlot(gexByStrike, symbol+" (All Expiries)", outputPath, price)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error creating chart: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.tmpl.ExecuteTemplate(w, "all_gex_chart.html", map[string]interface{}{
+			"ImagePath": fmt.Sprintf("/%s?nocache=%d", outputPath, time.Now().Unix()),
+			"GEXData":   gexData,
+			"Symbol":    symbol,
+		})
+		if err != nil {
+			h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
+			return
+		}
+		return
+	}
+
+	err := h.tmpl.ExecuteTemplate(w, "all_gex.html", nil)
+	if err != nil {
+		h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
+		return
+	}
 }
 
 func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -361,6 +459,10 @@ func (h *GEXHandler) storeExpiryDatesInOptionExpiryDates(ctx context.Context, sy
 func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]string, error) {
 	expiryDates, err := h.repo.GetOptionExpiryDatesBySymbol(ctx, symbol)
 	if err != nil {
+		// Check if it's a "no rows" error, and return empty slice instead of error
+		if err.Error() == "no rows in result set" {
+			return []string{}, nil
+		}
 		return nil, err
 	}
 
@@ -386,7 +488,7 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 
 	expiryDates, err := h.getExpiryDates(r.Context(), symbol)
 
-	if err != nil || expiryDates == nil {
+	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
 		apiKey := os.Getenv("TRADIER_API_KEY")
 		if apiKey == "" {
 			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
