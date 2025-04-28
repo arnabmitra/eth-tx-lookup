@@ -47,7 +47,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	}
 	expiryDates, err := h.getExpiryDates(ctx, symbol)
 
-	if err != nil || expiryDates == nil {
+	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
 
 		expiryDates, err = gex.GetExpirationDates(apiKey, symbol)
 		if err != nil {
@@ -99,12 +99,21 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			}
 		} else {
 			// Fetch fresh data
-			options, jsonOption, err := gex.FetchOptionsChain(symbol, expiryDate, apiKey)
-			if err != nil || jsonOption == nil {
+			optionsFromApi, jsonOption, errFromApi := gex.FetchOptionsChain(symbol, expiryDate, apiKey)
+			if errFromApi != nil || jsonOption == nil {
 				continue // Skip this expiry if there's an error
 			}
-
-			err = h.storeOptionChain(ctx, options, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
+			// Use cached data
+			var response gex.Response
+			if expiry.OptionChain != nil {
+				errFromUnMarshal := json.Unmarshal(expiry.OptionChain, &response)
+				if errFromUnMarshal == nil {
+					options = response.Options.Option
+				}
+			} else {
+				h.logger.Debug("No cached option chain available")
+			}
+			err = h.storeOptionChain(ctx, optionsFromApi, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
 			if err != nil {
 				continue
 			}
@@ -166,6 +175,17 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 			return math.Abs(gexEntries[i].GEX) > math.Abs(gexEntries[j].GEX)
 		})
 
+		// Filter out entries with very small GEX values (insignificant)
+		minSignificantGEX := 1000.0 // Adjust this threshold as needed
+		filteredEntries := make([]GEXEntry, 0)
+		for _, entry := range gexEntries {
+			if math.Abs(entry.GEX) >= minSignificantGEX {
+				filteredEntries = append(filteredEntries, entry)
+			}
+		}
+		gexEntries = filteredEntries
+
+		// Still limit to top 20 if we have too many
 		if len(gexEntries) > 20 {
 			gexEntries = gexEntries[:20]
 		}
@@ -182,9 +202,21 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 		outputPath := filepath.Join("static", "all_gex_chart_"+symbol+".png")
 		err = gex.CreateGEXPlot(gexByStrike, symbol+" (All Expiries)", outputPath, price)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error creating chart: %v", err), http.StatusInternalServerError)
+			h.renderError(w, fmt.Sprintf("Error getting data for this SYMBOL: %v", err))
 			return
 		}
+
+		// Add a small delay to ensure the file is completely written
+		time.Sleep(10 * time.Millisecond)
+
+		// Ensure the file exists and is accessible
+		if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+			http.Error(w, "Image file not ready yet", http.StatusInternalServerError)
+			return
+		}
+
+		// Set proper content type for HTML response
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		err = h.tmpl.ExecuteTemplate(w, "all_gex_chart.html", map[string]interface{}{
 			"ImagePath": fmt.Sprintf("/%s?nocache=%d", outputPath, time.Now().Unix()),
