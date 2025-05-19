@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GEX History for {{.Symbol}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        label {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+        }
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        th {
+            background-color: #f9f9f9;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .nested-table {
+            width: 100%;
+            margin: 0;
+            border: none;
+        }
+        .nested-table th, .nested-table td {
+            padding: 6px 4px;
+            font-size: 0.9em;
+            border-bottom: 1px solid #eee;
+        }
+        .nested-table th {
+            background-color: #f2f2f2;
+        }
+        .positive {
+            color: #27ae60;
+            font-weight: 500;
+        }
+        .negative {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        .info-box {
+            background-color: #eaf2f8;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>GEX History for {{.Symbol}}</h1>
+
+    <div class="info-box">
+        Viewing historical Gamma Exposure data for {{.Symbol}}. Positive GEX (green) generally creates resistance while negative GEX (red) creates support.
+    </div>
+
+    <form method="GET" action="/gex-history">
+        <div>
+            <label for="symbol">Symbol:</label>
+            <input type="text" id="symbol" name="symbol" value="{{.Symbol}}">
+        </div>
+
+        <div>
+            <label for="limit">Records:</label>
+            <select id="limit" name="limit">
+                <option value="5" {{if eq .Limit 5}}selected{{end}}>5</option>
+                <option value="10" {{if eq .Limit 10}}selected{{end}}>10</option>
+                <option value="20" {{if eq .Limit 20}}selected{{end}}>20</option>
+                <option value="50" {{if eq .Limit 50}}selected{{end}}>50</option>
+            </select>
+        </div>
+
+        <button type="submit">View History</button>
+    </form>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Collection Time</th>
+            <th>Expiry Date</th>
+            <th>Spot Price</th>
+            <th>Total GEX</th>
+            <th>Top GEX by Strike</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .History}}
+        <tr>
+            <td>{{.CollectedAt.Format "Jan 02, 2006 15:04:05"}}</td>
+            <td>{{.ExpiryDate}}</td>
+            <td>${{printf "%.2f" .SpotPrice}}</td>
+            <td class="{{if gt .TotalGex 0.0}}positive{{else}}negative{{end}}">
+                {{printf "%.2f" .TotalGex}}
+            </td>
+            <td>
+                <table class="nested-table">
+                    <thead>
+                    <tr>
+                        <th>Strike</th>
+                        <th>GEX Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{range .TopGexByStrike}}
+                    <tr>
+                        <td>${{printf "%.2f" .Strike}}</td>
+                        <td class="{{if gt .Value 0.0}}positive{{else}}negative{{end}}">
+                            {{printf "%.2f" .Value}}
+                        </td>
+                    </tr>
+                    {{end}}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

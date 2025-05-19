@@ -45,7 +45,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	if apiKey == "" {
 		return nil, fmt.Errorf("TRADIER_API_KEY environment variable is not set")
 	}
-	expiryDates, err := h.getExpiryDates(ctx, symbol)
+	expiryDates, err := h.GetExpiryDates(ctx, symbol)
 
 	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
 
@@ -60,7 +60,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			return nil, fmt.Errorf("cannot get expiration dates: %v", err)
 		}
 
-		err = h.storeExpiryDatesInOptionExpiryDates(ctx, symbol, expirationDatesJSON)
+		err = h.StoreExpiryDatesInOptionExpiryDates(ctx, symbol, expirationDatesJSON)
 
 	}
 
@@ -113,7 +113,14 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			} else {
 				h.logger.Debug("No cached option chain available")
 			}
-			err = h.storeOptionChain(ctx, optionsFromApi, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
+			gexByStrike := gex.CalculateGEXPerStrike(options, price)
+
+			// Calculate total GEX (sum of all strikes)
+			totalGEX := 0.0
+			for _, gexValue := range gexByStrike {
+				totalGEX += gexValue
+			}
+			err = h.StoreOptionChain(ctx, optionsFromApi, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
 			if err != nil {
 				continue
 			}
@@ -248,7 +255,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		expiryDates, err := h.getExpiryDates(r.Context(), symbol)
+		expiryDates, err := h.GetExpiryDates(r.Context(), symbol)
 
 		if err != nil || len(expiryDates) == 0 {
 			expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
@@ -263,11 +270,11 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			fmt.Println(string(expirationDatesJSON))
 
-			err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
+			err = h.StoreExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
 			if err != nil {
 				return
 			}
-			expiryDates, err = h.getExpiryDates(r.Context(), symbol)
+			expiryDates, err = h.GetExpiryDates(r.Context(), symbol)
 			if err != nil {
 				return
 			}
@@ -312,7 +319,14 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
 				return
 			}
-			err = h.storeOptionChain(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price))
+			// Calculate GEX for the nearest expiry
+			gexByStrike := gex.CalculateGEXPerStrike(options, price)
+			// Calculate total GEX (sum of all strikes)
+			totalGEX := 0.0
+			for _, gexValue := range gexByStrike {
+				totalGEX += gexValue
+			}
+			err = h.StoreOptionChain(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
 			if err != nil {
 				return
 			}
@@ -410,7 +424,7 @@ func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {
 	}
 }
 
-func (h *GEXHandler) storeOptionChain(ctx context.Context, options []gex.Option, symbol string, jsonData string, price string) error {
+func (h *GEXHandler) StoreOptionChain(ctx context.Context, options []gex.Option, symbol string, jsonData string, price string, gexValueCalculated string) error {
 
 	var expirationType string
 	var expiryDate pgtype.Date
@@ -437,14 +451,14 @@ func (h *GEXHandler) storeOptionChain(ctx context.Context, options []gex.Option,
 
 	var gexValue pgtype.Numeric
 	// Set a string value
-	err = gexValue.Scan(price)
+	err = gexValue.Scan(gexValueCalculated)
 	if err != nil {
 		fmt.Println("Error setting value:", err)
 	} else {
 		fmt.Println("GexValue set successfully:", gexValue)
 	}
 	recordedAt := time.Now()
-	_, err = h.repo.InsertGexHistory(ctx, repository.InsertGexHistoryParams{
+	_, err = h.repo.InsertGEXHistory(ctx, repository.InsertGEXHistoryParams{
 		ID:          uuid.New(),
 		Symbol:      symbol,
 		ExpiryDate:  expiryDate,
@@ -452,6 +466,7 @@ func (h *GEXHandler) storeOptionChain(ctx context.Context, options []gex.Option,
 		OptionChain: []byte(jsonData),
 		GexValue:    gexValue,
 		RecordedAt:  recordedAt,
+		SpotPrice:   pgtype.Text{String: price, Valid: true},
 	})
 	if err != nil {
 		h.logger.Error("failed to insert GEX history", "error", err)
@@ -476,7 +491,7 @@ func stringToPgDate(dateStr string) (pgtype.Date, error) {
 	return date, nil
 }
 
-func (h *GEXHandler) storeExpiryDatesInOptionExpiryDates(ctx context.Context, symbol string, expiryDates []byte) error {
+func (h *GEXHandler) StoreExpiryDatesInOptionExpiryDates(ctx context.Context, symbol string, expiryDates []byte) error {
 	_, err := h.repo.UpsertOptionExpiryDates(ctx, repository.UpsertOptionExpiryDatesParams{
 		Symbol:      symbol,
 		ExpiryDates: expiryDates,
@@ -488,7 +503,7 @@ func (h *GEXHandler) storeExpiryDatesInOptionExpiryDates(ctx context.Context, sy
 	return nil
 }
 
-func (h *GEXHandler) getExpiryDates(ctx context.Context, symbol string) ([]string, error) {
+func (h *GEXHandler) GetExpiryDates(ctx context.Context, symbol string) ([]string, error) {
 	expiryDates, err := h.repo.GetOptionExpiryDatesBySymbol(ctx, symbol)
 	if err != nil {
 		// Check if it's a "no rows" error, and return empty slice instead of error
@@ -518,7 +533,7 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	expiryDates, err := h.getExpiryDates(r.Context(), symbol)
+	expiryDates, err := h.GetExpiryDates(r.Context(), symbol)
 
 	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
 		apiKey := os.Getenv("TRADIER_API_KEY")
@@ -538,11 +553,11 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		err = h.storeExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
+		err = h.StoreExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
 		if err != nil {
 			return
 		}
-		expiryDates, err = h.getExpiryDates(r.Context(), symbol)
+		expiryDates, err = h.GetExpiryDates(r.Context(), symbol)
 		if err != nil {
 			return
 		}
@@ -550,4 +565,143 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(expiryDates)
+}
+
+func (h *GEXHandler) DisplayGEXHistoryPage(w http.ResponseWriter, r *http.Request) {
+	symbol := r.URL.Query().Get("symbol")
+	if symbol == "" {
+		http.Error(w, "Symbol is required", http.StatusBadRequest)
+		return
+	}
+
+	limit := 10 // Default limit
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr != "" {
+		parsedLimit, err := strconv.Atoi(limitStr)
+		if err == nil && parsedLimit > 0 && parsedLimit <= 50 {
+			limit = parsedLimit
+		}
+	}
+
+	// Get recent GEX history records for the symbol
+	history, err := h.GetRecentGEXHistory(r.Context(), symbol, limit)
+	if err != nil {
+		h.logger.Error("failed to fetch GEX history", "error", err)
+		h.renderError(w, fmt.Sprintf("Error fetching GEX history: %v", err))
+		return
+	}
+
+	// Render the template
+	err = h.tmpl.ExecuteTemplate(w, "gex_history_page.html", map[string]interface{}{
+		"Symbol":  symbol,
+		"History": history,
+		"Limit":   limit,
+	})
+	if err != nil {
+		h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
+		return
+	}
+}
+
+// Define this type at package level
+type GexTimePoint struct {
+	Timestamp time.Time
+	GexValue  float64
+}
+
+func (h *GEXHandler) GetRecentGEXHistory(ctx context.Context, symbol string, limit int) ([]GexHistoryRecord, error) {
+	history, err := h.repo.GetLatestGEXHistoryBySymbol(ctx, repository.GetLatestGEXHistoryBySymbolParams{
+		Symbol:     symbol,
+		Limit:      int32(limit),
+		RecordedAt: time.Now().Add(-24 * time.Hour), // Only get records from last 24 hours
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	records := make([]GexHistoryRecord, len(history))
+
+	for i, row := range history {
+		var gexValue float64
+		err = row.GexValue.Scan(&gexValue)
+		if err != nil {
+			h.logger.Error("failed to extract GEX value", "error", err)
+			gexValue = 0
+		}
+
+		// Extract spot price from pgtype.Text
+		var spotPrice float64 = 0
+		if row.SpotPrice.Valid && row.SpotPrice.String != "" {
+			spotPrice, err = strconv.ParseFloat(row.SpotPrice.String, 64)
+			if err != nil {
+				h.logger.Error("failed to parse spot price", "error", err)
+			}
+		}
+
+		// Get expiry date as formatted string
+		expiryDate := ""
+		if row.ExpiryDate.Valid {
+			expiryDate = row.ExpiryDate.Time.Format("2006-01-02")
+		}
+
+		// Calculate top GEX values by strike
+		topGexByStrike := []GexStrikeValue{}
+		if row.OptionChain != nil {
+			var response gex.Response
+			if err := json.Unmarshal(row.OptionChain, &response); err == nil {
+				if len(response.Options.Option) > 0 {
+					gexByStrike := gex.CalculateGEXPerStrike(response.Options.Option, spotPrice)
+
+					// Convert map to slice for sorting
+					gexEntries := make([]GexStrikeValue, 0, len(gexByStrike))
+					for strike, val := range gexByStrike {
+						gexEntries = append(gexEntries, GexStrikeValue{
+							Strike: strike,
+							Value:  val,
+						})
+					}
+
+					// Sort by absolute GEX value (highest impact first)
+					sort.Slice(gexEntries, func(i, j int) bool {
+						return math.Abs(gexEntries[i].Value) > math.Abs(gexEntries[j].Value)
+					})
+
+					// Take top 5
+					count := 5
+					if len(gexEntries) < count {
+						count = len(gexEntries)
+					}
+					topGexByStrike = gexEntries[:count]
+				}
+			}
+		}
+
+		records[i] = GexHistoryRecord{
+			ID:             row.ID,
+			Symbol:         row.Symbol,
+			ExpiryDate:     expiryDate,
+			CollectedAt:    row.RecordedAt,
+			TotalGex:       gexValue,
+			SpotPrice:      spotPrice,
+			TopGexByStrike: topGexByStrike,
+		}
+	}
+
+	return records, nil
+}
+
+type GexStrikeValue struct {
+	Strike float64 `json:"strike"`
+	Value  float64 `json:"value"`
+}
+
+type GexHistoryRecord struct {
+	ID             uuid.UUID        `json:"id"`
+	Symbol         string           `json:"symbol"`
+	CollectedAt    time.Time        `json:"collected_at"`
+	ExpiryDate     string           `json:"expiry_date"`
+	TotalGex       float64          `json:"total_gex"`
+	MaxGex         float64          `json:"max_gex"`
+	SpotPrice      float64          `json:"spot_price"`
+	TopGexByStrike []GexStrikeValue `json:"top_gex_by_strike"`
 }

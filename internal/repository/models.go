@@ -20,6 +20,7 @@ type GexHistory struct {
 	OptionChain []byte
 	GexValue    pgtype.Numeric
 	RecordedAt  time.Time
+	SpotPrice   pgtype.Text
 }
 
 type Guest struct {

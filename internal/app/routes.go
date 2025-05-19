@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (a *App) loadRoutes() {
+func (a *App) loadRoutes() *handler.GEXHandler {
 	a.router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -24,4 +24,7 @@ func (a *App) loadRoutes() {
 	a.router.HandleFunc("/expiry-dates", gexHandler.GetExpiryDatesHandler)
 	// Add this new route for the all-expiry GEX page
 	a.router.HandleFunc("/all-gex", gexHandler.AllGEXHandler)
+
+	a.router.HandleFunc("/gex-history", gexHandler.DisplayGEXHistoryPage)
+	return gexHandler
 }

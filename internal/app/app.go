@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/arnabmitra/eth-proxy/internal/database"
 	"github.com/arnabmitra/eth-proxy/internal/middleware"
+	"github.com/arnabmitra/eth-proxy/internal/worker"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"html/template"
@@ -21,10 +22,11 @@ import (
 )
 
 type App struct {
-	logger *slog.Logger
-	router *http.ServeMux
-	db     *pgxpool.Pool
-	rdb    *redis.Client
+	logger       *slog.Logger
+	router       *http.ServeMux
+	db           *pgxpool.Pool
+	rdb          *redis.Client
+	gexCollector *worker.GexCollector
 }
 
 func New(logger *slog.Logger) *App {
@@ -56,7 +58,13 @@ func (a *App) Start(ctx context.Context) error {
 
 	tmpl := template.Must(template.New("").ParseGlob("./templates/*"))
 
-	a.loadRoutes()
+	gexHandler := a.loadRoutes()
+
+	// Initialize the GexCollector with the handler and symbols
+	symbols := []string{"SPY", "QQQ", "AAPL"} // Add your preferred symbols here
+	a.gexCollector = worker.NewGEXCollector(gexHandler, symbols)
+	// Start the collector
+	a.gexCollector.Start()
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
@@ -78,6 +86,10 @@ func (a *App) Start(ctx context.Context) error {
 		break
 	case <-ctx.Done():
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		// Stop the collector
+		if a.gexCollector != nil {
+			a.gexCollector.Stop()
+		}
 		server.Shutdown(ctx)
 		cancel()
 	}
