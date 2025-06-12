@@ -90,7 +90,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			ExpiryDate: expirationDatePgType,
 		})
 
-		if err == nil && time.Since(expiry.UpdatedAt) <= 10*time.Minute {
+		if err == nil && time.Since(expiry.UpdatedAt) <= 1*time.Minute {
 			// Use cached data
 			var response gex.Response
 			err = json.Unmarshal(expiry.OptionChain, &response)
@@ -292,7 +292,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.logger.Error("failed to get option chain", "error", err)
 		}
 
-		if &expiry != nil && time.Since(expiry.UpdatedAt) <= 10*time.Minute {
+		if &expiry != nil && time.Since(expiry.UpdatedAt) <= 1*time.Minute {
 			var response gex.Response
 			err = json.Unmarshal(expiry.OptionChain, &response)
 			if err != nil {

@@ -21,7 +21,7 @@ func NewGEXCollector(gexHandler *handler.GEXHandler, symbols []string) *GexColle
 	return &GexCollector{
 		gexHandler: gexHandler,
 		symbols:    symbols,
-		interval:   30 * time.Minute,
+		interval:   5 * time.Minute,
 		stop:       make(chan struct{}),
 	}
 }
