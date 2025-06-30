@@ -1,112 +1,76 @@
-<!-- templates/gex_trading.html -->
 <!DOCTYPE html>
 <html lang="en" class="min-h-screen h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css" />
-    <link rel="stylesheet" href="/static/css/sample-project.css" /> <!-- Add this line -->
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-    <script src="/static/js/sample-project.js"></script> <!-- Add this line -->
+    <title>GEX Trading</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=123456"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<!-- FONTS -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap"
-      rel="stylesheet">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-VD3FWBHF4C');
-</script>
-<body class="h-screen bg-gray-950 font-[Poppins] ">
+<body class="h-screen bg-gray-950 font-[Poppins]">
 <header class="bg-gray-950 text-white py-4">
-    <div class="nav-links container mx-auto flex justify-between items-center left-0 top-[-100%]">
+    <div class="nav-links container mx-auto flex justify-between items-center">
         <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
         <nav>
             <ul class="flex space-x-4">
                 <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
                 <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
+                <li><a href="/all-gex" class="hover:text-indigo-400">All Expiries GEX</a></li>
+                <li><a href="/mag7-gex" class="hover:text-indigo-400">MAG7 GEX</a></li>
+                <li><a href="/gex-history?symbol=SPY&limit=5" class="hover:text-indigo-400">GEX History</a></li>
             </ul>
         </nav>
     </div>
 </header>
-<main class="">
+<main>
     <div class="bg-gray-950">
         <div class="mx-auto max-w-7xl">
             <div class="bg-gray-950 py-10">
                 <div class="px-4 sm:px-6 lg:px-8">
                     <div class="sm:flex sm:items-center">
                         <div class="sm:flex-auto">
-                            <h1 class="text-4xl font-semibold leading-6 text-white">How to Trade Using Gamma Exposure
-                                (GEX)</h1>
+                            <h1 class="text-4xl font-semibold leading-6 text-white">How to Trade Using Gamma Exposure (GEX)</h1>
                         </div>
                     </div>
-                    <div class="mt-10">
-                        <h2 class="text-2xl font-semibold leading-6 text-white">What is Gamma Exposure (GEX) and How Can
-                            It Improve Your Trading?</h2>
-                        <p class="text-gray-300">For traders navigating the fast-paced financial markets, understanding
-                            Gamma Exposure (GEX) and its related concepts can offer valuable insights. This guide
-                            simplifies GEX, Delta Hedging, and how they influence trading strategies.</p>
-
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Delta Hedging and Market Liquidity</h2>
-                        <p class="text-gray-300">Delta hedging is a strategy used by market makers to manage risks from
-                            price changes in underlying assets. By trading the underlying asset as markets fluctuate,
-                            they maintain balanced positions, ensuring market stability and liquidity.</p>
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">The Role of Liquidity in Trading</h2>
-                        <p class="text-gray-300">Liquidity refers to how easily assets can be traded without causing
-                            significant price changes. In liquid markets with tight spreads, market makers can hedge
-                            risks more efficiently. Low liquidity, however, results in higher implied volatility, making
-                            markets more sensitive to large trades.</p>
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Understanding Gamma and Delta
-                            Hedging</h2>
-                        <p class="text-gray-300">Gamma measures how much delta changes concerning price movements in the
-                            underlying asset. It provides insight into potential market maker activities, helping
-                            traders anticipate market trends.</p>
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Long Gamma vs. Short Gamma
-                            Positions</h2>
-                        <ul class="list-disc list-inside text-gray-300">
-                            <li><strong>Long Gamma:</strong> Stabilizes the market as market makers buy during price
-                                drops and sell during price rises.
-                            </li>
-                            <li><strong>Short Gamma:</strong> Amplifies market moves as market makers buy during price
-                                increases and sell during price decreases.
-                            </li>
-                        </ul>
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Using Gamma Exposure in Your
-                            Trading</h2>
-                        <p class="text-gray-300">By analyzing gamma levels, traders can gain a clearer picture of
-                            structural flows and market dynamics. Tools that track net gamma exposure can be
-                            particularly useful for making informed trading decisions.</p>
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">How is this Gamma Exposure(GEX) calculated</h2>
-                        <p class="text-gray-300">
-                            Gamma Exposure is calculated using the following formula:
-                            <br>
-                            spot * spot * gamma * open_interest * contract_size * 0.01
-                            <br>
-                            Then add up all Call and Put Gamma at each strike level, and present the net Gamma Exposure for that level.
-                        </p>
-                        <br/>
-                        <h2 class="text-2xl font-semibold leading-6 text-white">What Does this GEX calculator do</h2>
-                        <p class="text-gray-300">Firstly this is a free tool,
-                            traders can calculate the gex levels for a given symbol at a given expiry date.
-                            For e.g below is the gex levels for NVDA for 12/27/2024 expiry date.
-                            As you can see as of writing this page on 12/25/2024 the gex levels for NVDA is maximum at
-                            140, i would expect the price tomorrow
-                            to open and stay around 140 till the gex levels change.
-                            That would the next iteration of that tool to calculate and show how gex has changed over
-                            time.
-                            <img src="./static/static_images/gex_chart_NVDA.png" alt="GEX Chart for NVDA">
-                        </p>
+                    <div class="mt-10 space-y-8 text-gray-300">
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">What is Gamma Exposure (GEX) and How Can It Improve Your Trading?</h2>
+                            <p>For traders navigating the fast-paced financial markets, understanding Gamma Exposure (GEX) and its related concepts can offer valuable insights. This guide simplifies GEX, Delta Hedging, and how they influence trading strategies.</p>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">Delta Hedging and Market Liquidity</h2>
+                            <p>Delta hedging is a strategy used by market makers to manage risks from price changes in underlying assets. By trading the underlying asset as markets fluctuate, they maintain balanced positions, ensuring market stability and liquidity.</p>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">The Role of Liquidity in Trading</h2>
+                            <p>Liquidity refers to how easily assets can be traded without causing significant price changes. In liquid markets with tight spreads, market makers can hedge risks more efficiently. Low liquidity, however, results in higher implied volatility, making markets more sensitive to large trades.</p>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">Understanding Gamma and Delta Hedging</h2>
+                            <p>Gamma measures how much delta changes concerning price movements in the underlying asset. It provides insight into potential market maker activities, helping traders anticipate market trends.</p>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">Long Gamma vs. Short Gamma Positions</h2>
+                            <ul class="list-disc list-inside">
+                                <li><strong>Long Gamma:</strong> Stabilizes the market as market makers buy during price drops and sell during price rises.</li>
+                                <li><strong>Short Gamma:</strong> Amplifies market moves as market makers buy during price increases and sell during price decreases.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">Using Gamma Exposure in Your Trading</h2>
+                            <p>By analyzing gamma levels, traders can gain a clearer picture of structural flows and market dynamics. Tools that track net gamma exposure can be particularly useful for making informed trading decisions.</p>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">How is this Gamma Exposure (GEX) calculated</h2>
+                            <p class="font-mono bg-gray-800 p-4 rounded-md">spot * spot * gamma * open_interest * contract_size * 0.01</p>
+                            <p class="mt-2">Then add up all Call and Put Gamma at each strike level, and present the net Gamma Exposure for that level.</p>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold leading-6 text-white">What Does this GEX calculator do</h2>
+                            <p>Firstly this is a free tool, traders can calculate the gex levels for a given symbol at a given expiry date. For e.g below is the gex levels for NVDA for 12/27/2024 expiry date. As you can see as of writing this page on 12/25/2024 the gex levels for NVDA is maximum at 140, i would expect the price tomorrow to open and stay around 140 till the gex levels change. That would the next iteration of that tool to calculate and show how gex has changed over time.</p>
+                            <img src="/static/static_images/gex_chart_NVDA.png" alt="GEX Chart for NVDA" class="mt-4 rounded-lg shadow-lg">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -114,3 +78,4 @@
     </div>
 </main>
 </body>
+</html>

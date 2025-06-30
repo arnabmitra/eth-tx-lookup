@@ -1,178 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="min-h-screen h-full">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GEX History for {{.Symbol}}</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .container {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        form {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-        }
-        label {
-            font-weight: 600;
-            margin-right: 5px;
-        }
-        input, select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: white;
-        }
-        th, td {
-            padding: 12px 8px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        th {
-            background-color: #f9f9f9;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-        .nested-table {
-            width: 100%;
-            margin: 0;
-            border: none;
-        }
-        .nested-table th, .nested-table td {
-            padding: 6px 4px;
-            font-size: 0.9em;
-            border-bottom: 1px solid #eee;
-        }
-        .nested-table th {
-            background-color: #f2f2f2;
-        }
-        .positive {
-            color: #27ae60;
-            font-weight: 500;
-        }
-        .negative {
-            color: #e74c3c;
-            font-weight: 500;
-        }
-        .info-box {
-            background-color: #eaf2f8;
-            border-left: 4px solid #3498db;
-            padding: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #2c3e50;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css?v=123456"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body>
-<div class="container">
-    <h1>GEX History for {{.Symbol}}</h1>
-
-    <div class="info-box">
-        Viewing historical Gamma Exposure data for {{.Symbol}}. Positive GEX (green) generally creates resistance while negative GEX (red) creates support.
+<body class="h-screen bg-gray-950 font-[Poppins]">
+<header class="bg-gray-950 text-white py-4">
+    <div class="nav-links container mx-auto flex justify-between items-center">
+        <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
+                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
+                <li><a href="/all-gex" class="hover:text-indigo-400">All Expiries GEX</a></li>
+                <li><a href="/mag7-gex" class="hover:text-indigo-400">MAG7 GEX</a></li>
+                <li><a href="/gex-history?symbol=SPY&limit=5" class="hover:text-indigo-400">GEX History</a></li>
+            </ul>
+        </nav>
     </div>
+</header>
+<main>
+    <div class="bg-gray-950">
+        <div class="mx-auto max-w-7xl">
+            <div class="bg-gray-950 py-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <h1 class="text-4xl font-semibold leading-6 text-white">GEX History for {{.Symbol}}</h1>
 
-    <form method="GET" action="/gex-history">
-        <div>
-            <label for="symbol">Symbol:</label>
-            <input type="text" id="symbol" name="symbol" value="{{.Symbol}}">
+                    <div class="mt-4 p-4 bg-gray-800 border-l-4 border-teal-500 text-gray-300">
+                        Viewing historical Gamma Exposure data for {{.Symbol}}. Positive GEX (green) generally creates resistance while negative GEX (red) creates support.
+                    </div>
+
+                    <form method="GET" action="/gex-history" class="mt-6 flex items-center gap-4">
+                        <div>
+                            <label for="symbol" class="text-white">Symbol:</label>
+                            <input type="text" id="symbol" name="symbol" value="{{.Symbol}}" class="block rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6">
+                        </div>
+
+                        <div>
+                            <label for="limit" class="text-white">Records:</label>
+                            <select id="limit" name="limit" class="block rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6">
+                                <option value="5" {{if eq .Limit 5}}selected{{end}}>5</option>
+                                <option value="10" {{if eq .Limit 10}}selected{{end}}>10</option>
+                                <option value="20" {{if eq .Limit 20}}selected{{end}}>20</option>
+                                <option value="50" {{if eq .Limit 50}}selected{{end}}>50</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="rounded-md bg-teal-500 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-400">View History</button>
+                    </form>
+
+                    <div class="mt-8 flow-root">
+                        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                <table class="min-w-full divide-y divide-gray-700">
+                                    <thead class="bg-gray-800">
+                                    <tr>
+                                        <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-0">Collection Time</th>
+                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">Expiry Date</th>
+                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">Spot Price</th>
+                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">Total GEX</th>
+                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">Top GEX by Strike</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-800 bg-gray-900">
+                                    {{range .History}}
+                                    <tr>
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0">{{.CollectedAt.Format "Jan 02, 2006 15:04:05"}}</td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{{.ExpiryDate}}</td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">${{printf "%.2f" .SpotPrice}}</td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm {{if gt .TotalGex 0.0}}text-green-400{{else}}text-red-400{{end}}">{{printf "%.2f" .TotalGex}}</td>
+                                        <td class="py-4 px-3 text-sm text-gray-300">
+                                            <table class="min-w-full">
+                                                <thead class="bg-gray-700">
+                                                    <tr>
+                                                        <th class="py-2 px-2 text-left text-xs font-semibold text-white">Strike</th>
+                                                        <th class="py-2 px-2 text-left text-xs font-semibold text-white">GEX Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-gray-800">
+                                                {{range .TopGexByStrike}}
+                                                    <tr>
+                                                        <td class="whitespace-nowrap py-1 px-2 text-xs text-gray-300">${{printf "%.2f" .Strike}}</td>
+                                                        <td class="whitespace-nowrap py-1 px-2 text-xs {{if gt .Value 0.0}}text-green-400{{else}}text-red-400{{end}}">{{printf "%.2f" .Value}}</td>
+                                                    </tr>
+                                                {{end}}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div>
-            <label for="limit">Records:</label>
-            <select id="limit" name="limit">
-                <option value="5" {{if eq .Limit 5}}selected{{end}}>5</option>
-                <option value="10" {{if eq .Limit 10}}selected{{end}}>10</option>
-                <option value="20" {{if eq .Limit 20}}selected{{end}}>20</option>
-                <option value="50" {{if eq .Limit 50}}selected{{end}}>50</option>
-            </select>
-        </div>
-
-        <button type="submit">View History</button>
-    </form>
-
-    <table>
-        <thead>
-        <tr>
-            <th>Collection Time</th>
-            <th>Expiry Date</th>
-            <th>Spot Price</th>
-            <th>Total GEX</th>
-            <th>Top GEX by Strike</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{range .History}}
-        <tr>
-            <td>{{.CollectedAt.Format "Jan 02, 2006 15:04:05"}}</td>
-            <td>{{.ExpiryDate}}</td>
-            <td>${{printf "%.2f" .SpotPrice}}</td>
-            <td class="{{if gt .TotalGex 0.0}}positive{{else}}negative{{end}}">
-                {{printf "%.2f" .TotalGex}}
-            </td>
-            <td>
-                <table class="nested-table">
-                    <thead>
-                    <tr>
-                        <th>Strike</th>
-                        <th>GEX Value</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {{range .TopGexByStrike}}
-                    <tr>
-                        <td>${{printf "%.2f" .Strike}}</td>
-                        <td class="{{if gt .Value 0.0}}positive{{else}}negative{{end}}">
-                            {{printf "%.2f" .Value}}
-                        </td>
-                    </tr>
-                    {{end}}
-                    </tbody>
-                </table>
-            </td>
-        </tr>
-        {{end}}
-        </tbody>
-    </table>
-</div>
+    </div>
+</main>
 </body>
 </html>

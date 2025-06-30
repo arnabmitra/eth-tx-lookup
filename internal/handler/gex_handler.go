@@ -705,3 +705,39 @@ type GexHistoryRecord struct {
 	SpotPrice      float64          `json:"spot_price"`
 	TopGexByStrike []GexStrikeValue `json:"top_gex_by_strike"`
 }
+
+func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
+	mag7 := []string{"AAPL", "MSFT", "GOOG", "AMZN", "NVDA", "TSLA", "META"}
+	var imagePaths []string
+
+	for _, symbol := range mag7 {
+		gexByStrike, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
+		if err != nil {
+			h.logger.Error("failed to calculate GEX for all expiries", "error", err, "symbol", symbol)
+			continue
+		}
+
+		apiKey := os.Getenv("TRADIER_API_KEY")
+		price, err := gex.GetSpotPrice(apiKey, symbol)
+		if err != nil {
+			h.logger.Error("failed to get spot price", "error", err, "symbol", symbol)
+			continue
+		}
+
+		outputPath := filepath.Join("static", "gex_chart_"+symbol+".png")
+		err = gex.CreateGEXPlot(gexByStrike, symbol+" (All Expiries)", outputPath, price)
+		if err != nil {
+			h.logger.Error("failed to create GEX plot", "error", err, "symbol", symbol)
+			continue
+		}
+		imagePaths = append(imagePaths, "/"+outputPath)
+	}
+
+	err := h.tmpl.ExecuteTemplate(w, "mag7_gex.html", map[string]interface{}{
+		"ImagePaths": imagePaths,
+	})
+	if err != nil {
+		h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
+		return
+	}
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="min-h-screen h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css?v=123456"/>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+</head>
+<!-- FONTS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap"
+      rel="stylesheet">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-VD3FWBHF4C');
+</script>
+<body class="h-screen bg-gray-950 font-[Poppins] ">
+<header class="bg-gray-950 text-white py-4">
+    <div class="nav-links container mx-auto flex justify-between items-center left-0 top-[-100%]">
+        <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
+                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
+                <li><a href="/all-gex" class="hover:text-indigo-400">All Expiries GEX</a></li>
+                <li><a href="/mag7-gex" class="hover:text-indigo-400">MAG7 GEX</a></li>
+                <li><a href="/gex-history?symbol=SPY&limit=5" class="hover:text-indigo-400">GEX History</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+<main class="">
+    <div class="bg-gray-950">
+        <div class="mx-auto max-w-7xl">
+            <div class="bg-gray-950 py-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <h1 class="text-4xl font-semibold leading-6 text-white">MAG7 GEX Analysis</h1>
+                    <div class="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+                        {{range .ImagePaths}}
+                        <div class="bg-gray-800 rounded-lg shadow-lg p-4">
+                            <img src="{{.}}" alt="GEX Chart" class="w-full">
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

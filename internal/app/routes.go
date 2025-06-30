@@ -26,5 +26,6 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 	a.router.HandleFunc("/all-gex", gexHandler.AllGEXHandler)
 
 	a.router.HandleFunc("/gex-history", gexHandler.DisplayGEXHistoryPage)
+	a.router.HandleFunc("/mag7-gex", gexHandler.MAG7GEXHandler)
 	return gexHandler
 }
