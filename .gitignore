@@ -8,3 +8,9 @@ db
 .codegpt
 
 vendor/
+
+static/
+
+.zed/
+.zed/*
+__**

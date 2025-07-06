@@ -21,7 +21,7 @@ func NewGEXCollector(gexHandler *handler.GEXHandler, symbols []string) *GexColle
 	return &GexCollector{
 		gexHandler: gexHandler,
 		symbols:    symbols,
-		interval:   5 * time.Minute,
+		interval:   30 * time.Minute,
 		stop:       make(chan struct{}),
 	}
 }
@@ -48,11 +48,47 @@ func (c *GexCollector) Stop() {
 	close(c.stop)
 }
 
+// isMarketOpen checks if the US stock market is currently open (9:30 AM - 4:00 PM ET, Mon-Fri).
+func isMarketOpen() bool {
+	loc, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		fmt.Printf("Error loading location: %v\\n", err)
+		return false // Default to not open if location cannot be loaded
+	}
+
+	now := time.Now().In(loc)
+	weekday := now.Weekday()
+	hour := now.Hour()
+	minute := now.Minute()
+
+	// Check if it's a weekday (Monday to Friday)
+	if weekday < time.Monday || weekday > time.Friday {
+		return false
+	}
+
+	// Check if it's within market hours (9:30 AM to 4:00 PM ET)
+	// Market opens at 9:30
+	if hour < 9 || (hour == 9 && minute < 30) {
+		return false
+	}
+	// Market closes at 16:00
+	if hour >= 16 {
+		return false
+	}
+
+	return true
+}
+
 func (c *GexCollector) collectGEXData() {
+	if !isMarketOpen() {
+		fmt.Printf("[%s] Market is closed. Skipping GEX data collection.\\n", time.Now().Format(time.RFC3339))
+		return
+	}
+
 	startTime := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	fmt.Printf("[%s] Starting GEX data collection for symbols: %v\n", startTime.Format(time.RFC3339), c.symbols)
+	fmt.Printf("[%s] Starting GEX data collection for symbols: %v\\n", startTime.Format(time.RFC3339), c.symbols)
 	for _, symbol := range c.symbols {
 
 		// Get the nearest expiry date
@@ -69,7 +105,7 @@ func (c *GexCollector) collectGEXData() {
 
 			expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
 			if err != nil {
-				fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
+				fmt.Printf("Error marshalling expiration dates to JSON: %v\\n", err)
 				return
 			}
 			fmt.Println(string(expirationDatesJSON))
@@ -113,7 +149,7 @@ func (c *GexCollector) collectGEXData() {
 		for _, gexValue := range gexByStrike {
 			totalGEX += gexValue
 		}
-		fmt.Printf("[%s] Total GEX for %s (expiry %s): %.2f\n",
+		fmt.Printf("[%s] Total GEX for %s (expiry %s): %.2f\\n",
 			time.Now().Format(time.RFC3339), symbol, nearestExpiry, totalGEX)
 
 		// Store in the database
@@ -123,7 +159,7 @@ func (c *GexCollector) collectGEXData() {
 		}
 	}
 
-	fmt.Printf("[%s] Completed GEX data collection in %v\n",
+	fmt.Printf("[%s] Completed GEX data collection in %v\\n",
 		time.Now().Format(time.RFC3339),
 		time.Since(startTime))
 }

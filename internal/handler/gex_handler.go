@@ -244,8 +244,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
+func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {	if r.Method == http.MethodPost {
 		symbol := r.FormValue("symbol")
 		expiration := r.FormValue("expiration")
 
