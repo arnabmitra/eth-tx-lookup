@@ -178,20 +178,20 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 	}
 
 	// Create positive bars (green)
-	posBar, err := plotter.NewBarChart(posPoints, vg.Points(10))
+	posBar, err := plotter.NewBarChart(posPoints, vg.Points(5))
 	if err != nil {
 		return err
 	}
 	posBar.Color = color.RGBA{G: 255, A: 255}
-	posBar.Offset = vg.Points(5)
+	posBar.Offset = vg.Points(0)
 
 	// Create negative bars (red)
-	negBar, err := plotter.NewBarChart(negPoints, vg.Points(10))
+	negBar, err := plotter.NewBarChart(negPoints, vg.Points(5))
 	if err != nil {
 		return err
 	}
 	negBar.Color = color.RGBA{R: 255, A: 255}
-	negBar.Offset = vg.Points(5)
+	negBar.Offset = vg.Points(0)
 
 	// Create labels for the bars
 	labelPoints := make(plotter.XYs, len(labels))
