@@ -1,225 +1,341 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="min-h-screen h-full">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css?v=123456"/>
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
-     crossorigin="anonymous"></script>
-    <style>
-        .form-container {
-            width: 100%;
-            max-width: 100%;
-            padding: 1rem;
-        }
-
-        .form-container input,
-        .form-container select {
-            width: 100%;
-            max-width: 100%;
-            margin-bottom: 1rem;
-        }
-    </style>
-</head>
-<!-- FONTS -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap"
-      rel="stylesheet">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-VD3FWBHF4C');
-</script>
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Debounce function
-        let debounceTimeout;
-        function debounce(func, delay) {
-            return function (...args) {
-                clearTimeout(debounceTimeout);
-                debounceTimeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        // Fetch expiry dates function
-        const debouncedFetchExpiryDates = debounce(function () {
-            const symbol = document.getElementById('symbol').value;
-            if (symbol.length === 0) {
-                return;
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/static/css/style.css?v=123456" />
+        <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+        <script
+            src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+            defer
+        ></script>
+        <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
+            crossorigin="anonymous"
+        ></script>
+        <style>
+            .form-container {
+                width: 100%;
+                max-width: 100%;
+                padding: 1rem;
             }
 
-            fetch(`/expiry-dates?symbol=${symbol}`)
-                .then(response => response.json())
-                .then(data => {
-                    const expirationSelect = document.getElementById('expiration');
-                    expirationSelect.innerHTML = '';
-                    data.forEach(date => {
-                        const option = document.createElement('option');
-                        option.value = date;
-                        option.textContent = date;
-                        expirationSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error fetching expiry dates:', error));
-        }, 500);
-
-        // TradingView widget initialization
-        function initTradingViewWidget(symbol) {
-            const container = document.getElementById('tradingview_chart');
-            // Clear previous chart
-            container.innerHTML = '';
-
-            new TradingView.widget({
-                "container_id": "tradingview_chart",
-                "symbol": symbol, // This was missing the property name
-                "interval": "Etc/UTC",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "toolbar_bg": "#f1f3f6",
-                "enable_publishing": false,
-                "hide_top_toolbar": false,
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
-                "studies": [
-                    "MASimple@tv-basicstudies",
-                    "MACD@tv-basicstudies"
-                ],
-                "height": 800,
-                "width": "100%"
-            });
+            .form-container input,
+            .form-container select {
+                width: 100%;
+                max-width: 100%;
+                margin-bottom: 1rem;
+            }
+        </style>
+    </head>
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    />
+    <!-- Google tag (gtag.js) -->
+    <script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"
+    ></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
         }
+        gtag("js", new Date());
 
-        // Add event listeners
-        const symbolInput = document.getElementById('symbol');
-        if (symbolInput) {
-            symbolInput.addEventListener('input', debouncedFetchExpiryDates);
-            symbolInput.addEventListener('change', function() {
-                const symbol = this.value.toUpperCase();
-                if (symbol) {
-                    initTradingViewWidget(symbol);
+        gtag("config", "G-VD3FWBHF4C");
+    </script>
+    <script
+        type="text/javascript"
+        src="https://s3.tradingview.com/tv.js"
+    ></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Debounce function
+            let debounceTimeout;
+            function debounce(func, delay) {
+                return function (...args) {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(
+                        () => func.apply(this, args),
+                        delay,
+                    );
+                };
+            }
+
+            // Fetch expiry dates function
+            const debouncedFetchExpiryDates = debounce(function () {
+                const symbol = document.getElementById("symbol").value;
+                if (symbol.length === 0) {
+                    return;
                 }
-            });
-        }
 
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('htmx:afterOnLoad', function(evt) {
-                const symbol = document.getElementById('symbol').value.toUpperCase();
-                if (symbol) {
-                    setTimeout(() => {
+                fetch(`/expiry-dates?symbol=${symbol}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const expirationSelect =
+                            document.getElementById("expiration");
+                        expirationSelect.innerHTML = "";
+                        data.forEach((date) => {
+                            const option = document.createElement("option");
+                            option.value = date;
+                            option.textContent = date;
+                            expirationSelect.appendChild(option);
+                        });
+                    })
+                    .catch((error) =>
+                        console.error("Error fetching expiry dates:", error),
+                    );
+            }, 500);
+
+            // TradingView widget initialization
+            function initTradingViewWidget(symbol) {
+                const container = document.getElementById("tradingview_chart");
+                // Clear previous chart
+                container.innerHTML = "";
+
+                new TradingView.widget({
+                    container_id: "tradingview_chart",
+                    symbol: symbol, // This was missing the property name
+                    interval: "Etc/UTC",
+                    theme: "dark",
+                    style: "1",
+                    locale: "en",
+                    toolbar_bg: "#f1f3f6",
+                    enable_publishing: false,
+                    hide_top_toolbar: false,
+                    hide_side_toolbar: false,
+                    allow_symbol_change: true,
+                    studies: [
+                        "MASimple@tv-basicstudies",
+                        "MACD@tv-basicstudies",
+                    ],
+                    height: 800,
+                    width: "100%",
+                });
+            }
+
+            // Add event listeners
+            const symbolInput = document.getElementById("symbol");
+            if (symbolInput) {
+                symbolInput.addEventListener(
+                    "input",
+                    debouncedFetchExpiryDates,
+                );
+                symbolInput.addEventListener("change", function () {
+                    const symbol = this.value.toUpperCase();
+                    if (symbol) {
                         initTradingViewWidget(symbol);
-                    }, 500);
-                }
-            });
-        }
-    });
-</script>
+                    }
+                });
+            }
 
+            const form = document.querySelector("form");
+            if (form) {
+                form.addEventListener("htmx:afterOnLoad", function (evt) {
+                    const symbol = document
+                        .getElementById("symbol")
+                        .value.toUpperCase();
+                    if (symbol) {
+                        setTimeout(() => {
+                            initTradingViewWidget(symbol);
+                        }, 500);
+                    }
+                });
+            }
+        });
+    </script>
 
+    <body class="h-screen bg-gray-950 font-[Poppins]">
+        <header class="bg-gray-950 text-white py-4">
+            <div
+                class="nav-links container mx-auto flex justify-between items-center left-0 top-[-100%]"
+            >
+                <h1 class="text-4xl font-semibold leading-6 text-white">
+                    Gamma Exposure(GEX) Tool
+                </h1>
+                <nav>
+                    <ul class="flex space-x-4">
+                        <li>
+                            <a href="/about" class="hover:text-indigo-400"
+                                >GEX Trading</a
+                            >
+                        </li>
+                        <li>
+                            <a href="/gex" class="hover:text-indigo-400"
+                                >GEX Tracker</a
+                            >
+                        </li>
+                        <li>
+                            <a href="/all-gex" class="hover:text-indigo-400"
+                                >All Expiries GEX</a
+                            >
+                        </li>
+                        <li>
+                            <a href="/mag7-gex" class="hover:text-indigo-400"
+                                >MAG7 GEX</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="/gex-history?symbol=SPY&limit=5"
+                                class="hover:text-indigo-400"
+                                >GEX History</a
+                            >
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <main class="">
+            <div class="bg-gray-950">
+                <div class="mx-auto max-w-7xl">
+                    <div class="bg-gray-950 py-10">
+                        <div class="px-4 sm:px-6 lg:px-8">
+                            <div class="form-container">
+                                {{ if not .ImagePath }}
+                                <p class="mt-2 text-lg leading-8 text-gray-300">
+                                    Gamma Exposure (GEX) also known as Gamma
+                                    Levels, measures the change in delta
+                                    exposure for options based on changes in the
+                                    underlying price. Gamma exposure highlights
+                                    important price levels where there is
+                                    significant gamma based on market
+                                    positioning and open interest. These
+                                    elevated values reflect where market-makers
+                                    may need to hedge to mitigate their risk,
+                                    offering important levels of support and
+                                    resistance. By default, gamma exposure
+                                    levels are calculated on 4 nearby
+                                    expirations, based on a 1% move of the
+                                    underlying security using gamma and open
+                                    interest. Gamma exposure is calculated and
+                                    updated throughout the day. Current gamma
+                                    values, volume, and open interest can be
+                                    found in the Volatilities & Greeks page for
+                                    the security. For more information
+                                </p>
+                                <p class="mt-2 text-lg leading-8 text-gray-300">
+                                    This tool tracks current dealers' notional
+                                    gamma exposure (GEX).
+                                </p>
+                                <p class="mt-2 text-lg leading-6 text-gray-400">
+                                    Enter a symbol( e.g TSLA, NVDA, DIS etc) and
+                                    an expiration date to generate a GEX chart.
+                                </p>
+                                <form
+                                    hx-post="/gex"
+                                    hx-target="#gex-chart"
+                                    hx-swap="innerHTML"
+                                >
+                                    <label for="symbol">Symbol:</label>
+                                    <input
+                                        type="text"
+                                        name="symbol"
+                                        id="symbol"
+                                        required
+                                        oninput="debouncedFetchExpiryDates()"
+                                        class="block rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6"
+                                        placeholder="Enter Symbol"
+                                    />
+                                    <label for="expiration"
+                                        >Options Expiration Date:</label
+                                    >
+                                    <select
+                                        id="expiration"
+                                        name="expiration"
+                                        required
+                                        class="block rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6"
+                                    >
+                                        <!-- Options will be populated dynamically -->
+                                    </select>
+                                    <button
+                                        type="submit"
+                                        class="block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                                    >
+                                        Generate Chart
+                                    </button>
+                                </form>
+                                {{ end }}
+                            </div>
 
-
-
-<body class="h-screen bg-gray-950 font-[Poppins] ">
-<header class="bg-gray-950 text-white py-4">
-    <div class="nav-links container mx-auto flex justify-between items-center left-0 top-[-100%]">
-        <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
-        <nav>
-            <ul class="flex space-x-4">
-                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
-                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
-                <li><a href="/all-gex" class="hover:text-indigo-400">All Expiries GEX</a></li>
-                <li><a href="/mag7-gex" class="hover:text-indigo-400">MAG7 GEX</a></li>
-                <li><a href="/gex-history?symbol=SPY&limit=5" class="hover:text-indigo-400">GEX History</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
-<main class="">
-    <div class="bg-gray-950">
-        <div class="mx-auto max-w-7xl">
-            <div class="bg-gray-950 py-10">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="form-container">
-                        {{ if not .ImagePath }}
-                        <p class="mt-2 text-lg leading-8 text-gray-300">This tool tracks current dealers' notional
-                            gamma exposure (GEX). </p>
-                        <p class="mt-2 text-lg leading-6 text-gray-400">Enter a symbol( e.g TSLA, NVDA, DIS etc) and an expiration date to
-                            generate a GEX chart.</p>
-                        <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
-                            <label for="symbol">Symbol:</label>
-                            <input type="text" name="symbol" id="symbol" required
-                                   oninput="debouncedFetchExpiryDates()"
-                                   class="block rounded-md border-0 py-2 text-gray-900
-              shadow-sm ring-1 ring-inset ring-gray-300
-              placeholder:text-gray-400 focus:ring-2 focus:ring-inset
-              focus:ring-indigo-600 sm:text-md sm:leading-6"
-                                   placeholder="Enter Symbol" >
-                            <label for="expiration">Options Expiration Date:</label>
-                            <select id="expiration" name="expiration" required class="block rounded-md border-0 py-2 text-gray-900
-              shadow-sm ring-1 ring-inset ring-gray-300
-              placeholder:text-gray-400 focus:ring-2 focus:ring-inset
-              focus:ring-indigo-600 sm:text-md sm:leading-6">
-                                <!-- Options will be populated dynamically -->
-                            </select>
-                            <button type="submit"
-                                    class="block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                                Generate Chart
-                            </button>
-                        </form>
-                        {{ end }}
-                    </div>
-
-                    <div id="gex-chart" class="mt-10">
-                        {{ if .ImagePath }}
-                        <img src="{{ .ImagePath }}" alt="GEX Chart Tool" class="mx-auto">
-                        {{ end }}
-                    </div>
-                    {{ if .GEXData }}
-                    <div class="mt-10">
-                        <h2 class="text-2xl font-semibold leading-6 text-white">Gamma Exposure (GEX) per Strike Price
-                            (Sorted):</h2>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-800">
-                            <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Strike Price
-                                </th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    GEX
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody class="bg-gray-700 divide-y divide-gray-600">
-                            {{ range .GEXData }}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300">{{ .Strike
-                                        }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ .GEX }}</td>
-                            </tr>
+                            <div id="gex-chart" class="mt-10">
+                                {{ if .ImagePath }}
+                                <img
+                                    src="{{ .ImagePath }}"
+                                    alt="GEX Chart Tool"
+                                    class="mx-auto"
+                                />
+                                {{ end }}
+                            </div>
+                            {{ if .GEXData }}
+                            <div class="mt-10">
+                                <h2
+                                    class="text-2xl font-semibold leading-6 text-white"
+                                >
+                                    Gamma Exposure (GEX) per Strike Price
+                                    (Sorted):
+                                </h2>
+                                <table
+                                    class="min-w-full divide-y divide-gray-200"
+                                >
+                                    <thead class="bg-gray-800">
+                                        <tr>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Strike Price
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                                            >
+                                                GEX
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody
+                                        class="bg-gray-700 divide-y divide-gray-600"
+                                    >
+                                        {{ range .GEXData }}
+                                        <tr>
+                                            <td
+                                                class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300"
+                                            >
+                                                {{ .Strike }}
+                                            </td>
+                                            <td
+                                                class="px-6 py-4 whitespace-nowrap text-sm text-gray-300"
+                                            >
+                                                {{ .GEX }}
+                                            </td>
+                                        </tr>
+                                        {{ end }}
+                                    </tbody>
+                                </table>
+                            </div>
                             {{ end }}
-                            </tbody>
-                        </table>
+                            <!-- Add this div after the gex-chart div -->
+                            <div
+                                id="tradingview_chart"
+                                class="mt-10"
+                                style="
+                                    height: 800px;
+                                    width: 100%;
+                                    max-width: 1400px;
+                                    margin: 0 auto;
+                                "
+                            ></div>
+                        </div>
                     </div>
-                    {{ end }}
-                    <!-- Add this div after the gex-chart div -->
-                    <div id="tradingview_chart" class="mt-10" style="height: 800px; width: 100%; max-width: 1400px; margin: 0 auto;"></div>
                 </div>
             </div>
-        </div>
-    </div>
-
-</main>
-</body>
+        </main>
+    </body>
 </html>
