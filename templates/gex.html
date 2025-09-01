@@ -199,29 +199,21 @@
                         <div class="px-4 sm:px-6 lg:px-8">
                             <div class="form-container">
                                 {{ if not .ImagePath }}
-                                <p
-                                    class="mt-2 text-base leading-6 text-gray-300"
+                                <div
+                                    class="bg-gray-800 border-l-4 border-teal-500 text-gray-300 p-4 mt-4 rounded-md"
                                 >
-                                    Gamma Exposure (GEX) also known as Gamma
-                                    Levels, measures the change in delta
-                                    exposure for options based on changes in the
-                                    underlying price. Gamma exposure highlights
-                                    important price levels where there is
-                                    significant gamma based on market
-                                    positioning and open interest. These
-                                    elevated values reflect where market-makers
-                                    may need to hedge to mitigate their risk,
-                                    offering important levels of support and
-                                    resistance. By default, gamma exposure
-                                    levels are calculated on 4 nearby
-                                    expirations, based on a 1% move of the
-                                    underlying security using gamma and open
-                                    interest. Gamma exposure is calculated and
-                                    updated throughout the day. Current gamma
-                                    values, volume, and open interest can be
-                                    found in the Volatilities & Greeks page for
-                                    the security.
-                                </p>
+                                    <p class="font-bold text-white">
+                                        What is Gamma Exposure (GEX)?
+                                    </p>
+                                    <p class="text-sm mt-2 px-4">
+                                        Gamma Exposure (GEX) measures how
+                                        options delta exposure changes with the
+                                        underlying price. High GEX levels
+                                        indicate significant market-maker
+                                        hedging, creating potential support and
+                                        resistance. For more details, see our page on <a href="/about" class="text-teal-400 hover:text-teal-300">GEX Trading</a>.
+                                    </p>
+                                </div>
                                 <p class="mt-2 text-lg leading-8 text-gray-300">
                                     This tool tracks current dealers' notional
                                     gamma exposure (GEX).
