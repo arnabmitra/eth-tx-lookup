@@ -1,83 +1,329 @@
 <!DOCTYPE html>
-<html lang="en" class="min-h-screen h-full">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEX Trading</title>
-    <link rel="stylesheet" href="/static/css/style.css?v=123456"/>
+    <title>GEX Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
-     crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark Gray */
+            color: #d1d5db; /* Light Gray */
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background-color: #1f2937; /* Darker Gray */
+            border: 1px solid #374151; /* Gray border */
+            border-radius: 0.75rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        .cta-button {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: inline-block;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 10px -3px rgba(52, 211, 153, 0.3), 0 4px 6px -2px rgba(96, 165, 250, 0.3);
+        }
+    </style>
 </head>
-<body class="h-screen bg-gray-950 font-[Poppins]">
-<header class="bg-gray-950 text-white py-4">
-    <div class="nav-links container mx-auto flex justify-between items-center">
-        <h1 class="text-4xl font-semibold leading-6 text-white">Gamma Exposure(GEX) Tool</h1>
-        <nav>
-            <ul class="flex space-x-4">
-                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
-                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
-                <li><a href="/all-gex" class="hover:text-indigo-400">All Expiries GEX</a></li>
-                <li><a href="/mag7-gex" class="hover:text-indigo-400">MAG7 GEX</a></li>
-                <li><a href="/gex-history?symbol=SPY&limit=5" class="hover:text-indigo-400">GEX History</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
-<main>
-    <div class="bg-gray-950">
-        <div class="mx-auto max-w-7xl">
-            <div class="bg-gray-950 py-10">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="sm:flex sm:items-center">
-                        <div class="sm:flex-auto">
-                            <h1 class="text-4xl font-semibold leading-6 text-white">How to Trade Using Gamma Exposure (GEX)</h1>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
+                </div>
+                <nav class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
+                        <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
+                        <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
+                        <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                <span>More</span>
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                                <a href="/all-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">All Expiries GEX</a>
+                                <a href="/mag7-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">MAG7 GEX</a>
+                                <a href="/gex-history?symbol=SPY&limit=5" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">GEX History</a>
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-10 space-y-8 text-gray-300">
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">What is Gamma Exposure (GEX) and How Can It Improve Your Trading?</h2>
-                            <p>For traders navigating the fast-paced financial markets, understanding Gamma Exposure (GEX) and its related concepts can offer valuable insights. This guide simplifies GEX, Delta Hedging, and how they influence trading strategies.</p>
+                </nav>
+                <div class="md:hidden">
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu, show/hide based on menu state. -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
+                <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
+                <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
+                <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+                <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+                <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
+                <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Hero Section -->
+        <section class="text-center mb-20" id="learn">
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">Master Options Trading with <span class="gradient-text">Gamma Exposure</span></h1>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-400 mb-8">Unlock market insights by understanding how dealer positioning can influence price movements. This guide will turn complex concepts into actionable trading knowledge.</p>
+            <a href="/gex" class="cta-button">Go to GEX Tracker</a>
+        </section>
+
+        <!-- What is Gamma Exposure -->
+        <section class="mb-20">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-8">What is Gamma Exposure (GEX)?</h2>
+                <div class="card p-8 space-y-6">
+                    <p class="text-lg">Gamma Exposure, or GEX, is a measure of the sensitivity of option delta to changes in the underlying asset's price. In simpler terms, it shows how much market makers and dealers will need to buy or sell of an asset to hedge their positions as the price moves.</p>
+                    <div class="flex flex-col md:flex-row items-center gap-8 bg-gray-900 p-6 rounded-lg">
+                        <div class="flex-shrink-0">
+                           <img src="https://placehold.co/150x150/1f2937/34d399?text=GEX+Visual" alt="GEX Analogy" class="rounded-lg">
                         </div>
                         <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">Delta Hedging and Market Liquidity</h2>
-                            <p>Delta hedging is a strategy used by market makers to manage risks from price changes in underlying assets. By trading the underlying asset as markets fluctuate, they maintain balanced positions, ensuring market stability and liquidity.</p>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">The Role of Liquidity in Trading</h2>
-                            <p>Liquidity refers to how easily assets can be traded without causing significant price changes. In liquid markets with tight spreads, market makers can hedge risks more efficiently. Low liquidity, however, results in higher implied volatility, making markets more sensitive to large trades.</p>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">Understanding Gamma and Delta Hedging</h2>
-                            <p>Gamma measures how much delta changes concerning price movements in the underlying asset. It provides insight into potential market maker activities, helping traders anticipate market trends.</p>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">Long Gamma vs. Short Gamma Positions</h2>
-                            <ul class="list-disc list-inside">
-                                <li><strong>Long Gamma:</strong> Stabilizes the market as market makers buy during price drops and sell during price rises.</li>
-                                <li><strong>Short Gamma:</strong> Amplifies market moves as market makers buy during price increases and sell during price decreases.</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">Using Gamma Exposure in Your Trading</h2>
-                            <p>By analyzing gamma levels, traders can gain a clearer picture of structural flows and market dynamics. Tools that track net gamma exposure can be particularly useful for making informed trading decisions.</p>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">How is this Gamma Exposure (GEX) calculated</h2>
-                            <p class="font-mono bg-gray-800 p-4 rounded-md">spot * spot * gamma * open_interest * contract_size * 0.01</p>
-                            <p class="mt-2">Then add up all Call and Put Gamma at each strike level, and present the net Gamma Exposure for that level.</p>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-semibold leading-6 text-white">What Does this GEX calculator do</h2>
-                            <p>Firstly this is a free tool, traders can calculate the gex levels for a given symbol at a given expiry date. For e.g below is the gex levels for NVDA for 12/27/2024 expiry date. As you can see as of writing this page on 12/25/2024 the gex levels for NVDA is maximum at 140, i would expect the price tomorrow to open and stay around 140 till the gex levels change. That would the next iteration of that tool to calculate and show how gex has changed over time.</p>
-                            <img src="/static/static_images/gex_chart_NVDA.png" alt="GEX Chart for NVDA" class="mt-4 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-semibold text-emerald-400">The "Price Magnet" Analogy</h3>
+                            <p class="mt-2 text-gray-300">Think of GEX as a gravitational pull on the stock price.
+                                <br>
+                                <strong class="text-white">High Positive Gamma:</strong> Acts like a stabilizer. As the price moves away from a key level, dealers hedge by buying dips and selling rips, often pinning the price in a range.
+                                <br>
+                                <strong class="text-white">High Negative Gamma:</strong> Acts like an accelerator. As the price moves, dealers are forced to chase it—selling more as it drops and buying more as it rises, which can lead to volatile, trending moves.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- How to Use the Tracker -->
+        <section class="mb-20">
+             <h2 class="text-3xl font-bold text-center mb-8">How to Use the GEX Tracker</h2>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card p-8">
+                   <h3 class="text-2xl font-semibold mb-4">Interpreting the Chart</h3>
+                   <p class="mb-4">Our tracker visualizes these "magnet" levels for any given stock and expiration date. Here's how to read it:</p>
+                   <ul class="space-y-3 text-gray-300">
+                       <li class="flex items-start">
+                           <svg class="w-5 h-5 mr-2 mt-1 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                           <span><strong class="text-white">Large Green Bars (Positive Gamma):</strong> Indicate significant price levels where the price may become "sticky" and act as support or resistance.</span>
+                       </li>
+                       <li class="flex items-start">
+                           <svg class="w-5 h-5 mr-2 mt-1 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                           <span><strong class="text-white">Large Red Bars (Negative Gamma):</strong> Highlight levels where a price breach could lead to accelerated, volatile moves.</span>
+                       </li>
+                       <li class="flex items-start">
+                            <svg class="w-5 h-5 mr-2 mt-1 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                           <span><strong class="text-white">Zero Gamma Level:</strong> This is the tipping point. A cross above or below this level can signal a shift in the market's hedging dynamics from stable to volatile, or vice-versa.</span>
+                       </li>
+                   </ul>
+                </div>
+                <div>
+                    <img src="/static/static_images/gex_chart_NVDA.png" alt="GEX Tracker Interface" class="rounded-lg shadow-2xl border-2 border-gray-700">
+                </div>
+            </div>
+        </section>
+
+        <!-- Trading Strategies -->
+        <section class="mb-20" id="strategies">
+            <h2 class="text-3xl font-bold text-center mb-8">Trading Strategies with GEX Analysis</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Strategy 1 -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-3">Identifying Support & Resistance</h3>
+                    <p class="text-gray-400">Look for the largest positive gamma bars. These levels often act as strong magnets for price. A trader might look to sell calls or puts around these levels, expecting the price to revert to them, or use them as profit targets.</p>
+                </div>
+                <!-- Strategy 2 -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-3">Playing Volatility Breakouts</h3>
+                    <p class="text-gray-400">When the stock price approaches the Zero Gamma level or a large negative gamma zone, it's a signal that volatility could expand. A breach of these levels can be a trigger for entering trend-following trades like buying a call or put.</p>
+                </div>
+                <!-- Strategy 3 -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-3">Trend & Reversal Confirmation</h3>
+                    <p class="text-gray-400">Use GEX levels to confirm your existing analysis. If a stock is approaching a key support level on your chart that also corresponds with a high positive gamma level, it adds conviction to a potential bounce trade.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="max-w-3xl mx-auto" id="faq">
+            <h2 class="text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">What is GEX and how can it improve trading?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">For traders navigating the fast-paced financial markets, understanding Gamma Exposure (GEX) and its related concepts can offer valuable insights. This guide simplifies GEX, Delta Hedging, and how they influence trading strategies.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">What is Delta Hedging and Market Liquidity?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">Delta hedging is a strategy used by market makers to manage risks from price changes in underlying assets. By trading the underlying asset as markets fluctuate, they maintain balanced positions, ensuring market stability and liquidity.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">What is the Role of Liquidity in Trading?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">Liquidity refers to how easily assets can be traded without causing significant price changes. In liquid markets with tight spreads, market makers can hedge risks more efficiently. Low liquidity, however, results in higher implied volatility, making markets more sensitive to large trades.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">How do Gamma and Delta Hedging relate?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">Gamma measures how much delta changes concerning price movements in the underlying asset. It provides insight into potential market maker activities, helping traders anticipate market trends.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">What are Long and Short Gamma positions?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <ul class="list-disc list-inside text-gray-400">
+                            <li><strong>Long Gamma:</strong> Stabilizes the market as market makers buy during price drops and sell during price rises.</li>
+                            <li><strong>Short Gamma:</strong> Amplifies market moves as market makers buy during price increases and sell during price decreases.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">How often is the GEX data updated?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">Our GEX data is calculated and updated throughout the trading day to provide you with the most current market positioning information.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">Is GEX a guaranteed predictor of price movement?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">No trading tool is a crystal ball. GEX is a powerful analytical tool that provides insight into market structure and potential pressure points. It should be used in conjunction with other forms of analysis, not as a standalone signal.</p>
+                    </div>
+                </div>
+                 <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">What does a GEX of $500M mean?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">A GEX of $500M means that for every 1% move in the underlying stock, market makers would theoretically need to buy or sell $500 million worth of the stock to remain hedged. The sign (positive/negative) determines the direction of their hedging.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">How is Gamma Exposure (GEX) calculated?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="font-mono bg-gray-800 p-4 rounded-md text-gray-400">spot * spot * gamma * open_interest * contract_size * 0.01</p>
+                        <p class="mt-2 text-gray-400">Then add up all Call and Put Gamma at each strike level, and present the net Gamma Exposure for that level.</p>
+                    </div>
+                </div>
+                <div class="faq-item card p-2">
+                    <button class="faq-question w-full text-left flex justify-between items-center p-4">
+                        <span class="text-lg font-semibold">What does the GEX calculator do?</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-answer hidden p-4 pt-0">
+                        <p class="text-gray-400">Firstly this is a free tool, traders can calculate the gex levels for a given symbol at a given expiry date. For e.g below is the gex levels for NVDA for 12/27/2024 expiry date. As you can see as of writing this page on 12/25/2024 the gex levels for NVDA is maximum at 140, i would expect the price tomorrow to open and stay around 140 till the gex levels change. That would the next iteration of that tool to calculate and show how gex has changed over time.</p>
+                        <img src="/static/static_images/gex_chart_NVDA.png" alt="GEX Chart for NVDA" class="mt-4 rounded-lg shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 mt-20 border-t border-gray-700">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+            <p>&copy; 2024 GEX Tracker. All Rights Reserved.</p>
+             <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
         </div>
-    </div>
-</main>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // FAQ Accordion
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            const answer = item.querySelector('.faq-answer');
+            const icon = question.querySelector('svg');
+
+            question.addEventListener('click', () => {
+                const isHidden = answer.classList.contains('hidden');
+                
+                // Close all other answers
+                faqItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.querySelector('.faq-answer').classList.add('hidden');
+                        otherItem.querySelector('.faq-question svg').classList.remove('rotate-180');
+                    }
+                });
+
+                // Toggle current answer
+                answer.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+    </script>
+
 </body>
 </html>

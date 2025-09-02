@@ -1,64 +1,209 @@
 <!DOCTYPE html>
-<html lang="en" class="min-h-screen h-full">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css" />
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
-     crossorigin="anonymous"></script>
+    <title>Ethereum Transaction Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .g-title {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+        }
+        .g-subtitle {
+            font-size: 1.125rem; /* 18px */
+            color: #9ca3af;
+            max-width: 42rem; /* 672px */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 2rem;
+            line-height: 1.75;
+        }
+        .g-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .g-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+        .g-input {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 0.375rem;
+            padding: 0.75rem 1rem;
+            color: #d1d5db;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .g-input:focus {
+            outline: none;
+            border-color: #34d399;
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
+        }
+        .g-button {
+            display: inline-block;
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+        }
+        .g-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 10px -3px rgba(52, 211, 153, 0.3), 0 4px 6px -2px rgba(96, 165, 250, 0.3);
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.5rem 1.5rem;
+        }
+        .details-grid dt {
+            font-weight: 600;
+            color: #9ca3af;
+            text-align: right;
+        }
+        .details-grid dd {
+            word-break: break-all;
+        }
+    </style>
 </head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+<body class="antialiased">
 
-    gtag('config', 'G-VD3FWBHF4C');
-</script>
-<body class="min-h-screen bg-gray-950 font-mono">
-<main class="">
-    <div class="bg-gray-950">
-        <div class="mx-auto max-w-7xl">
-            <div class="bg-gray-950 py-10">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="sm:flex sm:items-center">
-                        <div class="sm:flex-auto">
-                            <h1 class="text-4xl font-semibold leading-6 text-white">Ethereum Transaction Details</h1>
+<!-- Header -->
+<header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex-shrink-0">
+                <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
+            </div>
+            <nav class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                    <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
+                    <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
+                    <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
+                    <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                            <span>More</span>
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                            <a href="/all-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">All Expiries GEX</a>
+                            <a href="/mag7-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">MAG7 GEX</a>
+                            <a href="/gex-history?symbol=SPY&limit=5" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">GEX History</a>
                         </div>
                     </div>
-                    <div class="mt-10">
-                        <form hx-post="/eth-tx" hx-target="#transaction-details" hx-swap="innerHTML">
-                            <div class="flex flex-row">
-                                <input type="text" name="txhash" id="txhash" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 rounded-r-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6" placeholder="Enter Ethereum transaction hash">
-                                <button type="submit" class="block rounded-md rounded-l-none bg-blue-800 w-min text-nowrap px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Get Transaction Details</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div id="transaction-details" class="mt-10">
-                        {{ template "transaction-details" . }}
-                    </div>
                 </div>
+            </nav>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
+            <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
+            <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
+            <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
+            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center">
+            <h1 class="g-title gradient-text">Ethereum Transaction Details</h1>
+            <p class="g-subtitle">Enter an Ethereum transaction hash to retrieve its details from the blockchain.</p>
+        </div>
+
+        <div class="g-card">
+            <form hx-post="/eth-tx" hx-target="#transaction-details" hx-swap="innerHTML">
+                <label for="txhash" class="g-label">Transaction Hash</label>
+                <div class="flex items-center space-x-2">
+                    <input type="text" name="txhash" id="txhash" class="g-input" placeholder="0x...">
+                    <button type="submit" class="g-button" style="width: auto; white-space: nowrap; margin-top: 0;">Get Details</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="transaction-details" class="mt-8">
+             {{ template "transaction-details" . }}
+        </div>
+    </div>
 </main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2024 GEX Tracker. All Rights Reserved.</p>
+        <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
+    </div>
+</footer>
+
+<script>
+    // Mobile menu toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+</script>
+
 </body>
 </html>
 
 {{ define "transaction-details" }}
 {{ if .Details }}
-<h2 class="text-2xl font-semibold leading-6 text-white">Transaction Details:</h2>
-<p class="text-gray-300">Block Number: {{ .Details.Result.BlockNumber }}</p>
-<p class="text-gray-300">From: {{ .Details.Result.From }}</p>
-<p class="text-gray-300">To: {{ .Details.Result.To }}</p>
-<p class="text-gray-300">Value: {{ .Details.Result.Value }}</p>
-<p class="text-gray-300">Gas: {{ .Details.Result.Gas }}</p>
-<p class="text-gray-300">Gas Price: {{ .Details.Result.GasPrice }}</p>
-<p class="text-gray-300">Nonce: {{ .Details.Result.Nonce }}</p>
-<p class="text-gray-300">Transaction Index: {{ .Details.Result.TransactionIndex }}</p>
-<p class="text-gray-300">Input: {{ .Details.Result.Input }}</p>
-<p class="text-gray-300">Hash: {{ .Details.Result.Hash }}</p>
-<p class="text-gray-300">Block Hash: {{ .Details.Result.BlockHash }}</p>
+<div class="g-card">
+    <h2 class="text-2xl font-bold mb-6 gradient-text">Transaction Details</h2>
+    <dl class="details-grid">
+        <dt>Block Number:</dt><dd>{{ .Details.Result.BlockNumber }}</dd>
+        <dt>From:</dt><dd>{{ .Details.Result.From }}</dd>
+        <dt>To:</dt><dd>{{ .Details.Result.To }}</dd>
+        <dt>Value:</dt><dd>{{ .Details.Result.Value }}</dd>
+        <dt>Gas:</dt><dd>{{ .Details.Result.Gas }}</dd>
+        <dt>Gas Price:</dt><dd>{{ .Details.Result.GasPrice }}</dd>
+        <dt>Nonce:</dt><dd>{{ .Details.Result.Nonce }}</dd>
+        <dt>Tx Index:</dt><dd>{{ .Details.Result.TransactionIndex }}</dd>
+        <dt>Input:</dt><dd>{{ .Details.Result.Input }}</dd>
+        <dt>Hash:</dt><dd>{{ .Details.Result.Hash }}</dd>
+        <dt>Block Hash:</dt><dd>{{ .Details.Result.BlockHash }}</dd>
+    </dl>
+</div>
 {{ end }}
 {{ end }}

@@ -1,113 +1,254 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="scroll-smooth">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Expiries GEX Analysis</title>
-    <script src="https://unpkg.com/htmx.org"></script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
-     crossorigin="anonymous"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // TradingView widget initialization
-            function initTradingViewWidget(symbol) {
-                const container = document.getElementById('tradingview_chart');
-                container.innerHTML = '';
-
-                new TradingView.widget({
-                    "container_id": "tradingview_chart",
-                    "symbol": symbol,
-                    "interval": "D",
-                    "timezone": "Etc/UTC",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_top_toolbar": false,
-                    "hide_side_toolbar": false,
-                    "allow_symbol_change": true,
-                    "studies": [
-                        "MASimple@tv-basicstudies",
-                        "MACD@tv-basicstudies"
-                    ],
-                    "height": 800,
-                    "width": "100%"
-                });
-            }
-
-            const symbolInput = document.getElementById('symbol');
-            if (symbolInput) {
-                symbolInput.addEventListener('change', function() {
-                    const symbol = this.value.toUpperCase();
-                    if (symbol) {
-                        initTradingViewWidget(symbol);
-                    }
-                });
-            }
-
-            const form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('htmx:afterOnLoad', function() {
-                    const symbol = document.getElementById('symbol').value.toUpperCase();
-                    if (symbol) {
-                        setTimeout(() => {
-                            initTradingViewWidget(symbol);
-                        }, 500);
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .g-title {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+        }
+        .g-subtitle {
+            font-size: 1.125rem; /* 18px */
+            color: #9ca3af;
+            max-width: 42rem; /* 672px */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 2rem;
+            line-height: 1.75;
+        }
+        .g-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .g-form-container {
+            margin-bottom: 0; /* Removed margin-bottom */
+        }
+        .g-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+        .g-input {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 0.375rem;
+            padding: 0.75rem 1rem;
+            color: #d1d5db;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .g-input:focus {
+            outline: none;
+            border-color: #34d399;
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
+        }
+        .g-button {
+            display: inline-block;
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .g-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 10px -3px rgba(52, 211, 153, 0.3), 0 4px 6px -2px rgba(96, 165, 250, 0.3);
+        }
+        .g-chart-container {
+            margin-top: 2.5rem;
+        }
+        .g-tradingview-container {
+            margin-top: 2.5rem;
+            height: 800px;
+            width: 100%;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
 </head>
+<body class="antialiased">
 
-<body class="h-screen bg-gray-950 font-[Poppins]">
-<header class="bg-gray-950 text-white py-4">
-    <div class="nav-links container mx-auto flex justify-between items-center">
-        <h1 class="text-4xl font-semibold leading-6 text-white">All Expiries GEX Analysis</h1>
-        <nav>
-            <ul class="flex space-x-4">
-                <li><a href="/about" class="hover:text-indigo-400">GEX Trading</a></li>
-                <li><a href="/gex" class="hover:text-indigo-400">GEX Tracker</a></li>
-                <li><a href="/all-gex" class="hover:text-indigo-400">All Expiries GEX</a></li>
-                <li><a href="/mag7-gex" class="hover:text-indigo-400">MAG7 GEX</a></li>
-                <li><a href="/gex-history?symbol=SPY&limit=5" class="hover:text-indigo-400">GEX History</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
-<main>
-    <div class="bg-gray-950">
-        <div class="mx-auto max-w-7xl">
-            <div class="bg-gray-950 py-10">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="form-container">
-                        <p class="mt-2 text-lg leading-8 text-gray-300">This tool analyzes gamma exposure (GEX) across all available expiry dates.</p>
-                        <p class="mt-2 text-lg leading-6 text-gray-400">Enter a symbol (e.g., TSLA, NVDA, DIS) to generate a consolidated GEX chart.</p>
-                        <form hx-post="/all-gex" hx-target="#gex-chart" hx-swap="innerHTML">
-                            <label for="symbol">Symbol:</label>
-                            <input type="text" name="symbol" id="symbol" required
-                                   class="block rounded-md border-0 py-2 text-gray-900
-                                          shadow-sm ring-1 ring-inset ring-gray-300
-                                          placeholder:text-gray-400 focus:ring-2 focus:ring-inset
-                                          focus:ring-indigo-600 sm:text-md sm:leading-6"
-                                   placeholder="Enter Symbol">
-                            <button type="submit"
-                                    class="mt-4 block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400">
-                                Generate All-Expiry GEX Chart
-                            </button>
-                        </form>
+<!-- Header -->
+<header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex-shrink-0">
+                <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
+            </div>
+            <nav class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                    <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
+                    <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
+                    <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
+                    <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                            <span>More</span>
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                            <a href="/all-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">All Expiries GEX</a>
+                            <a href="/mag7-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">MAG7 GEX</a>
+                            <a href="/gex-history?symbol=SPY&limit=5" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">GEX History</a>
+                        </div>
                     </div>
-                    <div id="gex-chart" class="mt-10">
-                        <!-- HTMX will replace this content -->
-                    </div>
-                    <div id="tradingview_chart" class="mt-10" style="height: 800px; width: 100%; max-width: 1400px; margin: 0 auto;"></div>
-
                 </div>
+            </nav>
+            <div class="md:hidden">
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
+    <!-- Mobile menu, show/hide based on menu state. -->
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
+            <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
+            <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
+            <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
+            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center">
+            <h1 class="g-title gradient-text">All Expiries GEX Analysis</h1>
+            <p class="g-subtitle">This tool analyzes gamma exposure (GEX) across all available expiry dates. Enter a symbol to generate a consolidated GEX chart.</p>
+        </div>
+
+        <div class="g-card">
+            <div class="g-form-container">
+                <form hx-post="/all-gex" hx-target="#gex-chart" hx-swap="innerHTML">
+                    <div>
+                        <label for="symbol" class="g-label">Symbol</label>
+                        <input type="text" name="symbol" id="symbol" required
+                               class="g-input"
+                               placeholder="e.g., TSLA, NVDA, DIS">
+                    </div>
+                    <button type="submit"
+                            class="g-button">
+                        Generate All-Expiry GEX Chart
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="gex-chart" class="g-chart-container">
+            <!-- HTMX will replace this content -->
+        </div>
+        <div id="tradingview_chart" class="g-tradingview-container"></div>
+    </div>
 </main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2024 GEX Tracker. All Rights Reserved.</p>
+         <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
+    </div>
+</footer>
+
+<script>
+    // Mobile menu toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // TradingView widget initialization
+    function initTradingViewWidget(symbol) {
+        const container = document.getElementById('tradingview_chart');
+        if (!container) return;
+        container.innerHTML = '';
+
+        new TradingView.widget({
+            "container_id": "tradingview_chart",
+            "symbol": symbol,
+            "interval": "D",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "studies": [
+                "MASimple@tv-basicstudies",
+                "MACD@tv-basicstudies"
+            ],
+            "height": 800,
+            "width": "100%"
+        });
+    }
+
+    document.body.addEventListener('htmx:afterOnLoad', function(event) {
+        const symbolInput = document.getElementById('symbol');
+        if (symbolInput && symbolInput.value) {
+            initTradingViewWidget(symbolInput.value.toUpperCase());
+        }
+    });
+
+    // Also handle initial load if the symbol is already present
+    document.addEventListener('DOMContentLoaded', function() {
+        const symbolInput = document.getElementById('symbol');
+        if (symbolInput && symbolInput.value) {
+            initTradingViewWidget(symbolInput.value.toUpperCase());
+        }
+        // Add change listener to update chart when symbol is changed manually
+        if(symbolInput) {
+            symbolInput.addEventListener('change', function() {
+                const symbol = this.value.toUpperCase();
+                if (symbol) {
+                    initTradingViewWidget(symbol);
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

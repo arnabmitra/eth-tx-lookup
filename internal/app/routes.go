@@ -19,7 +19,7 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	gexHandler := handler.NewGEXHandler(a.logger, tmpl, a.db)
 	a.router.HandleFunc("/gex", gexHandler.ServeHTTP)
-	a.router.HandleFunc("/", gexHandler.ServeHTTP)
+	a.router.HandleFunc("/", gexTradingHandler)
 	// Register the expiry dates handler
 	a.router.HandleFunc("/expiry-dates", gexHandler.GetExpiryDatesHandler)
 	// Add this new route for the all-expiry GEX page

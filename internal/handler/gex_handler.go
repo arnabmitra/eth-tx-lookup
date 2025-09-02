@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"html/template"
 	"math"
 	"net/http"
@@ -14,6 +12,9 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/arnabmitra/eth-proxy/internal/repository"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -103,16 +104,9 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			if errFromApi != nil || jsonOption == nil {
 				continue // Skip this expiry if there's an error
 			}
-			// Use cached data
-			var response gex.Response
-			if expiry.OptionChain != nil {
-				errFromUnMarshal := json.Unmarshal(expiry.OptionChain, &response)
-				if errFromUnMarshal == nil {
-					options = response.Options.Option
-				}
-			} else {
-				h.logger.Debug("No cached option chain available")
-			}
+			// Use the fresh data we just fetched
+			options = optionsFromApi
+
 			gexByStrike := gex.CalculateGEXPerStrike(options, price)
 
 			// Calculate total GEX (sum of all strikes)
@@ -244,7 +238,8 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {	if r.Method == http.MethodPost {
+func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
 		symbol := r.FormValue("symbol")
 		expiration := r.FormValue("expiration")
 
@@ -707,7 +702,11 @@ type GexHistoryRecord struct {
 
 func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 	mag7 := []string{"AAPL", "MSFT", "GOOG", "AMZN", "NVDA", "TSLA", "META"}
-	var imagePaths []string
+	type Mag7Chart struct {
+		Symbol    string
+		ImagePath string
+	}
+	var charts []Mag7Chart
 
 	for _, symbol := range mag7 {
 		gexByStrike, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
@@ -729,11 +728,14 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 			h.logger.Error("failed to create GEX plot", "error", err, "symbol", symbol)
 			continue
 		}
-		imagePaths = append(imagePaths, "/"+outputPath)
+		charts = append(charts, Mag7Chart{
+			Symbol:    symbol,
+			ImagePath: "/" + outputPath,
+		})
 	}
 
 	err := h.tmpl.ExecuteTemplate(w, "mag7_gex.html", map[string]interface{}{
-		"ImagePaths": imagePaths,
+		"Charts": charts,
 	})
 	if err != nil {
 		h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
