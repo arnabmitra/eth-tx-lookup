@@ -413,8 +413,8 @@ func (h *GEXHandler) renderError(w http.ResponseWriter, errMsg string) {
 	})
 
 	if err != nil {
-		h.renderError(w, fmt.Sprintf("Error executing template: %v", err))
-		return
+		h.logger.Error("failed to execute error template", "error", err)
+		http.Error(w, "An unexpected error occurred", http.StatusInternalServerError)
 	}
 }
 
