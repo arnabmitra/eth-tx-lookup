@@ -1,360 +1,581 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEX Tracker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Dark Gray */
-            color: #d1d5db; /* Light Gray */
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #34d399, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .card {
-            background-color: #1f2937; /* Darker Gray */
-            border: 1px solid #374151; /* Gray border */
-            border-radius: 0.75rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-        }
-        .cta-button {
-            background: linear-gradient(to right, #34d399, #60a5fa);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: inline-block;
-        }
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 10px -3px rgba(52, 211, 153, 0.3), 0 4px 6px -2px rgba(96, 165, 250, 0.3);
-        }
-    </style>
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-    <script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
-        crossorigin="anonymous"
-    ></script>
-    <!-- Google tag (gtag.js) -->
-    <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"
-    ></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag("js", new Date());
-
-        gtag("config", "G-VD3FWBHF4C");
-    </script>
-    <script
-        type="text/javascript"
-        src="https://s3.tradingview.com/tv.js"
-    ></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Debounce function
-            let debounceTimeout;
-            function debounce(func, delay) {
-                return function (...args) {
-                    clearTimeout(debounceTimeout);
-                    debounceTimeout = setTimeout(
-                        () => func.apply(this, args),
-                        delay,
-                    );
-                };
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>GEX Tracker</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+            src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+            defer
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+            defer
+        ></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+                background-color: #111827; /* Dark Gray */
+                color: #d1d5db; /* Light Gray */
             }
+            .gradient-text {
+                background: linear-gradient(to right, #34d399, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .card {
+                background-color: #1f2937; /* Darker Gray */
+                border: 1px solid #374151; /* Gray border */
+                border-radius: 0.75rem;
+                transition:
+                    transform 0.3s ease,
+                    box-shadow 0.3s ease;
+            }
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow:
+                    0 10px 15px -3px rgba(0, 0, 0, 0.2),
+                    0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            }
+            .modal-overlay {
+                background-color: rgba(0, 0, 0, 0.75);
+            }
+            .cta-button {
+                background: linear-gradient(to right, #34d399, #60a5fa);
+                color: white;
+                padding: 0.75rem 1.5rem;
+                border-radius: 0.5rem;
+                font-weight: 600;
+                transition:
+                    transform 0.3s ease,
+                    box-shadow 0.3s ease;
+                display: inline-block;
+            }
+            .cta-button:hover {
+                transform: translateY(-2px);
+                box-shadow:
+                    0 7px 10px -3px rgba(52, 211, 153, 0.3),
+                    0 4px 6px -2px rgba(96, 165, 250, 0.3);
+            }
+            .modal-overlay {
+                background-color: rgba(0, 0, 0, 0.75);
+            }
+        </style>
+        <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+        <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0318971566325934"
+            crossorigin="anonymous"
+        ></script>
+        <!-- Google tag (gtag.js) -->
+        <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-VD3FWBHF4C"
+        ></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
 
-            // Fetch expiry dates function
-            const debouncedFetchExpiryDates = debounce(function () {
-                const symbol = document.getElementById("symbol").value;
-                if (symbol.length === 0) {
-                    return;
+            gtag("config", "G-VD3FWBHF4C");
+        </script>
+        <script
+            type="text/javascript"
+            src="https://s3.tradingview.com/tv.js"
+        ></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Debounce function
+                let debounceTimeout;
+                function debounce(func, delay) {
+                    return function (...args) {
+                        clearTimeout(debounceTimeout);
+                        debounceTimeout = setTimeout(
+                            () => func.apply(this, args),
+                            delay,
+                        );
+                    };
                 }
 
-                fetch(`/expiry-dates?symbol=${symbol}`)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        const expirationSelect =
-                            document.getElementById("expiration");
-                        expirationSelect.innerHTML = "";
-                        data.forEach((date) => {
-                            const option = document.createElement("option");
-                            option.value = date;
-                            option.textContent = date;
-                            expirationSelect.appendChild(option);
-                        });
-                    })
-                    .catch((error) =>
-                        console.error("Error fetching expiry dates:", error),
+                // Fetch expiry dates function
+                const debouncedFetchExpiryDates = debounce(function () {
+                    const symbol = document.getElementById("symbol").value;
+                    if (symbol.length === 0) {
+                        return;
+                    }
+
+                    fetch(`/expiry-dates?symbol=${symbol}`)
+                        .then((response) => response.json())
+                        .then((data) => {
+                            const expirationSelect =
+                                document.getElementById("expiration");
+                            expirationSelect.innerHTML = "";
+                            data.forEach((date) => {
+                                const option = document.createElement("option");
+                                option.value = date;
+                                option.textContent = date;
+                                expirationSelect.appendChild(option);
+                            });
+                        })
+                        .catch((error) =>
+                            console.error(
+                                "Error fetching expiry dates:",
+                                error,
+                            ),
+                        );
+                }, 500);
+
+                // TradingView widget initialization
+                function initTradingViewWidget(symbol) {
+                    const container =
+                        document.getElementById("tradingview_chart");
+                    // Clear previous chart
+                    container.innerHTML = "";
+
+                    new TradingView.widget({
+                        container_id: "tradingview_chart",
+                        symbol: symbol, // This was missing the property name
+                        interval: "Etc/UTC",
+                        theme: "dark",
+                        style: "1",
+                        locale: "en",
+                        toolbar_bg: "#f1f3f6",
+                        enable_publishing: false,
+                        hide_top_toolbar: false,
+                        hide_side_toolbar: false,
+                        allow_symbol_change: true,
+                        studies: [
+                            "MASimple@tv-basicstudies",
+                            "MACD@tv-basicstudies",
+                        ],
+                        height: 800,
+                        width: "100%",
+                    });
+                }
+
+                // Add event listeners
+                const symbolInput = document.getElementById("symbol");
+                if (symbolInput) {
+                    symbolInput.addEventListener(
+                        "input",
+                        debouncedFetchExpiryDates,
                     );
-            }, 500);
-
-            // TradingView widget initialization
-            function initTradingViewWidget(symbol) {
-                const container = document.getElementById("tradingview_chart");
-                // Clear previous chart
-                container.innerHTML = "";
-
-                new TradingView.widget({
-                    container_id: "tradingview_chart",
-                    symbol: symbol, // This was missing the property name
-                    interval: "Etc/UTC",
-                    theme: "dark",
-                    style: "1",
-                    locale: "en",
-                    toolbar_bg: "#f1f3f6",
-                    enable_publishing: false,
-                    hide_top_toolbar: false,
-                    hide_side_toolbar: false,
-                    allow_symbol_change: true,
-                    studies: [
-                        "MASimple@tv-basicstudies",
-                        "MACD@tv-basicstudies",
-                    ],
-                    height: 800,
-                    width: "100%",
-                });
-            }
-
-            // Add event listeners
-            const symbolInput = document.getElementById("symbol");
-            if (symbolInput) {
-                symbolInput.addEventListener(
-                    "input",
-                    debouncedFetchExpiryDates,
-                );
-                symbolInput.addEventListener("change", function () {
-                    const symbol = this.value.toUpperCase();
-                    if (symbol) {
-                        initTradingViewWidget(symbol);
-                    }
-                });
-            }
-
-            const form = document.querySelector("form");
-            if (form) {
-                form.addEventListener("htmx:afterOnLoad", function (evt) {
-                    const symbol = document
-                        .getElementById("symbol")
-                        .value.toUpperCase();
-                    if (symbol) {
-                        setTimeout(() => {
+                    symbolInput.addEventListener("change", function () {
+                        const symbol = this.value.toUpperCase();
+                        if (symbol) {
                             initTradingViewWidget(symbol);
-                        }, 500);
-                    }
-                });
-            }
-        });
-    </script>
-</head>
-<body class="antialiased">
+                        }
+                    });
+                }
 
-    <!-- Header -->
-    <header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex-shrink-0">
-                    <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
-                </div>
-                <nav class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
-                        <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
-                        <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
-                        <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
-                        <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                                <span>More</span>
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
-                                <a href="/all-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">All Expiries GEX</a>
-                                <a href="/mag7-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">MAG7 GEX</a>
-                                <a href="/gex-history?symbol=SPY&limit=5" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">GEX History</a>
+                const form = document.querySelector("form");
+                if (form) {
+                    form.addEventListener("htmx:afterOnLoad", function (evt) {
+                        const symbol = document
+                            .getElementById("symbol")
+                            .value.toUpperCase();
+                        if (symbol) {
+                            setTimeout(() => {
+                                initTradingViewWidget(symbol);
+                            }, 500);
+                        }
+                    });
+                }
+            });
+        </script>
+    </head>
+    <body class="antialiased" x-data="{ open: false, imageSrc: '', title: '' }">
+        <!-- Header -->
+        <header
+            class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50"
+        >
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex-shrink-0">
+                        <a href="/" class="text-2xl font-bold gradient-text"
+                            >GEX Tracker</a
+                        >
+                    </div>
+                    <nav class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a
+                                href="/gex"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >Tracker</a
+                            >
+                            <a
+                                href="/about"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >Learn Center</a
+                            >
+                            <a
+                                href="/about#strategies"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >Strategies</a
+                            >
+                            <a
+                                href="/about#faq"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >FAQ</a
+                            >
+                            <div x-data="{ open: false }" class="relative">
+                                <button
+                                    @click="open = !open"
+                                    class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                                >
+                                    <span>More</span>
+                                    <svg
+                                        class="w-4 h-4 ml-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 9l-7 7-7-7"
+                                        ></path>
+                                    </svg>
+                                </button>
+                                <div
+                                    x-show="open"
+                                    @click.away="open = false"
+                                    class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20"
+                                >
+                                    <a
+                                        href="/all-gex"
+                                        class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                        >All Expiries GEX</a
+                                    >
+                                    <a
+                                        href="/mag7-gex"
+                                        class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                        >MAG7 GEX</a
+                                    >
+                                    <a
+                                        href="/gex-history?symbol=SPY&limit=5"
+                                        class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                        >GEX History</a
+                                    >
+                                </div>
                             </div>
                         </div>
+                    </nav>
+                    <div class="md:hidden">
+                        <!-- Mobile menu button -->
+                        <button
+                            id="mobile-menu-button"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                        >
+                            <span class="sr-only">Open main menu</span>
+                            <svg
+                                class="h-6 w-6"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
+                            </svg>
+                        </button>
                     </div>
-                </nav>
-                <div class="md:hidden">
-                    <!-- Mobile menu button -->
-                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
-                        <span class="sr-only">Open main menu</span>
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </div>
+            </div>
+            <!-- Mobile menu, show/hide based on menu state. -->
+            <div class="md:hidden hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a
+                        href="/gex"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >Tracker</a
+                    >
+                    <a
+                        href="/about"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >Learn Center</a
+                    >
+                    <a
+                        href="/about#strategies"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >Strategies</a
+                    >
+                    <a
+                        href="/about#faq"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >FAQ</a
+                    >
+                    <a
+                        href="/all-gex"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >All Expiries GEX</a
+                    >
+                    <a
+                        href="/mag7-gex"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >MAG7 GEX</a
+                    >
+                    <a
+                        href="/gex-history?symbol=SPY&limit=5"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        >GEX History</a
+                    >
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="max-w-4xl mx-auto">
+                <h1
+                    class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center gradient-text"
+                >
+                    GEX Tracker
+                </h1>
+                <p
+                    class="max-w-3xl mx-auto text-lg md:text-xl text-gray-400 mb-8 text-center"
+                >
+                    This tool tracks current dealers' notional gamma exposure
+                    (GEX). Enter a symbol and an expiration date to generate a
+                    GEX chart.
+                </p>
+
+                <div class="card p-8">
+                    {{ if not .ImagePath }}
+                    <form
+                        hx-post="/gex"
+                        hx-target="#gex-chart"
+                        hx-swap="innerHTML"
+                        class="space-y-6"
+                    >
+                        <div>
+                            <label
+                                for="symbol"
+                                class="block text-sm font-medium text-gray-300"
+                                >Symbol</label
+                            >
+                            <input
+                                type="text"
+                                name="symbol"
+                                id="symbol"
+                                required
+                                oninput="debouncedFetchExpiryDates()"
+                                class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                                placeholder="e.g., TSLA, NVDA, DIS"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="expiration"
+                                class="block text-sm font-medium text-gray-300"
+                                >Options Expiration Date</label
+                            >
+                            <select
+                                id="expiration"
+                                name="expiration"
+                                required
+                                class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                            >
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full cta-button">
+                                Generate Chart
+                            </button>
+                        </div>
+                    </form>
+                    {{ end }}
+                </div>
+
+                <div id="gex-chart" class="mt-10">
+                    {{ if .ImagePath }}
+                    <div
+                        @click="imageSrc = '{{ .ImagePath }}'; title = '{{ .Symbol }} GEX Chart'; open = true"
+                        class="cursor-pointer"
+                    >
+                        <img
+                            src="{{ .ImagePath }}"
+                            alt="GEX Chart Tool"
+                            class="mx-auto rounded-lg shadow-2xl"
+                        />
+                    </div>
+                    {{ end }}
+                </div>
+                {{ if .GEXData }}
+                <div class="mt-10 card p-8">
+                    <h2
+                        class="text-2xl font-semibold leading-6 text-white mb-6"
+                    >
+                        Gamma Exposure (GEX) per Strike Price (Sorted)
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-800">
+                                <tr>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Strike Price
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                                    >
+                                        GEX
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-gray-900 divide-y divide-gray-700">
+                                {{ range .GEXData }}
+                                <tr>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300"
+                                    >
+                                        {{ .Strike }}
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-300"
+                                    >
+                                        {{ .GEX }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {{ end }}
+                <!-- Add this div after the gex-chart div -->
+                <div
+                    id="tradingview_chart"
+                    class="mt-10"
+                    style="
+                        height: 800px;
+                        width: 100%;
+                        max-width: 1400px;
+                        margin: 0 auto;
+                    "
+                ></div>
+            </div>
+
+            <div
+                x-show="open"
+                class="fixed inset-0 z-50 flex items-center justify-center modal-overlay"
+                @keydown.escape.window="open = false"
+                style="display: none"
+            >
+                <div
+                    class="bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full p-4 relative"
+                    @click.away="open = false"
+                >
+                    <h2
+                        class="text-2xl font-bold text-white text-center mb-4"
+                        x-text="title"
+                    ></h2>
+                    <img
+                        :src="imageSrc"
+                        alt="Enlarged GEX Chart"
+                        class="w-full rounded-md"
+                    />
+                    <button
+                        @click="open = false"
+                        class="absolute top-2 right-2 text-gray-400 hover:text-white"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            ></path>
                         </svg>
                     </button>
                 </div>
             </div>
-        </div>
-        <!-- Mobile menu, show/hide based on menu state. -->
-        <div class="md:hidden hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
-                <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
-                <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
-                <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
-                <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
-                <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
-                <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center gradient-text">GEX Tracker</h1>
-            <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-400 mb-8 text-center">
-                This tool tracks current dealers' notional gamma exposure (GEX). Enter a symbol and an expiration date to generate a GEX chart.
-            </p>
-
-            <div class="card p-8">
-                {{ if not .ImagePath }}
-                <form
-                    hx-post="/gex"
-                    hx-target="#gex-chart"
-                    hx-swap="innerHTML"
-                    class="space-y-6"
+            <!-- Modal -->
+            <div
+                x-show="open"
+                class="fixed inset-0 z-50 flex items-center justify-center modal-overlay"
+                @keydown.escape.window="open = false"
+                style="display: none"
+            >
+                <div
+                    class="bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full p-4 relative"
+                    @click.away="open = false"
                 >
-                    <div>
-                        <label for="symbol" class="block text-sm font-medium text-gray-300">Symbol</label>
-                        <input
-                            type="text"
-                            name="symbol"
-                            id="symbol"
-                            required
-                            oninput="debouncedFetchExpiryDates()"
-                            class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
-                            placeholder="e.g., TSLA, NVDA, DIS"
-                        />
-                    </div>
-                    <div>
-                        <label for="expiration" class="block text-sm font-medium text-gray-300">Options Expiration Date</label>
-                        <select
-                            id="expiration"
-                            name="expiration"
-                            required
-                            class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
-                        >
-                            <!-- Options will be populated dynamically -->
-                        </select>
-                    </div>
-                    <div>
-                        <button
-                            type="submit"
-                            class="w-full cta-button"
-                        >
-                            Generate Chart
-                        </button>
-                    </div>
-                </form>
-                {{ end }}
-            </div>
-
-            <div id="gex-chart" class="mt-10">
-                {{ if .ImagePath }}
-                <img
-                    src="{{ .ImagePath }}"
-                    alt="GEX Chart Tool"
-                    class="mx-auto rounded-lg shadow-2xl"
-                />
-                {{ end }}
-            </div>
-            {{ if .GEXData }}
-            <div class="mt-10 card p-8">
-                <h2
-                    class="text-2xl font-semibold leading-6 text-white mb-6"
-                >
-                    Gamma Exposure (GEX) per Strike Price (Sorted)
-                </h2>
-                <div class="overflow-x-auto">
-                    <table
-                        class="min-w-full divide-y divide-gray-700"
+                    <h2
+                        class="text-2xl font-bold text-white text-center mb-4"
+                        x-text="title"
+                    ></h2>
+                    <img
+                        :src="imageSrc"
+                        alt="Enlarged GEX Chart"
+                        class="w-full rounded-md"
+                    />
+                    <button
+                        @click="open = false"
+                        class="absolute top-2 right-2 text-gray-400 hover:text-white"
                     >
-                        <thead class="bg-gray-800">
-                            <tr>
-                                <th
-                                    scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                                >
-                                    Strike Price
-                                </th>
-                                <th
-                                    scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                                >
-                                    GEX
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody
-                            class="bg-gray-900 divide-y divide-gray-700"
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            {{ range .GEXData }}
-                            <tr>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300"
-                                >
-                                    {{ .Strike }}
-                                </td>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-300"
-                                >
-                                    {{ .GEX }}
-                                </td>
-                            </tr>
-                            {{ end }}
-                        </tbody>
-                    </table>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            ></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
-            {{ end }}
-            <!-- Add this div after the gex-chart div -->
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 mt-20 border-t border-gray-700">
             <div
-                id="tradingview_chart"
-                class="mt-10"
-                style="
-                    height: 800px;
-                    width: 100%;
-                    max-width: 1400px;
-                    margin: 0 auto;
-                "
-            ></div>
-        </div>
-    </main>
+                class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400"
+            >
+                <p>&copy; 2024 GEX Tracker. All Rights Reserved.</p>
+                <p class="text-sm text-gray-500 mt-2">
+                    Disclaimer: Trading options involves significant risk and is
+                    not suitable for all investors. The information provided on
+                    this site is for educational purposes only.
+                </p>
+            </div>
+        </footer>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 mt-20 border-t border-gray-700">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-            <p>&copy; 2024 GEX Tracker. All Rights Reserved.</p>
-             <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
-        </div>
-    </footer>
-
-    <script>
-        // Mobile menu toggle
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
-
-</body>
+        <script>
+            // Mobile menu toggle
+            const mobileMenuButton =
+                document.getElementById("mobile-menu-button");
+            const mobileMenu = document.getElementById("mobile-menu");
+            mobileMenuButton.addEventListener("click", () => {
+                mobileMenu.classList.toggle("hidden");
+            });
+        </script>
+    </body>
 </html>
