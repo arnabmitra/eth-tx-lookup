@@ -15,6 +15,7 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 	a.router.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
+	a.router.HandleFunc("/glossary", glossaryHandler)
 	// Register the GEX handler
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	gexHandler := handler.NewGEXHandler(a.logger, tmpl, a.db)

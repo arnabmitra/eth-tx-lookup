@@ -65,6 +65,25 @@
             .modal-overlay {
                 background-color: rgba(0, 0, 0, 0.75);
             }
+            .htmx-indicator {
+                display: none;
+            }
+            form.htmx-request .htmx-indicator {
+                display: inline-block;
+            }
+            .spinner {
+                border: 4px solid #374151;
+                border-top: 4px solid #34d399;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 2rem auto;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
         </style>
         <script src="https://unpkg.com/htmx.org@1.6.1"></script>
         <script
@@ -92,6 +111,8 @@
         ></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
+                let hasAutoSubmitted = false;
+                
                 // Debounce function
                 let debounceTimeout;
                 function debounce(func, delay) {
@@ -123,6 +144,18 @@
                                 option.textContent = date;
                                 expirationSelect.appendChild(option);
                             });
+                            
+                            // Auto-submit form after expiry dates are loaded for SPY on initial load
+                            const symbolInput = document.getElementById('symbol');
+                            if (symbolInput.value === 'SPY' && !hasAutoSubmitted && data.length > 0) {
+                                const form = document.querySelector('form');
+                                if (form) {
+                                    hasAutoSubmitted = true;
+                                    setTimeout(() => {
+                                        form.dispatchEvent(new Event('submit'));
+                                    }, 100);
+                                }
+                            }
                         })
                         .catch((error) =>
                             console.error(
@@ -173,7 +206,21 @@
                             initTradingViewWidget(symbol);
                         }
                     });
+                    
+                    // Trigger initial load for SPY
+                    if (symbolInput.value === 'SPY') {
+                        debouncedFetchExpiryDates();
+                    }
                 }
+
+                // Show/hide loading indicator
+                document.body.addEventListener('htmx:beforeRequest', function(evt) {
+                    document.getElementById('loading-indicator').style.display = 'block';
+                });
+                
+                document.body.addEventListener('htmx:afterRequest', function(evt) {
+                    document.getElementById('loading-indicator').style.display = 'none';
+                });
 
                 const form = document.querySelector("form");
                 if (form) {
@@ -375,6 +422,7 @@
                                 oninput="debouncedFetchExpiryDates()"
                                 class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
                                 placeholder="e.g., TSLA, NVDA, DIS"
+                                value="SPY"
                             />
                         </div>
                         <div>
@@ -395,13 +443,32 @@
                         <div>
                             <button type="submit" class="w-full cta-button">
                                 Generate Chart
+                                <span class="htmx-indicator">
+                                    <svg class="inline w-4 h-4 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </span>
                             </button>
                         </div>
                     </form>
                     {{ end }}
                 </div>
 
+                <div id="loading-indicator" class="htmx-indicator mt-10" style="display: none;">
+                    <div class="text-center">
+                        <div class="spinner"></div>
+                        <p class="text-gray-400 mt-4">Loading GEX data...</p>
+                    </div>
+                </div>
+
                 <div id="gex-chart" class="mt-10">
+                    <div id="loading-indicator" class="htmx-indicator">
+                        <div class="text-center">
+                            <div class="spinner"></div>
+                            <p class="text-gray-400 mt-4">Loading GEX data...</p>
+                        </div>
+                    </div>
                     {{ if .ImagePath }}
                     <div
                         @click="imageSrc = '{{ .ImagePath }}'; title = '{{ .Symbol }} GEX Chart'; open = true"
