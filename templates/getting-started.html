@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started with GEX Tracking - Complete Beginner's Guide</title>
+    <meta name="description" content="Learn how to use gamma exposure (GEX) tracking to improve your trading. Complete beginner's guide with step-by-step tutorials and real examples.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content-section {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            border-radius: 50%;
+            font-weight: bold;
+            color: white;
+            margin-right: 1rem;
+        }
+        .pro-tip {
+            background-color: #065f46;
+            border-left: 4px solid #34d399;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        .warning-box {
+            background-color: #7c2d12;
+            border-left: 4px solid #f97316;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        .example-box {
+            background-color: #1e3a8a;
+            border-left: 4px solid #60a5fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<!-- Header -->
+<header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex-shrink-0">
+                <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
+            </div>
+            <nav class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                    <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
+                    <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
+                    <a href="/glossary" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Glossary</a>
+                    <a href="/getting-started" class="text-emerald-400 px-3 py-2 rounded-md text-sm font-medium">Getting Started</a>
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-4xl mx-auto">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 gradient-text">
+                Getting Started with GEX Tracking
+            </h1>
+            <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                Your complete guide to understanding and using gamma exposure analysis to make smarter trading decisions.
+            </p>
+        </div>
+
+        <!-- Quick Start -->
+        <div class="content-section bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border-emerald-700/50">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">⚡ Quick Start (60 seconds)</h2>
+            <ol class="space-y-3 text-gray-300">
+                <li>1. Go to the <a href="/gex" class="text-emerald-400 hover:text-emerald-300 underline">GEX Tracker</a></li>
+                <li>2. Enter a ticker symbol (try "SPY" to start)</li>
+                <li>3. Select an expiration date (nearest Friday is usually most active)</li>
+                <li>4. Click "Generate Chart"</li>
+                <li>5. Look for the largest positive (green) and negative (red) GEX levels—these are key support and resistance zones!</li>
+            </ol>
+        </div>
+
+        <!-- What is GEX -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">What is Gamma Exposure (GEX)?</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                Gamma Exposure (GEX) measures how much stock market makers need to buy or sell as the underlying stock price moves. Think of it as the "hidden force" that can either stabilize or amplify price movements.
+            </p>
+            
+            <h3 class="text-xl font-semibold text-white mb-3 mt-6">The Simple Explanation</h3>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                When you buy options, market makers (dealers) sell them to you. To stay neutral, they hedge by buying or selling the underlying stock. <strong class="text-white">Gamma exposure tells us how sensitive their hedging is to price changes.</strong>
+            </p>
+
+            <div class="example-box">
+                <p class="text-blue-300 font-semibold mb-2">🎯 Real-World Example:</p>
+                <p class="text-gray-200 leading-relaxed">
+                    Imagine SPY is trading at $450, and there's massive positive GEX at the $450 strike. If SPY drops to $449, dealers need to BUY shares. If SPY rises to $451, dealers need to SELL shares. This creates a "magnetic effect" pulling the stock back toward $450.
+                </p>
+            </div>
+
+            <h3 class="text-xl font-semibold text-white mb-3 mt-6">Why Does This Matter?</h3>
+            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                <li><strong class="text-white">Positive GEX = Support/Resistance:</strong> Price tends to gravitate toward high positive GEX strikes</li>
+                <li><strong class="text-white">Negative GEX = Volatility:</strong> When negative, dealers amplify moves (buy high, sell low)</li>
+                <li><strong class="text-white">Identifies Key Levels:</strong> Helps you spot where institutions are positioned</li>
+                <li><strong class="text-white">Predicts Volatility:</strong> High positive GEX = low volatility expected, negative GEX = wild swings likely</li>
+            </ul>
+        </div>
+
+        <!-- Step-by-Step Guide -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Step-by-Step: Your First GEX Analysis</h2>
+
+            <div class="space-y-8">
+                <!-- Step 1 -->
+                <div>
+                    <div class="flex items-start mb-4">
+                        <span class="step-number">1</span>
+                        <h3 class="text-xl font-semibold text-white mt-1">Choose Your Ticker</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-4 ml-12">
+                        Start with liquid, actively traded tickers where options volume is high. The best tickers for GEX analysis are:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-300 space-y-2 ml-16">
+                        <li><strong class="text-white">SPY:</strong> Most liquid ETF, perfect for learning GEX</li>
+                        <li><strong class="text-white">QQQ:</strong> Tech-heavy index, shows clear GEX patterns</li>
+                        <li><strong class="text-white">AAPL, TSLA, NVDA:</strong> Individual stocks with massive options activity</li>
+                        <li><strong class="text-white">IWM:</strong> Small-cap index, different dynamics than large caps</li>
+                    </ul>
+                    <div class="pro-tip ml-12 mt-4">
+                        <p class="text-emerald-300 font-semibold mb-1">💡 Pro Tip:</p>
+                        <p class="text-gray-200">Start with SPY. It has the most options volume, making GEX levels very reliable and clear to interpret.</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div>
+                    <div class="flex items-start mb-4">
+                        <span class="step-number">2</span>
+                        <h3 class="text-xl font-semibold text-white mt-1">Select the Expiration Date</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-4 ml-12">
+                        The expiration date determines which options contracts you're analyzing. Different expirations tell different stories:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-300 space-y-2 ml-16 mb-4">
+                        <li><strong class="text-white">This Week's Friday (0DTE-3DTE):</strong> Shows immediate dealer positioning, best for day trading</li>
+                        <li><strong class="text-white">Next Week (1-2 weeks out):</strong> Good balance of volume and forward-looking positioning</li>
+                        <li><strong class="text-white">Monthly/Quarterly OPEX:</strong> Shows major institutional positioning, key for swing trades</li>
+                        <li><strong class="text-white">All Expiries Combined:</strong> Full picture of dealer exposure across time (use our All Expiries tool)</li>
+                    </ul>
+                    <div class="pro-tip ml-12">
+                        <p class="text-emerald-300 font-semibold mb-1">💡 Pro Tip:</p>
+                        <p class="text-gray-200">For day trading, focus on the nearest Friday expiration. For swing trading, look at monthly OPEX (3rd Friday of the month).</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div>
+                    <div class="flex items-start mb-4">
+                        <span class="step-number">3</span>
+                        <h3 class="text-xl font-semibold text-white mt-1">Read the GEX Chart</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-4 ml-12">
+                        Once your chart loads, here's what you're looking at:
+                    </p>
+                    
+                    <div class="ml-12 space-y-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-emerald-400 mb-2">Green Bars (Positive GEX)</h4>
+                            <p class="text-gray-300 leading-relaxed mb-2">
+                                These represent strikes where dealers have POSITIVE gamma exposure. This means:
+                            </p>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li>Dealers sell when price goes up, buy when price goes down</li>
+                                <li>Creates a stabilizing "pin" effect</li>
+                                <li>Acts as support/resistance</li>
+                                <li>The taller the bar, the stronger the effect</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-red-400 mb-2">Red Bars (Negative GEX)</h4>
+                            <p class="text-gray-300 leading-relaxed mb-2">
+                                These represent strikes where dealers have NEGATIVE gamma exposure. This means:
+                            </p>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li>Dealers buy when price goes up, sell when price goes down</li>
+                                <li>Amplifies price movements (momentum fuel)</li>
+                                <li>Can lead to "gamma squeezes"</li>
+                                <li>Often occurs below the current price (put-heavy positioning)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="example-box ml-12 mt-4">
+                        <p class="text-blue-300 font-semibold mb-2">📊 Chart Reading Example:</p>
+                        <p class="text-gray-200 leading-relaxed mb-2">
+                            SPY is trading at $450. Your GEX chart shows:
+                        </p>
+                        <ul class="list-disc list-inside text-gray-200 space-y-1 ml-4">
+                            <li>Massive green bar at $450 strike (+$500M GEX)</li>
+                            <li>Large green bar at $455 strike (+$300M GEX)</li>
+                            <li>Moderate red bar at $445 strike (-$150M GEX)</li>
+                        </ul>
+                        <p class="text-gray-200 leading-relaxed mt-2">
+                            <strong>Interpretation:</strong> $450 is strong support (dealers will defend it). $455 is resistance. If SPY breaks below $445, expect volatility to increase as dealers amplify the move.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div>
+                    <div class="flex items-start mb-4">
+                        <span class="step-number">4</span>
+                        <h3 class="text-xl font-semibold text-white mt-1">Identify Key Levels</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-4 ml-12">
+                        Look for these critical levels on your GEX chart:
+                    </p>
+                    
+                    <div class="ml-12 space-y-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-white mb-2">The Largest Positive GEX Strike</h4>
+                            <p class="text-gray-300 leading-relaxed">
+                                This is often called the "pin level" or "gamma strike." Price has a tendency to gravitate toward this level, especially as expiration approaches. This is your primary reference point.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-white mb-2">Zero Gamma Level</h4>
+                            <p class="text-gray-300 leading-relaxed">
+                                The price where GEX changes from positive to negative. Above this level = low volatility expected. Below this level = high volatility expected. This is a critical inflection point.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-white mb-2">Put Wall vs. Call Wall</h4>
+                            <p class="text-gray-300 leading-relaxed">
+                                Large positive GEX concentrations above current price (call wall) act as resistance. Large positive GEX below current price (put wall) acts as support.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div>
+                    <div class="flex items-start mb-4">
+                        <span class="step-number">5</span>
+                        <h3 class="text-xl font-semibold text-white mt-1">Apply to Your Trading</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-4 ml-12">
+                        Now that you understand the levels, here's how to use them:
+                    </p>
+
+                    <div class="ml-12 space-y-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-emerald-400 mb-2">For Day Traders</h4>
+                            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                                <li>Fade moves away from the largest positive GEX strike (expect mean reversion)</li>
+                                <li>Be cautious trading through zero gamma—volatility often spikes</li>
+                                <li>Watch for breakouts above call walls or below put walls (often fail and reverse)</li>
+                                <li>Use GEX levels as targets for profit-taking</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-emerald-400 mb-2">For Options Traders</h4>
+                            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                                <li>Sell options near high positive GEX strikes (high probability of pin)</li>
+                                <li>Buy options when price is near zero gamma and likely to break out</li>
+                                <li>Use GEX to determine expected move and price ranges</li>
+                                <li>Avoid buying premium when trapped between strong GEX levels (choppy, range-bound)</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-emerald-400 mb-2">For Swing Traders</h4>
+                            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                                <li>Use monthly OPEX GEX levels to identify multi-week support/resistance</li>
+                                <li>Look for accumulation near strong positive GEX support levels</li>
+                                <li>Be cautious holding through OPEX when price is at major GEX pin</li>
+                                <li>Combine GEX with traditional technical analysis for confluence</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Mistakes -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">⚠️ Common Mistakes to Avoid</h2>
+            
+            <div class="space-y-4">
+                <div class="warning-box">
+                    <h3 class="text-orange-300 font-semibold mb-2">1. Trading GEX Levels in Isolation</h3>
+                    <p class="text-gray-200">
+                        GEX is a powerful tool, but it's not magic. Always combine GEX analysis with price action, volume, news, and other technical indicators. GEX tells you WHERE dealers are positioned, not WHEN price will move there.
+                    </p>
+                </div>
+
+                <div class="warning-box">
+                    <h3 class="text-orange-300 font-semibold mb-2">2. Ignoring Options Volume</h3>
+                    <p class="text-gray-200">
+                        GEX is most reliable on highly liquid tickers with massive options volume. On low-volume stocks, GEX levels can be misleading or change rapidly. Stick to SPY, QQQ, and mega-cap stocks when learning.
+                    </p>
+                </div>
+
+                <div class="warning-box">
+                    <h3 class="text-orange-300 font-semibold mb-2">3. Assuming GEX Never Changes</h3>
+                    <p class="text-gray-200">
+                        GEX levels are dynamic and change throughout the day as new options are traded and positions are closed. Check GEX levels multiple times per day, especially before major moves or into the close.
+                    </p>
+                </div>
+
+                <div class="warning-box">
+                    <h3 class="text-orange-300 font-semibold mb-2">4. Fighting the Trend with GEX</h3>
+                    <p class="text-gray-200">
+                        GEX creates support/resistance, but strong fundamental news or massive directional flow can overwhelm dealer hedging. If SPY is breaking above a call wall on huge volume and bullish news, don't blindly short expecting resistance.
+                    </p>
+                </div>
+
+                <div class="warning-box">
+                    <h3 class="text-orange-300 font-semibold mb-2">5. Over-Trading Based on Small GEX Changes</h3>
+                    <p class="text-gray-200">
+                        Focus on the LARGEST GEX concentrations. Small bars on the chart don't have enough dealer positioning to meaningfully impact price action. Look for the obvious, glaring levels.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Tips -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">🚀 Advanced Tips</h2>
+
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Understanding OPEX Dynamics</h3>
+                    <p class="text-gray-300 leading-relaxed mb-2">
+                        On expiration day (especially monthly OPEX), GEX pinning effects are strongest. Price often gravitates toward the largest GEX strike as expiration approaches. This is called "gamma pinning" or "max pain."
+                    </p>
+                    <div class="pro-tip mt-3">
+                        <p class="text-emerald-300 font-semibold mb-1">💡 Pro Strategy:</p>
+                        <p class="text-gray-200">On OPEX Friday, if price is within 1% of the largest positive GEX strike by 2pm ET, expect it to pin near that level into the close. Sell options (theta gang) or fade directional moves away from the pin.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Combining Multiple Expirations</h3>
+                    <p class="text-gray-300 leading-relaxed mb-2">
+                        Use our <a href="/all-gex" class="text-emerald-400 hover:text-emerald-300 underline">All Expiries GEX tool</a> to see the combined gamma exposure across all dates. This shows the "total dealer positioning" and often reveals the strongest, most reliable support/resistance levels.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Volatility Regime Shifts</h3>
+                    <p class="text-gray-300 leading-relaxed mb-2">
+                        When overall market GEX flips from positive to negative, expect a regime change from low to high volatility. Monitor total market GEX (aggregate across SPY, QQQ, IWM) to gauge macro volatility expectations.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3">0DTE Options Impact</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Same-day expiration (0DTE) options have exploded in volume recently. These create massive GEX concentrations that change rapidly throughout the day. For day traders, tracking 0DTE GEX on SPY/QQQ can explain sudden intraday support/resistance.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Exercise -->
+        <div class="content-section bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-700/50">
+            <h2 class="text-2xl font-bold text-blue-400 mb-4">📝 Practice Exercise</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                Ready to put your knowledge to the test? Try this exercise:
+            </p>
+            <ol class="space-y-3 text-gray-300 mb-6">
+                <li><strong class="text-white">1.</strong> Go to the <a href="/gex" class="text-emerald-400 hover:text-emerald-300 underline">GEX Tracker</a> and pull up SPY</li>
+                <li><strong class="text-white">2.</strong> Select this Friday's expiration</li>
+                <li><strong class="text-white">3.</strong> Identify the three largest positive GEX strikes</li>
+                <li><strong class="text-white">4.</strong> Write down the current SPY price and your GEX levels</li>
+                <li><strong class="text-white">5.</strong> Make a prediction: will SPY gravitate toward the largest GEX level by Friday close?</li>
+                <li><strong class="text-white">6.</strong> Check your prediction on Friday at 4pm ET</li>
+            </ol>
+            <p class="text-gray-300 leading-relaxed">
+                Repeat this exercise for 4-6 weeks to develop an intuition for how GEX levels influence price action. You'll start to see patterns and improve your timing.
+            </p>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">What's Next?</h2>
+            <p class="text-gray-300 leading-relaxed mb-6">
+                Now that you understand the basics of GEX tracking, here are some resources to deepen your knowledge:
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">📚 Learn More</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/glossary" class="text-emerald-400 hover:text-emerald-300 underline">Options Trading Glossary</a></li>
+                        <li><a href="/about" class="text-emerald-400 hover:text-emerald-300 underline">GEX Trading Strategies</a></li>
+                        <li><a href="/about#faq" class="text-emerald-400 hover:text-emerald-300 underline">Frequently Asked Questions</a></li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">🛠️ Try Our Tools</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/gex" class="text-emerald-400 hover:text-emerald-300 underline">Single Expiry GEX Tracker</a></li>
+                        <li><a href="/all-gex" class="text-emerald-400 hover:text-emerald-300 underline">All Expiries GEX Analysis</a></li>
+                        <li><a href="/mag7-gex" class="text-emerald-400 hover:text-emerald-300 underline">MAG7 Stocks GEX</a></li>
+                        <li><a href="/gex-history?symbol=SPY&limit=5" class="text-emerald-400 hover:text-emerald-300 underline">Historical GEX Data</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final CTA -->
+        <div class="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-lg p-8 border border-emerald-700/30">
+            <h2 class="text-2xl font-bold text-white mb-4 text-center">Ready to Start Tracking GEX?</h2>
+            <p class="text-gray-300 mb-6 text-center">
+                Put your new knowledge into practice with our free GEX tracking tools.
+            </p>
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="/gex" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition">
+                    Start Tracking
+                </a>
+                <a href="/glossary" class="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition">
+                    View Glossary
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+        <div class="mt-2 space-x-4">
+            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
