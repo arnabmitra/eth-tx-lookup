@@ -134,7 +134,8 @@
                     <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
                     <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
                     <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
-                    <div x-data="{ open: false }" class="relative">
+            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>                    <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">About Us</a>
+                            <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
                             <span>More</span>
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -165,7 +166,7 @@
             <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
             <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
             <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
-            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
             <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
             <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
         </div>
@@ -221,7 +222,12 @@
 <!-- Footer -->
 <footer class="bg-gray-900 mt-20 border-t border-gray-700">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-        <p>&copy; 2024 GEX Tracker. All Rights Reserved.</p>
+        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+        <div class="mt-2 space-x-4">
+            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+        </div>
          <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
     </div>
 </footer>
