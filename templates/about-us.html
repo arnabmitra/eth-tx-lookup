@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - GEX Tracker</title>
+    <meta name="description" content="Learn about GEX Tracker - our mission to provide traders with powerful gamma exposure tracking tools and educational resources.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content-section {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .feature-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px -5px rgba(52, 211, 153, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<!-- Header -->
+<header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex-shrink-0">
+                <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
+            </div>
+            <nav class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                    <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
+                    <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
+                    <a href="/glossary" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Glossary</a>
+                    <a href="/about-us" class="text-emerald-400 px-3 py-2 rounded-md text-sm font-medium">About</a>
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-4xl mx-auto">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 gradient-text">
+                About GEX Tracker
+            </h1>
+            <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                Empowering traders with professional-grade gamma exposure (GEX) analysis tools and educational resources.
+            </p>
+        </div>
+
+        <!-- Mission Statement -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Our Mission</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                GEX Tracker was created to democratize access to gamma exposure analysis—a powerful market metric that was previously only available to institutional traders and professional market makers. We believe that retail traders deserve access to the same high-quality data and analysis tools that move markets.
+            </p>
+            <p class="text-gray-300 leading-relaxed">
+                Our mission is to provide accurate, real-time gamma exposure data along with educational resources that help traders understand how dealer positioning influences market dynamics, volatility, and price action.
+            </p>
+        </div>
+
+        <!-- Story Section -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Our Story</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                GEX Tracker was born from a simple observation: understanding market maker positioning through gamma exposure can provide significant edge in options trading. After years of manually calculating GEX levels and witnessing their impact on market behavior, we decided to build a platform that makes this analysis accessible to everyone.
+            </p>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                What started as a personal project to track SPY gamma levels has evolved into a comprehensive suite of tools used by thousands of traders to analyze GEX across hundreds of tickers, identify key support and resistance levels, and make more informed trading decisions.
+            </p>
+            <p class="text-gray-300 leading-relaxed">
+                We're continually improving our platform, adding new features, and expanding our educational content to help traders better understand the crucial role gamma plays in modern markets.
+            </p>
+        </div>
+
+        <!-- What We Offer -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">What We Offer</h2>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">📊</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Real-Time GEX Data</h3>
+                    <p class="text-gray-300">
+                        Access up-to-date gamma exposure levels across all major tickers and indices, calculated from real-time options chain data.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">📈</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Visual Charts</h3>
+                    <p class="text-gray-300">
+                        Interactive charts showing GEX levels by strike price, making it easy to identify key support and resistance zones.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">🎓</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Educational Resources</h3>
+                    <p class="text-gray-300">
+                        Comprehensive guides, glossary, and articles explaining how gamma exposure affects market behavior and trading strategies.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="text-3xl mb-3">📱</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Multiple Tools</h3>
+                    <p class="text-gray-300">
+                        Track single expiries, all expiries combined, MAG7 stocks, and historical GEX trends—all in one platform.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Why GEX Matters -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Why Gamma Exposure Matters</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                Gamma exposure represents the sensitivity of market makers' delta hedging to price changes. When dealers have large gamma positions, they're forced to buy or sell the underlying asset as prices move, creating self-reinforcing price action.
+            </p>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                Understanding GEX levels helps traders:
+            </p>
+            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                <li>Identify key support and resistance levels where dealer hedging activity concentrates</li>
+                <li>Anticipate periods of low vs. high volatility based on market maker positioning</li>
+                <li>Recognize "pinning" behavior where stocks gravitate toward high GEX strikes at expiration</li>
+                <li>Understand when markets are likely to trend vs. chop in a range</li>
+                <li>Make more informed decisions about option strategies and directional trades</li>
+            </ul>
+        </div>
+
+        <!-- Our Values -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Our Values</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Transparency</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        We're open about our data sources, calculation methodology, and limitations. GEX analysis is a tool, not a crystal ball, and we're honest about what it can and cannot tell you.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Education First</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        We don't just provide data—we teach you how to use it. Our educational resources are designed to help you understand the "why" behind gamma exposure, not just the "what."
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Accessibility</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Professional-grade tools shouldn't require professional-grade budgets. We're committed to keeping our core GEX tracking tools accessible to retail traders.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Continuous Improvement</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Markets evolve, and so do we. We're constantly refining our algorithms, adding new features, and incorporating user feedback to improve the platform.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data & Technology -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Our Data & Technology</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                We source our options chain data from Tradier, a SEC-registered broker-dealer, ensuring high-quality, reliable data. Our GEX calculations follow industry-standard methodologies used by institutional traders and market makers.
+            </p>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                <strong class="text-white">Data Sources:</strong>
+            </p>
+            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4 mb-4">
+                <li>Options chain data: Tradier API</li>
+                <li>Price charts: TradingView</li>
+                <li>Spot prices: Real-time market data feeds</li>
+            </ul>
+            <p class="text-gray-300 leading-relaxed">
+                Our platform is built with modern web technologies to ensure fast loading times, responsive design across all devices, and reliable performance even during high-volatility market periods.
+            </p>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="content-section bg-yellow-900/20 border-yellow-700/50">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-4">Important Disclaimer</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                GEX Tracker is an educational platform and data tool. We are <strong>not</strong> registered investment advisors, broker-dealers, or financial planners. Nothing on this site constitutes investment advice, financial advice, or trading advice.
+            </p>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                All content is provided for informational and educational purposes only. Trading options involves substantial risk and is not suitable for all investors. You should carefully consider your financial situation and consult with licensed financial professionals before making any investment decisions.
+            </p>
+            <p class="text-gray-300 leading-relaxed">
+                Past performance and historical GEX levels are not indicative of future results. While we strive for accuracy, we make no warranties about the completeness, reliability, or accuracy of the data presented.
+            </p>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="content-section">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Get in Touch</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                We love hearing from our users! Whether you have questions, suggestions, or just want to share your trading insights, feel free to reach out.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">General Inquiries</h3>
+                    <p class="text-gray-300 mb-2">
+                        Email: <a href="mailto:info@gextracker.com" class="text-emerald-400 hover:text-emerald-300 underline">info@gextracker.com</a>
+                    </p>
+                    <p class="text-gray-300">
+                        For questions about our tools, features, or how to use GEX analysis.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">Support</h3>
+                    <p class="text-gray-300 mb-2">
+                        Email: <a href="mailto:support@gextracker.com" class="text-emerald-400 hover:text-emerald-300 underline">support@gextracker.com</a>
+                    </p>
+                    <p class="text-gray-300">
+                        Technical support, bug reports, and feature requests.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">Privacy & Legal</h3>
+                    <p class="text-gray-300 mb-2">
+                        Email: <a href="mailto:legal@gextracker.com" class="text-emerald-400 hover:text-emerald-300 underline">legal@gextracker.com</a>
+                    </p>
+                    <p class="text-gray-300">
+                        Privacy concerns, legal inquiries, and GDPR/CCPA requests.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-3">Business Partnerships</h3>
+                    <p class="text-gray-300 mb-2">
+                        Email: <a href="mailto:partnerships@gextracker.com" class="text-emerald-400 hover:text-emerald-300 underline">partnerships@gextracker.com</a>
+                    </p>
+                    <p class="text-gray-300">
+                        Collaboration opportunities and business inquiries.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-lg p-8 border border-emerald-700/30">
+            <h2 class="text-2xl font-bold text-white mb-4 text-center">Start Tracking GEX Today</h2>
+            <p class="text-gray-300 mb-6 text-center">
+                Join thousands of traders using gamma exposure analysis to gain edge in the markets.
+            </p>
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="/gex" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition">
+                    GEX Tracker
+                </a>
+                <a href="/glossary" class="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition">
+                    Learn More
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="mt-8 bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Legal & Privacy</h3>
+            <div class="flex flex-wrap gap-4">
+                <a href="/privacy" class="text-emerald-400 hover:text-emerald-300 underline">Privacy Policy</a>
+                <a href="/terms" class="text-emerald-400 hover:text-emerald-300 underline">Terms of Service</a>
+                <a href="/cookies" class="text-emerald-400 hover:text-emerald-300 underline">Cookie Policy</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+        <div class="mt-2 space-x-4">
+            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

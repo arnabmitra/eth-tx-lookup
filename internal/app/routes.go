@@ -16,6 +16,10 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
 	a.router.HandleFunc("/glossary", glossaryHandler)
+	a.router.HandleFunc("/privacy", privacyHandler)
+	a.router.HandleFunc("/terms", termsHandler)
+	a.router.HandleFunc("/cookies", cookiesHandler)
+	a.router.HandleFunc("/about-us", aboutUsHandler)
 	// Register the GEX handler
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	gexHandler := handler.NewGEXHandler(a.logger, tmpl, a.db)

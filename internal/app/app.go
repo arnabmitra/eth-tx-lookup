@@ -166,6 +166,58 @@ func glossaryHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+func privacyHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
+	tmpl, err := template.ParseFiles("templates/privacy.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
+
+func termsHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
+	tmpl, err := template.ParseFiles("templates/terms.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
+
+func cookiesHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
+	tmpl, err := template.ParseFiles("templates/cookies.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
+
+func aboutUsHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
+	tmpl, err := template.ParseFiles("templates/about-us.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
+
 type AlchemyResponse struct {
 	Jsonrpc string `json:"jsonrpc"`
 	Id      int    `json:"id"`
