@@ -17,3 +17,6 @@ __**
 .vscode/
 
 .vscode/
+
+debug-bin
+debug-bin/*

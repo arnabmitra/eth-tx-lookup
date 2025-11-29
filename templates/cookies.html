@@ -1,367 +1,697 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Policy - GEX Tracker</title>
-    <meta name="description" content="Cookie Policy for GEX Tracker - How we use cookies and tracking technologies.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827;
-            color: #d1d5db;
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #34d399, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .content-section {
-            background-color: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 0.75rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-        .cookie-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .cookie-table th {
-            background-color: #374151;
-            padding: 0.75rem;
-            text-align: left;
-            font-weight: 600;
-            color: #fff;
-        }
-        .cookie-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #374151;
-        }
-    </style>
-</head>
-<body class="antialiased">
-
-<!-- Header -->
-<header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <div class="flex-shrink-0">
-                <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
-            </div>
-            <nav class="hidden md:block">
-                <div class="ml-10 flex items-baseline space-x-4">
-                    <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
-                    <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
-                    <a href="/glossary" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Glossary</a>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Cookie Policy - GEX Tracker</title>
+        <meta
+            name="description"
+            content="Cookie Policy for GEX Tracker - How we use cookies and tracking technologies."
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+            src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+            defer
+        ></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+                background-color: #111827;
+                color: #d1d5db;
+            }
+            .gradient-text {
+                background: linear-gradient(to right, #34d399, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .content-section {
+                background-color: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 0.75rem;
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+            .cookie-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .cookie-table th {
+                background-color: #374151;
+                padding: 0.75rem;
+                text-align: left;
+                font-weight: 600;
+                color: #fff;
+            }
+            .cookie-table td {
+                padding: 0.75rem;
+                border-bottom: 1px solid #374151;
+            }
+        </style>
+    </head>
+    <body class="antialiased">
+        <!-- Header -->
+        <header
+            class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50"
+        >
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex-shrink-0">
+                        <a href="/" class="text-2xl font-bold gradient-text"
+                            >GEX Tracker</a
+                        >
+                    </div>
+                    <nav class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a
+                                href="/gex"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >Tracker</a
+                            >
+                            <a
+                                href="/about"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >Learn Center</a
+                            >
+                            <a
+                                href="/glossary"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >Glossary</a
+                            >
+                        </div>
+                    </nav>
                 </div>
-            </nav>
-        </div>
-    </div>
-</header>
-
-<!-- Main Content -->
-<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 gradient-text">
-            Cookie Policy
-        </h1>
-        <p class="text-gray-400 mb-8">Last Updated: January 26, 2025</p>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">What Are Cookies?</h2>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                Cookies are small text files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners to make their websites work more efficiently and to provide reporting information.
-            </p>
-            <p class="text-gray-300 leading-relaxed">
-                Cookies set by the website owner (in this case, GEX Tracker) are called "first-party cookies." Cookies set by parties other than the website owner are called "third-party cookies." Third-party cookies enable third-party features or functionality to be provided on or through the website (e.g., advertising, analytics, and interactive content).
-            </p>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Why We Use Cookies</h2>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                We use first-party and third-party cookies for several reasons:
-            </p>
-            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
-                <li><strong>Essential Functionality:</strong> Some cookies are required for technical reasons for our website to operate</li>
-                <li><strong>Analytics:</strong> To understand how visitors use our site and how we can improve it</li>
-                <li><strong>Advertising:</strong> To deliver relevant advertisements and measure their effectiveness</li>
-                <li><strong>Preferences:</strong> To remember your settings and preferences</li>
-            </ul>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Types of Cookies We Use</h2>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">1. Strictly Necessary Cookies</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                These cookies are essential for the website to function properly. They enable basic functions like page navigation and access to secure areas of the website. The website cannot function properly without these cookies.
-            </p>
-            <div class="overflow-x-auto mb-6">
-                <table class="cookie-table">
-                    <thead>
-                        <tr>
-                            <th>Cookie Name</th>
-                            <th>Purpose</th>
-                            <th>Duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-gray-300">session_id</td>
-                            <td class="text-gray-300">Maintains your session state</td>
-                            <td class="text-gray-300">Session</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">csrf_token</td>
-                            <td class="text-gray-300">Security token to prevent cross-site request forgery</td>
-                            <td class="text-gray-300">Session</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
+        </header>
 
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">2. Analytics and Performance Cookies</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site. They help us know which pages are the most and least popular and see how visitors move around the site.
-            </p>
-            <div class="overflow-x-auto mb-6">
-                <table class="cookie-table">
-                    <thead>
-                        <tr>
-                            <th>Cookie Name</th>
-                            <th>Provider</th>
-                            <th>Purpose</th>
-                            <th>Duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-gray-300">_ga</td>
-                            <td class="text-gray-300">Google Analytics</td>
-                            <td class="text-gray-300">Used to distinguish users</td>
-                            <td class="text-gray-300">2 years</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">_ga_*</td>
-                            <td class="text-gray-300">Google Analytics</td>
-                            <td class="text-gray-300">Used to persist session state</td>
-                            <td class="text-gray-300">2 years</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">_gid</td>
-                            <td class="text-gray-300">Google Analytics</td>
-                            <td class="text-gray-300">Used to distinguish users</td>
-                            <td class="text-gray-300">24 hours</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">_gat</td>
-                            <td class="text-gray-300">Google Analytics</td>
-                            <td class="text-gray-300">Used to throttle request rate</td>
-                            <td class="text-gray-300">1 minute</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="max-w-4xl mx-auto">
+                <h1
+                    class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 gradient-text"
+                >
+                    Cookie Policy
+                </h1>
+                <p class="text-gray-400 mb-8">Last Updated: January 26, 2025</p>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        What Are Cookies?
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        Cookies are small text files that are placed on your
+                        computer or mobile device when you visit a website.
+                        Cookies are widely used by website owners to make their
+                        websites work more efficiently and to provide reporting
+                        information.
+                    </p>
+                    <p class="text-gray-300 leading-relaxed">
+                        Cookies set by the website owner (in this case, GEX
+                        Tracker) are called "first-party cookies." Cookies set
+                        by parties other than the website owner are called
+                        "third-party cookies." Third-party cookies enable
+                        third-party features or functionality to be provided on
+                        or through the website (e.g., advertising, analytics,
+                        and interactive content).
+                    </p>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Why We Use Cookies
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        We use first-party and third-party cookies for several
+                        reasons:
+                    </p>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-2 ml-4"
+                    >
+                        <li>
+                            <strong>Essential Functionality:</strong> Some
+                            cookies are required for technical reasons for our
+                            website to operate
+                        </li>
+                        <li>
+                            <strong>Analytics:</strong> To understand how
+                            visitors use our site and how we can improve it
+                        </li>
+                        <li>
+                            <strong>Advertising:</strong> To deliver relevant
+                            advertisements and measure their effectiveness
+                        </li>
+                        <li>
+                            <strong>Preferences:</strong> To remember your
+                            settings and preferences
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Types of Cookies We Use
+                    </h2>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        1. Strictly Necessary Cookies
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        These cookies are essential for the website to function
+                        properly. They enable basic functions like page
+                        navigation and access to secure areas of the website.
+                        The website cannot function properly without these
+                        cookies.
+                    </p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="cookie-table">
+                            <thead>
+                                <tr>
+                                    <th>Cookie Name</th>
+                                    <th>Purpose</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-gray-300">session_id</td>
+                                    <td class="text-gray-300">
+                                        Maintains your session state
+                                    </td>
+                                    <td class="text-gray-300">Session</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">csrf_token</td>
+                                    <td class="text-gray-300">
+                                        Security token to prevent cross-site
+                                        request forgery
+                                    </td>
+                                    <td class="text-gray-300">Session</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        2. Analytics and Performance Cookies
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        These cookies allow us to count visits and traffic
+                        sources so we can measure and improve the performance of
+                        our site. They help us know which pages are the most and
+                        least popular and see how visitors move around the site.
+                    </p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="cookie-table">
+                            <thead>
+                                <tr>
+                                    <th>Cookie Name</th>
+                                    <th>Provider</th>
+                                    <th>Purpose</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-gray-300">_ga</td>
+                                    <td class="text-gray-300">
+                                        Google Analytics
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used to distinguish users
+                                    </td>
+                                    <td class="text-gray-300">2 years</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">_ga_*</td>
+                                    <td class="text-gray-300">
+                                        Google Analytics
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used to persist session state
+                                    </td>
+                                    <td class="text-gray-300">2 years</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">_gid</td>
+                                    <td class="text-gray-300">
+                                        Google Analytics
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used to distinguish users
+                                    </td>
+                                    <td class="text-gray-300">24 hours</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">_gat</td>
+                                    <td class="text-gray-300">
+                                        Google Analytics
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used to throttle request rate
+                                    </td>
+                                    <td class="text-gray-300">1 minute</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Learn more:
+                        <a
+                            href="https://policies.google.com/technologies/cookies"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >Google's Cookie Policy</a
+                        >
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        3. Advertising Cookies
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        These cookies are used to make advertising messages more
+                        relevant to you. They perform functions like preventing
+                        the same ad from continuously reappearing, ensuring that
+                        ads are properly displayed, and in some cases selecting
+                        advertisements based on your interests.
+                    </p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="cookie-table">
+                            <thead>
+                                <tr>
+                                    <th>Cookie Name</th>
+                                    <th>Provider</th>
+                                    <th>Purpose</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-gray-300">_gcl_au</td>
+                                    <td class="text-gray-300">
+                                        Google AdSense
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used for ad targeting and measurement
+                                    </td>
+                                    <td class="text-gray-300">3 months</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">IDE</td>
+                                    <td class="text-gray-300">
+                                        Google DoubleClick
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used to serve targeted advertisements
+                                    </td>
+                                    <td class="text-gray-300">1 year</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">test_cookie</td>
+                                    <td class="text-gray-300">
+                                        Google DoubleClick
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Used to check if browser supports
+                                        cookies
+                                    </td>
+                                    <td class="text-gray-300">15 minutes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Opt out of personalized advertising:
+                        <a
+                            href="https://www.google.com/settings/ads"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >Google Ads Settings</a
+                        >
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        4. Functionality Cookies
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        These cookies enable the website to provide enhanced
+                        functionality and personalization. They may be set by us
+                        or by third-party providers whose services we have added
+                        to our pages.
+                    </p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="cookie-table">
+                            <thead>
+                                <tr>
+                                    <th>Cookie Name</th>
+                                    <th>Purpose</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-gray-300">
+                                        user_preferences
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Stores your chart preferences and
+                                        settings
+                                    </td>
+                                    <td class="text-gray-300">1 year</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-gray-300">
+                                        recent_searches
+                                    </td>
+                                    <td class="text-gray-300">
+                                        Remembers recently searched ticker
+                                        symbols
+                                    </td>
+                                    <td class="text-gray-300">30 days</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Third-Party Cookies
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        In addition to our own cookies, we use various
+                        third-party cookies to report usage statistics and
+                        deliver advertisements. These third parties may also use
+                        cookies:
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        Google Analytics
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        We use Google Analytics to analyze the use of our
+                        website. Google Analytics gathers information about
+                        website use through cookies. The information gathered is
+                        used to create reports about the use of our website.
+                    </p>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Privacy Policy:
+                        <a
+                            href="https://policies.google.com/privacy"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >https://policies.google.com/privacy</a
+                        >
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        Google AdSense
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        We use Google AdSense to display advertisements. Google
+                        AdSense uses cookies to serve ads based on your prior
+                        visits to our website or other websites on the Internet.
+                    </p>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Privacy Policy:
+                        <a
+                            href="https://policies.google.com/technologies/ads"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >https://policies.google.com/technologies/ads</a
+                        >
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        TradingView
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        We embed TradingView charts which may set their own
+                        cookies for functionality and analytics.
+                    </p>
+                    <p class="text-gray-300 text-sm">
+                        Privacy Policy:
+                        <a
+                            href="https://www.tradingview.com/privacy-policy/"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >https://www.tradingview.com/privacy-policy/</a
+                        >
+                    </p>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        How to Control Cookies
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        You have the right to decide whether to accept or reject
+                        cookies. You can exercise your cookie preferences by:
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        Browser Settings
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        Most web browsers allow you to control cookies through
+                        their settings preferences. However, limiting cookies
+                        may impact your experience of our website.
+                    </p>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        To find out more about cookies, including how to see
+                        what cookies have been set and how to manage and delete
+                        them, visit:
+                    </p>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-2 ml-4 mb-4"
+                    >
+                        <li>
+                            <a
+                                href="https://www.allaboutcookies.org"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >AllAboutCookies.org</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="https://www.youronlinechoices.com"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >YourOnlineChoices.com</a
+                            >
+                        </li>
+                    </ul>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        Browser-Specific Instructions
+                    </h3>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-2 ml-4"
+                    >
+                        <li>
+                            <a
+                                href="https://support.google.com/chrome/answer/95647"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Google Chrome</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Mozilla Firefox</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="https://support.apple.com/guide/safari/manage-cookies-and-website-data-sfri11471/mac"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Safari</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Microsoft Edge</a
+                            >
+                        </li>
+                    </ul>
+
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-6">
+                        Opt-Out of Targeted Advertising
+                    </h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        You can opt out of receiving personalized ads from
+                        Google and other companies that participate in
+                        self-regulatory programs:
+                    </p>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-2 ml-4"
+                    >
+                        <li>
+                            <a
+                                href="https://www.google.com/settings/ads"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Google Ads Settings</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="https://optout.networkadvertising.org/"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Network Advertising Initiative</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="https://optout.aboutads.info/"
+                                class="text-emerald-400 hover:text-emerald-300 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Digital Advertising Alliance</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Impact of Disabling Cookies
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        If you choose to disable cookies, some features of our
+                        website may not function as intended:
+                    </p>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-2 ml-4"
+                    >
+                        <li>
+                            You may need to re-enter information more frequently
+                        </li>
+                        <li>
+                            Certain personalized features may not be available
+                        </li>
+                        <li>
+                            Your preferences won't be saved between sessions
+                        </li>
+                        <li>Some interactive tools may not work properly</li>
+                    </ul>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Updates to This Cookie Policy
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed">
+                        We may update this Cookie Policy from time to time to
+                        reflect changes to the cookies we use or for other
+                        operational, legal, or regulatory reasons. Please
+                        revisit this Cookie Policy regularly to stay informed
+                        about our use of cookies.
+                    </p>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Contact Us
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        If you have any questions about our use of cookies,
+                        please contact us:
+                    </p>
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <p class="text-gray-300">
+                            Email:
+                            <a
+                                href="mailto:gextracker@gmail.com"
+                                class="text-emerald-400 hover:text-emerald-300"
+                                >privacy@gextracker.com</a
+                            >
+                        </p>
+                        <p class="text-gray-300 mt-2">
+                            Website:
+                            <a
+                                href="/"
+                                class="text-emerald-400 hover:text-emerald-300"
+                                >https://gextracker.com</a
+                            >
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="mt-8 bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        Related Policies
+                    </h3>
+                    <div class="flex flex-wrap gap-4">
+                        <a
+                            href="/privacy"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            >Privacy Policy</a
+                        >
+                        <a
+                            href="/terms"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            >Terms of Service</a
+                        >
+                        <a
+                            href="/about-us"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            >About Us</a
+                        >
+                    </div>
+                </div>
             </div>
-            <p class="text-gray-300 text-sm mb-4">
-                Learn more: <a href="https://policies.google.com/technologies/cookies" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Google's Cookie Policy</a>
-            </p>
+        </main>
 
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">3. Advertising Cookies</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                These cookies are used to make advertising messages more relevant to you. They perform functions like preventing the same ad from continuously reappearing, ensuring that ads are properly displayed, and in some cases selecting advertisements based on your interests.
-            </p>
-            <div class="overflow-x-auto mb-6">
-                <table class="cookie-table">
-                    <thead>
-                        <tr>
-                            <th>Cookie Name</th>
-                            <th>Provider</th>
-                            <th>Purpose</th>
-                            <th>Duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-gray-300">_gcl_au</td>
-                            <td class="text-gray-300">Google AdSense</td>
-                            <td class="text-gray-300">Used for ad targeting and measurement</td>
-                            <td class="text-gray-300">3 months</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">IDE</td>
-                            <td class="text-gray-300">Google DoubleClick</td>
-                            <td class="text-gray-300">Used to serve targeted advertisements</td>
-                            <td class="text-gray-300">1 year</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">test_cookie</td>
-                            <td class="text-gray-300">Google DoubleClick</td>
-                            <td class="text-gray-300">Used to check if browser supports cookies</td>
-                            <td class="text-gray-300">15 minutes</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- Footer -->
+        <footer class="bg-gray-900 mt-20 border-t border-gray-700">
+            <div
+                class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400"
+            >
+                <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+                <div class="mt-2 space-x-4">
+                    <a
+                        href="/privacy"
+                        class="text-sm text-gray-500 hover:text-emerald-400"
+                        >Privacy Policy</a
+                    >
+                    <a
+                        href="/terms"
+                        class="text-sm text-gray-500 hover:text-emerald-400"
+                        >Terms of Service</a
+                    >
+                    <a
+                        href="/cookies"
+                        class="text-sm text-gray-500 hover:text-emerald-400"
+                        >Cookie Policy</a
+                    >
+                </div>
             </div>
-            <p class="text-gray-300 text-sm mb-4">
-                Opt out of personalized advertising: <a href="https://www.google.com/settings/ads" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>
-            </p>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">4. Functionality Cookies</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                These cookies enable the website to provide enhanced functionality and personalization. They may be set by us or by third-party providers whose services we have added to our pages.
-            </p>
-            <div class="overflow-x-auto mb-6">
-                <table class="cookie-table">
-                    <thead>
-                        <tr>
-                            <th>Cookie Name</th>
-                            <th>Purpose</th>
-                            <th>Duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-gray-300">user_preferences</td>
-                            <td class="text-gray-300">Stores your chart preferences and settings</td>
-                            <td class="text-gray-300">1 year</td>
-                        </tr>
-                        <tr>
-                            <td class="text-gray-300">recent_searches</td>
-                            <td class="text-gray-300">Remembers recently searched ticker symbols</td>
-                            <td class="text-gray-300">30 days</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Third-Party Cookies</h2>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                In addition to our own cookies, we use various third-party cookies to report usage statistics and deliver advertisements. These third parties may also use cookies:
-            </p>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">Google Analytics</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                We use Google Analytics to analyze the use of our website. Google Analytics gathers information about website use through cookies. The information gathered is used to create reports about the use of our website.
-            </p>
-            <p class="text-gray-300 text-sm mb-4">
-                Privacy Policy: <a href="https://policies.google.com/privacy" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a>
-            </p>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">Google AdSense</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                We use Google AdSense to display advertisements. Google AdSense uses cookies to serve ads based on your prior visits to our website or other websites on the Internet.
-            </p>
-            <p class="text-gray-300 text-sm mb-4">
-                Privacy Policy: <a href="https://policies.google.com/technologies/ads" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">https://policies.google.com/technologies/ads</a>
-            </p>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">TradingView</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                We embed TradingView charts which may set their own cookies for functionality and analytics.
-            </p>
-            <p class="text-gray-300 text-sm">
-                Privacy Policy: <a href="https://www.tradingview.com/privacy-policy/" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">https://www.tradingview.com/privacy-policy/</a>
-            </p>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">How to Control Cookies</h2>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                You have the right to decide whether to accept or reject cookies. You can exercise your cookie preferences by:
-            </p>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">Browser Settings</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                Most web browsers allow you to control cookies through their settings preferences. However, limiting cookies may impact your experience of our website.
-            </p>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                To find out more about cookies, including how to see what cookies have been set and how to manage and delete them, visit:
-            </p>
-            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4 mb-4">
-                <li><a href="https://www.allaboutcookies.org" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">AllAboutCookies.org</a></li>
-                <li><a href="https://www.youronlinechoices.com" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">YourOnlineChoices.com</a></li>
-            </ul>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">Browser-Specific Instructions</h3>
-            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
-                <li><a href="https://support.google.com/chrome/answer/95647" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Google Chrome</a></li>
-                <li><a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a></li>
-                <li><a href="https://support.apple.com/guide/safari/manage-cookies-and-website-data-sfri11471/mac" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Safari</a></li>
-                <li><a href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Microsoft Edge</a></li>
-            </ul>
-
-            <h3 class="text-xl font-semibold text-white mb-3 mt-6">Opt-Out of Targeted Advertising</h3>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                You can opt out of receiving personalized ads from Google and other companies that participate in self-regulatory programs:
-            </p>
-            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
-                <li><a href="https://www.google.com/settings/ads" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Google Ads Settings</a></li>
-                <li><a href="https://optout.networkadvertising.org/" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Network Advertising Initiative</a></li>
-                <li><a href="https://optout.aboutads.info/" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Digital Advertising Alliance</a></li>
-            </ul>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Impact of Disabling Cookies</h2>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                If you choose to disable cookies, some features of our website may not function as intended:
-            </p>
-            <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
-                <li>You may need to re-enter information more frequently</li>
-                <li>Certain personalized features may not be available</li>
-                <li>Your preferences won't be saved between sessions</li>
-                <li>Some interactive tools may not work properly</li>
-            </ul>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Updates to This Cookie Policy</h2>
-            <p class="text-gray-300 leading-relaxed">
-                We may update this Cookie Policy from time to time to reflect changes to the cookies we use or for other operational, legal, or regulatory reasons. Please revisit this Cookie Policy regularly to stay informed about our use of cookies.
-            </p>
-        </div>
-
-        <div class="content-section">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-4">Contact Us</h2>
-            <p class="text-gray-300 leading-relaxed mb-4">
-                If you have any questions about our use of cookies, please contact us:
-            </p>
-            <div class="bg-gray-800 rounded-lg p-4">
-                <p class="text-gray-300">Email: <a href="mailto:privacy@gextracker.com" class="text-emerald-400 hover:text-emerald-300">privacy@gextracker.com</a></p>
-                <p class="text-gray-300 mt-2">Website: <a href="/" class="text-emerald-400 hover:text-emerald-300">https://gextracker.com</a></p>
-            </div>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="mt-8 bg-gray-800 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-white mb-4">Related Policies</h3>
-            <div class="flex flex-wrap gap-4">
-                <a href="/privacy" class="text-emerald-400 hover:text-emerald-300 underline">Privacy Policy</a>
-                <a href="/terms" class="text-emerald-400 hover:text-emerald-300 underline">Terms of Service</a>
-                <a href="/about-us" class="text-emerald-400 hover:text-emerald-300 underline">About Us</a>
-            </div>
-        </div>
-    </div>
-</main>
-
-<!-- Footer -->
-<footer class="bg-gray-900 mt-20 border-t border-gray-700">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
-        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
-        <div class="mt-2 space-x-4">
-            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
-            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
-            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
-        </div>
-    </div>
-</footer>
-
-</body>
+        </footer>
+    </body>
 </html>
