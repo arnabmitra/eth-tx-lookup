@@ -153,6 +153,19 @@ func gexTradingHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+func strategiesHandler(w http.ResponseWriter, r *http.Request) {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
+
+	tmpl, err := template.ParseFiles("templates/strategies.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
+
 func glossaryHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))

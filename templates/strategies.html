@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEX Trading Strategies - Learn How to Trade with Gamma Exposure</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta name="description" content="Comprehensive guide to trading strategies using Gamma Exposure (GEX) analysis. Learn professional techniques for options trading.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .strategy-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .strategy-card:hover {
+            transform: translateY(-3px);
+            border-color: #34d399;
+            box-shadow: 0 10px 20px -5px rgba(52, 211, 153, 0.2);
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-bullish { background-color: #34d39920; color: #34d399; }
+        .badge-bearish { background-color: #ef444420; color: #ef4444; }
+        .badge-neutral { background-color: #60a5fa20; color: #60a5fa; }
+        .badge-advanced { background-color: #a78bfa20; color: #a78bfa; }
+        .badge-intermediate { background-color: #fbbf2420; color: #fbbf24; }
+        .badge-beginner { background-color: #34d39920; color: #34d399; }
+    </style>
+</head>
+<body class="antialiased">
+
+<!-- Header -->
+<header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex-shrink-0">
+                <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
+            </div>
+            <nav class="hidden md:block">
+                                                <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">All Expiries GEX</a>
+                            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">MAG7 GEX</a>
+                            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">GEX History</a>
+                            <div x-data="{ open: false }" class="relative">
+                                <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <span>More</span>
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                                    <a href="/gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Tracker</a>
+                                    <a href="/strategies" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Strategies</a>
+                                    <a href="/about" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Learn Center</a>
+                                    <a href="/about#faq" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">FAQ</a>
+                                    <a href="/about-us" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">About Us</a>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="md:hidden hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
+            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
+            <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
+            <a href="/strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
+            <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
+            <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+        <h1 class="text-5xl font-bold gradient-text mb-4">GEX Trading Strategies</h1>
+        <p class="text-xl text-gray-400 max-w-3xl mx-auto">Master professional trading techniques using Gamma Exposure analysis. Learn how market makers position themselves and turn that knowledge into profitable trades.</p>
+    </div>
+
+    <!-- Quick Reference Guide -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-8 mb-12">
+        <h2 class="text-2xl font-bold mb-6">Quick Reference Guide</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-lg font-semibold text-emerald-400 mb-3">🟢 Positive GEX (Support/Resistance)</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li>• <strong>Effect:</strong> Price stabilization - acts as a magnet</li>
+                    <li>• <strong>Market Maker Action:</strong> Buy dips, sell rallies</li>
+                    <li>• <strong>Trader Opportunity:</strong> Mean reversion, range trading</li>
+                    <li>• <strong>Best For:</strong> Selling premium, tight stop losses</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-red-400 mb-3">🔴 Negative GEX (Breakout Zones)</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li>• <strong>Effect:</strong> Price acceleration - amplifies moves</li>
+                    <li>• <strong>Market Maker Action:</strong> Buy rallies, sell dips</li>
+                    <li>• <strong>Trader Opportunity:</strong> Trend following, momentum</li>
+                    <li>• <strong>Best For:</strong> Buying options, trailing stops</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strategy Categories -->
+    <div class="mb-16">
+        <h2 class="text-3xl font-bold mb-8">Strategy Categories</h2>
+        
+        <!-- Beginner Strategies -->
+        <div class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6 flex items-center">
+                <span class="badge badge-beginner mr-3">Beginner</span>
+                Foundation Strategies
+            </h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Strategy 1 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">Support & Resistance Identification</h4>
+                        <span class="badge badge-neutral">Neutral</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Use the largest positive GEX bars as key price levels where the stock is likely to find support or resistance.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Identify top 3 highest positive GEX levels</li>
+                            <li>2. Wait for price to approach these levels</li>
+                            <li>3. Look for reversal signals (candlesticks, volume)</li>
+                            <li>4. Enter mean reversion trades with tight stops</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Low | <strong>Win Rate:</strong> 60-70% | <strong>R:R:</strong> 1:1 to 1:2</p>
+                    </div>
+                </div>
+
+                <!-- Strategy 2 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">Zero Gamma Level Trading</h4>
+                        <span class="badge badge-bullish">Breakout</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Trade the transition from positive to negative gamma as price crosses the zero GEX level - a key inflection point.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Note the zero gamma level on your chart</li>
+                            <li>2. Watch for price approaching this level</li>
+                            <li>3. Expect increased volatility near this zone</li>
+                            <li>4. Trade breakouts above/below with momentum</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Medium | <strong>Win Rate:</strong> 50-60% | <strong>R:R:</strong> 1:2 to 1:3</p>
+                    </div>
+                </div>
+
+                <!-- Strategy 3 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">GEX Confirmation</h4>
+                        <span class="badge badge-neutral">Confirmation</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Enhance your existing technical analysis by confirming support/resistance with GEX levels for higher conviction trades.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Perform your normal technical analysis</li>
+                            <li>2. Check if key levels align with high GEX</li>
+                            <li>3. Increase position size when aligned</li>
+                            <li>4. Use tighter stops when not aligned</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Low | <strong>Win Rate:</strong> 65-75% | <strong>R:R:</strong> 1:1.5</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Intermediate Strategies -->
+        <div class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6 flex items-center">
+                <span class="badge badge-intermediate mr-3">Intermediate</span>
+                Advanced Techniques
+            </h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Strategy 4 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">Volatility Breakout Play</h4>
+                        <span class="badge badge-bullish">Directional</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Trade explosive moves when price breaks through negative gamma zones where market makers amplify momentum.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Identify negative GEX zones on chart</li>
+                            <li>2. Wait for price to approach these areas</li>
+                            <li>3. Enter on volume confirmation breakout</li>
+                            <li>4. Use trailing stops to capture trend</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Medium-High | <strong>Win Rate:</strong> 45-55% | <strong>R:R:</strong> 1:3+</p>
+                    </div>
+                </div>
+
+                <!-- Strategy 5 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">GEX Ladder Strategy</h4>
+                        <span class="badge badge-neutral">Multi-Level</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Scale into positions at multiple GEX levels to build a high-probability trade with favorable risk/reward.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Identify 3-4 significant positive GEX levels</li>
+                            <li>2. Enter 25% position at each level</li>
+                            <li>3. Set stop below all GEX levels</li>
+                            <li>4. Take profits at negative GEX zones</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Medium | <strong>Win Rate:</strong> 55-65% | <strong>R:R:</strong> 1:2</p>
+                    </div>
+                </div>
+
+                <!-- Strategy 6 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">Expiration Week Squeeze</h4>
+                        <span class="badge badge-bullish">Event-Based</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Trade the gamma squeeze effect in the week leading up to major option expiration when GEX concentrations are highest.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Focus on weekly expirations</li>
+                            <li>2. Find highest GEX strike (max pain)</li>
+                            <li>3. Trade towards this level Mon-Thu</li>
+                            <li>4. Exit before Friday's pin risk</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Medium | <strong>Win Rate:</strong> 60-70% | <strong>R:R:</strong> 1:1.5</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Advanced Strategies -->
+        <div class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6 flex items-center">
+                <span class="badge badge-advanced mr-3">Advanced</span>
+                Professional Techniques
+            </h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Strategy 7 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">Delta-Neutral GEX Hedge</h4>
+                        <span class="badge badge-neutral">Hedging</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Create market-neutral positions that profit from GEX-driven price action regardless of direction.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Sell options at high positive GEX strikes</li>
+                            <li>2. Buy stock to create delta-neutral position</li>
+                            <li>3. Rebalance as price moves toward GEX level</li>
+                            <li>4. Profit from theta decay + mean reversion</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Low-Medium | <strong>Win Rate:</strong> 70-80% | <strong>R:R:</strong> 1:1</p>
+                    </div>
+                </div>
+
+                <!-- Strategy 8 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">GEX Flip Momentum</h4>
+                        <span class="badge badge-bullish">Reversal</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Capitalize on regime changes when market transitions from positive to negative GEX or vice versa.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Monitor total GEX (all strikes combined)</li>
+                            <li>2. Watch for flip from net positive to negative</li>
+                            <li>3. Enter long volatility trades (buy options)</li>
+                            <li>4. Expect larger price moves post-flip</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> High | <strong>Win Rate:</strong> 40-50% | <strong>R:R:</strong> 1:4+</p>
+                    </div>
+                </div>
+
+                <!-- Strategy 9 -->
+                <div class="strategy-card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-xl font-bold">Multi-Expiry GEX Arbitrage</h4>
+                        <span class="badge badge-advanced">Complex</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Exploit differences between near-term and long-term GEX positioning to capture calendar spread opportunities.</p>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <p class="text-sm font-semibold text-emerald-400 mb-2">How to Trade:</p>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>1. Compare weekly vs monthly GEX levels</li>
+                            <li>2. Look for misalignment in positioning</li>
+                            <li>3. Use calendar spreads at divergent strikes</li>
+                            <li>4. Profit from convergence over time</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <p class="text-xs text-gray-500"><strong>Risk:</strong> Medium | <strong>Win Rate:</strong> 55-65% | <strong>R:R:</strong> 1:2</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Management Section -->
+    <div class="bg-gradient-to-br from-red-900/20 to-orange-900/20 border border-red-700/50 rounded-lg p-8 mb-12">
+        <h2 class="text-2xl font-bold mb-6 text-red-400">⚠️ Risk Management Guidelines</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-lg font-semibold mb-3 text-white">Position Sizing Rules</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li>• Never risk more than 1-2% of capital per trade</li>
+                    <li>• Size positions smaller in negative GEX zones (higher volatility)</li>
+                    <li>• Use wider stops in low liquidity environments</li>
+                    <li>• Scale in gradually at multiple GEX levels</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-3 text-white">When NOT to Trade GEX</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li>• Low open interest (< 1000 contracts at strike)</li>
+                    <li>• Major news events overriding technical levels</li>
+                    <li>• Extreme market conditions (VIX > 40)</li>
+                    <li>• Illiquid underlying securities</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example Trade Setups -->
+    <div class="mb-12">
+        <h2 class="text-3xl font-bold mb-8">Example Trade Setups</h2>
+        <div class="space-y-6">
+            
+            <!-- Example 1 -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <h3 class="text-xl font-bold">SPY Mean Reversion at High GEX</h3>
+                    <span class="badge badge-beginner">Beginner-Friendly</span>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Setup</p>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• SPY trading at $580</li>
+                            <li>• Highest GEX at $575 (+$15M)</li>
+                            <li>• Price pulls back to $576</li>
+                            <li>• Support on daily chart at $575</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Entry & Management</p>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• Buy SPY $577 call, 7 DTE</li>
+                            <li>• Entry: $2.50 per contract</li>
+                            <li>• Stop: Below $574 (-40%)</li>
+                            <li>• Target: $582 (+100%)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Rationale</p>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• High GEX acts as support</li>
+                            <li>• Market makers will buy dips</li>
+                            <li>• Technical confluence</li>
+                            <li>• Favorable R:R ratio</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example 2 -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <h3 class="text-xl font-bold">NVDA Volatility Breakout Play</h3>
+                    <span class="badge badge-intermediate">Intermediate</span>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Setup</p>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• NVDA at $140</li>
+                            <li>• Zero GEX level at $142</li>
+                            <li>• Negative GEX above $142 (-$8M)</li>
+                            <li>• Consolidation pattern forming</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Entry & Management</p>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• Buy NVDA $145 call on break of $142</li>
+                            <li>• Entry: $3.00 per contract</li>
+                            <li>• Stop: $141 (-33%)</li>
+                            <li>• Target: $150 (+200%)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Rationale</p>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• Negative GEX amplifies moves</li>
+                            <li>• MM hedging accelerates breakout</li>
+                            <li>• Clear risk/reward structure</li>
+                            <li>• Momentum in our favor</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Common Mistakes -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-8 mb-12">
+        <h2 class="text-2xl font-bold mb-6">Common Mistakes to Avoid</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold text-white">Trading Every GEX Level</p>
+                        <p class="text-sm text-gray-400">Focus on the most significant levels with highest open interest. Quality > quantity.</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold text-white">Ignoring Market Context</p>
+                        <p class="text-sm text-gray-400">GEX doesn't work in isolation. Always consider broader market trends and news.</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold text-white">Overleveraging Positions</p>
+                        <p class="text-sm text-gray-400">GEX increases probability but doesn't guarantee success. Stick to proper position sizing.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold text-white">Chasing After Price Moves</p>
+                        <p class="text-sm text-gray-400">Wait for price to come to your GEX level, don't chase it after it's already moved.</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold text-white">No Stop Loss Plan</p>
+                        <p class="text-sm text-gray-400">Always define your risk before entering. GEX levels can fail.</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold text-white">Trading Illiquid Options</p>
+                        <p class="text-sm text-gray-400">Stick to highly liquid underlyings like SPY, QQQ, major tech stocks.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border border-emerald-700/50 rounded-lg p-12">
+        <h2 class="text-3xl font-bold mb-4">Ready to Put These Strategies to Work?</h2>
+        <p class="text-xl text-gray-400 mb-8">Use our GEX Tracker to identify real-time opportunities</p>
+        <a href="/gex" class="inline-block bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:-translate-y-1">
+            Start Analyzing GEX Now →
+        </a>
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+        <div class="mt-2 space-x-4">
+            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+        </div>
+        <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
+    </div>
+</footer>
+
+<script>
+    document.getElementById('mobile-menu-button').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+</script>
+
+</body>
+</html>

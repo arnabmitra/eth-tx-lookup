@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         body {
@@ -129,25 +130,25 @@
                 <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
             </div>
             <nav class="hidden md:block">
-                <div class="ml-10 flex items-baseline space-x-4">
-                    <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
-                    <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
-                    <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
-                    <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
-            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>                    <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">About Us</a>
+                                                <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">All Expiries GEX</a>
+                            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">MAG7 GEX</a>
+                            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">GEX History</a>
                             <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                            <span>More</span>
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
-                            <a href="/all-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">All Expiries GEX</a>
-                            <a href="/mag7-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">MAG7 GEX</a>
-                            <a href="/gex-history?symbol=SPY&limit=5" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">GEX History</a>
+                                <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <span>More</span>
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                                    <a href="/gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Tracker</a>
+                                    <a href="/strategies" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Strategies</a>
+                                    <a href="/about" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Learn Center</a>
+                                    <a href="/about#faq" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">FAQ</a>
+                                    <a href="/about-us" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">About Us</a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </nav>
+                    </nav>
             <div class="md:hidden">
                 <!-- Mobile menu button -->
                 <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
@@ -161,14 +162,15 @@
     </div>
     <!-- Mobile menu, show/hide based on menu state. -->
     <div class="md:hidden hidden" id="mobile-menu">
-        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
-            <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
-            <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
-            <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
-            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
             <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
             <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
+            <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
+            <a href="/strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
+            <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
+            <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>
         </div>
     </div>
 </header>

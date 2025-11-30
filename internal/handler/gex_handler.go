@@ -8,7 +8,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"time"
@@ -74,6 +73,12 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	// Initialize combined GEX map
 	combinedGEXByStrike := make(map[float64]float64)
 
+	// Limit to next 8 expiries (roughly 2 months) for performance
+	maxExpiries := 8
+	if len(expiryDates) > maxExpiries {
+		expiryDates = expiryDates[:maxExpiries]
+	}
+
 	h.logger.Info(fmt.Sprintf("Processing %d expiry dates for %s", len(expiryDates), symbol))
 
 	// Process each expiry date
@@ -91,7 +96,9 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			ExpiryDate: expirationDatePgType,
 		})
 
-		if err == nil && time.Since(expiry.UpdatedAt) <= 1*time.Minute {
+		// Use longer cache time (5 minutes) for better performance
+		cacheTime := 15 * time.Minute
+		if err == nil && time.Since(expiry.UpdatedAt) <= cacheTime {
 			// Use cached data
 			var response gex.Response
 			err = json.Unmarshal(expiry.OptionChain, &response)
@@ -200,29 +207,30 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		outputPath := filepath.Join("static", "all_gex_chart_"+symbol+".png")
-		err = gex.CreateGEXPlot(gexByStrike, symbol+" (All Expiries)", outputPath, price)
-		if err != nil {
-			h.renderError(w, fmt.Sprintf("Error getting data for this SYMBOL: %v", err))
-			return
+		// Prepare chart data for D3.js
+		chartData := make([]map[string]interface{}, 0)
+		for strike, gexValue := range gexByStrike {
+			if gexValue < -100 || gexValue > 100 {
+				chartData = append(chartData, map[string]interface{}{
+					"strike": strike,
+					"gex":    gexValue,
+				})
+			}
 		}
 
-		// Add a small delay to ensure the file is completely written
-		time.Sleep(10 * time.Millisecond)
-
-		// Ensure the file exists and is accessible
-		if _, err := os.Stat(outputPath); os.IsNotExist(err) {
-			http.Error(w, "Image file not ready yet", http.StatusInternalServerError)
-			return
-		}
+		// Sort by strike price
+		sort.Slice(chartData, func(i, j int) bool {
+			return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
+		})
 
 		// Set proper content type for HTML response
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		err = h.tmpl.ExecuteTemplate(w, "all_gex_chart.html", map[string]interface{}{
-			"ImagePath": fmt.Sprintf("/%s?nocache=%d", outputPath, time.Now().Unix()),
-			"GEXData":   gexData,
 			"Symbol":    symbol,
+			"SpotPrice": price,
+			"GEXData":   gexData,
+			"ChartData": chartData,
 		})
 		if err != nil {
 			h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
@@ -383,16 +391,27 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"GEX":    humanize.Commaf(entry.GEX),
 			}
 		}
-		outputPath := filepath.Join("static", "gex_chart_"+symbol+".png")
-		err = gex.CreateGEXPlot(gexByStrike, symbol, outputPath, price)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error creating bar chart: %v", err), http.StatusInternalServerError)
-			return
+		// Prepare chart data for D3.js
+		chartData := make([]map[string]interface{}, 0)
+		for strike, gexValue := range gexByStrike {
+			if gexValue < -100 || gexValue > 100 {
+				chartData = append(chartData, map[string]interface{}{
+					"strike": strike,
+					"gex":    gexValue,
+				})
+			}
 		}
 
+		// Sort by strike price
+		sort.Slice(chartData, func(i, j int) bool {
+			return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
+		})
+
 		err = h.tmpl.ExecuteTemplate(w, "gex_chart.html", map[string]interface{}{
-			"ImagePath": fmt.Sprintf("/%s?nocache=%d", outputPath, time.Now().Unix()),
+			"Symbol":    symbol,
+			"SpotPrice": price,
 			"GEXData":   gexData,
+			"ChartData": chartData,
 		})
 		if err != nil {
 			h.renderError(w, fmt.Sprintf("Error fetching options chain: %v", err))
@@ -401,7 +420,9 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.tmpl.ExecuteTemplate(w, "gex.html", nil)
+	err := h.tmpl.ExecuteTemplate(w, "gex.html", map[string]interface{}{
+		"ChartData": nil,
+	})
 	if err != nil {
 		return
 	}
@@ -704,10 +725,14 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 	mag7 := []string{"AAPL", "MSFT", "GOOG", "AMZN", "NVDA", "TSLA", "META"}
 	type Mag7Chart struct {
 		Symbol    string
-		ImagePath string
+		SpotPrice float64
+		ChartData []map[string]interface{}
 	}
+	
 	var charts []Mag7Chart
+	apiKey := os.Getenv("TRADIER_API_KEY")
 
+	// Process sequentially to avoid API rate limits
 	for _, symbol := range mag7 {
 		gexByStrike, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
 		if err != nil {
@@ -715,23 +740,36 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		apiKey := os.Getenv("TRADIER_API_KEY")
 		price, err := gex.GetSpotPrice(apiKey, symbol)
 		if err != nil {
 			h.logger.Error("failed to get spot price", "error", err, "symbol", symbol)
 			continue
 		}
 
-		outputPath := filepath.Join("static", "gex_chart_"+symbol+".png")
-		err = gex.CreateGEXPlot(gexByStrike, symbol+" (All Expiries)", outputPath, price)
-		if err != nil {
-			h.logger.Error("failed to create GEX plot", "error", err, "symbol", symbol)
-			continue
+		// Prepare chart data for D3.js
+		chartData := make([]map[string]interface{}, 0)
+		for strike, gexValue := range gexByStrike {
+			if gexValue < -100 || gexValue > 100 {
+				chartData = append(chartData, map[string]interface{}{
+					"strike": strike,
+					"gex":    gexValue,
+				})
+			}
 		}
+
+		// Sort by strike price
+		sort.Slice(chartData, func(i, j int) bool {
+			return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
+		})
+
 		charts = append(charts, Mag7Chart{
 			Symbol:    symbol,
-			ImagePath: "/" + outputPath,
+			SpotPrice: price,
+			ChartData: chartData,
 		})
+		
+		// Add small delay between symbols to avoid rate limiting
+		time.Sleep(150 * time.Millisecond)
 	}
 
 	err := h.tmpl.ExecuteTemplate(w, "mag7_gex.html", map[string]interface{}{

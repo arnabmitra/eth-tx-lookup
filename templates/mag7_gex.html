@@ -5,32 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAG7 GEX Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Dark Gray */
-            color: #d1d5db; /* Light Gray */
+            background-color: #111827;
+            color: #d1d5db;
         }
         .gradient-text {
             background: linear-gradient(to right, #34d399, #60a5fa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .card {
-            background-color: #1f2937; /* Darker Gray */
-            border: 1px solid #374151; /* Gray border */
+        .chart-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
             border-radius: 0.75rem;
+            padding: 1.5rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
         }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-        }
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.75);
+        .chart-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(52, 211, 153, 0.2);
+            border-color: #34d399;
         }
     </style>
 </head>
@@ -44,25 +43,25 @@
                     <a href="/" class="text-2xl font-bold gradient-text">GEX Tracker</a>
                 </div>
                 <nav class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tracker</a>
-                        <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Learn Center</a>
-                        <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Strategies</a>
-                        <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
-            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>                        <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">About Us</a>
+                                                <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">All Expiries GEX</a>
+                            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">MAG7 GEX</a>
+                            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">GEX History</a>
                             <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                                <span>More</span>
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
-                                <a href="/all-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">All Expiries GEX</a>
-                                <a href="/mag7-gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">MAG7 GEX</a>
-                                <a href="/gex-history?symbol=SPY&limit=5" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">GEX History</a>
+                                <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <span>More</span>
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                                    <a href="/gex" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Tracker</a>
+                                    <a href="/strategies" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Strategies</a>
+                                    <a href="/about" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Learn Center</a>
+                                    <a href="/about#faq" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">FAQ</a>
+                                    <a href="/about-us" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">About Us</a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </nav>
+                    </nav>
                 <div class="md:hidden">
                     <!-- Mobile menu button -->
                     <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
@@ -76,42 +75,33 @@
         </div>
         <!-- Mobile menu, show/hide based on menu state. -->
         <div class="md:hidden hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
-                <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
-                <a href="/about#strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
-                <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
-            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>                <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
-                <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
-                <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
-            </div>
+                    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/all-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">All Expiries GEX</a>
+            <a href="/mag7-gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">MAG7 GEX</a>
+            <a href="/gex-history?symbol=SPY&limit=5" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">GEX History</a>
+            <a href="/gex" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Tracker</a>
+            <a href="/strategies" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Strategies</a>
+            <a href="/about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learn Center</a>
+            <a href="/about#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+            <a href="/about-us" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About Us</a>
         </div>
-    </header>
+    </div>
+</header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12" x-data="{ open: false, imageSrc: '', title: '' }">
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 gradient-text">MAG7 GEX Analysis</h1>
-            <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-400">Consolidated Gamma Exposure charts for the Magnificent Seven stocks.</p>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-400">Interactive Gamma Exposure charts for the Magnificent Seven stocks.</p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {{range .Charts}}
-            <div class="card p-4" @click="imageSrc = '{{.ImagePath}}'; title = '{{.Symbol}} GEX Analysis'; open = true">
-                <h3 class="text-lg font-semibold text-center mb-2">{{.Symbol}}</h3>
-                <img src="{{.ImagePath}}" alt="GEX Chart for {{.Symbol}}" class="w-full rounded-md">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {{range $index, $chart := .Charts}}
+            <div class="chart-card">
+                <h3 class="text-xl font-bold text-center mb-4 text-white">{{.Symbol}} (Spot: ${{ printf "%.2f" .SpotPrice }})</h3>
+                <div id="chart-{{.Symbol}}" class="w-full"></div>
             </div>
             {{end}}
-        </div>
-
-        <!-- Modal -->
-        <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center modal-overlay" @keydown.escape.window="open = false" style="display: none;">
-            <div class="bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full p-4 relative" @click.away="open = false">
-                <h2 class="text-2xl font-bold text-white text-center mb-4" x-text="title"></h2>
-                <img :src="imageSrc" alt="Enlarged GEX Chart" class="w-full rounded-md">
-                <button @click="open = false" class="absolute top-2 right-2 text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
         </div>
     </main>
 
@@ -134,6 +124,144 @@
         const mobileMenu = document.getElementById('mobile-menu');
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
+        });
+
+        // D3 Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof d3 === 'undefined') {
+                console.error('D3.js is not loaded');
+                return;
+            }
+
+            const chartsData = [
+                {{range $index, $chart := .Charts}}
+                {
+                    symbol: '{{.Symbol}}',
+                    data: {{.ChartData}}
+                },
+                {{end}}
+            ];
+
+            chartsData.forEach(chartInfo => {
+                if (!chartInfo.data || chartInfo.data.length === 0) {
+                    console.log(`No data for ${chartInfo.symbol}`);
+                    return;
+                }
+
+                const containerId = `chart-${chartInfo.symbol}`;
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                // Clear any existing content
+                d3.select(`#${containerId}`).selectAll("*").remove();
+
+                // Set up dimensions
+                const containerWidth = container.offsetWidth;
+                const margin = {top: 20, right: 20, bottom: 60, left: 60};
+                const width = containerWidth - margin.left - margin.right;
+                const height = 300 - margin.top - margin.bottom;
+
+                // Create SVG
+                const svg = d3.select(`#${containerId}`)
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .style("background", "#1f2937")
+                    .style("border-radius", "0.5rem")
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                // X Scale
+                const x = d3.scaleBand()
+                    .domain(chartInfo.data.map(d => d.strike))
+                    .range([0, width])
+                    .padding(0.7);
+
+                // Y Scale
+                const yExtent = d3.extent(chartInfo.data, d => d.gex);
+                const y = d3.scaleLinear()
+                    .domain([Math.min(yExtent[0], 0), Math.max(yExtent[1], 0)])
+                    .range([height, 0]);
+
+                // Add X Axis
+                svg.append("g")
+                    .attr("transform", `translate(0,${y(0)})`)
+                    .call(d3.axisBottom(x).tickValues(
+                        x.domain().filter((d, i) => i % Math.ceil(chartInfo.data.length / 10) === 0)
+                    ))
+                    .selectAll("text")
+                    .attr("transform", "rotate(-45)")
+                    .style("text-anchor", "end")
+                    .style("fill", "#f9fafb")
+                    .style("font-size", "10px");
+
+                // Add Y Axis
+                svg.append("g")
+                    .call(d3.axisLeft(y).ticks(5).tickFormat(d => `$${d3.format(",.0f")(d)}`))
+                    .selectAll("text")
+                    .style("fill", "#f9fafb")
+                    .style("font-size", "10px");
+
+                // Style axis lines
+                svg.selectAll(".domain, .tick line")
+                    .style("stroke", "#9ca3af");
+
+                // Create tooltip
+                const tooltip = d3.select("body")
+                    .append("div")
+                    .style("position", "absolute")
+                    .style("background", "#1f2937")
+                    .style("padding", "8px")
+                    .style("border", "2px solid #34d399")
+                    .style("border-radius", "6px")
+                    .style("pointer-events", "none")
+                    .style("opacity", 0)
+                    .style("color", "#f3f4f6")
+                    .style("font-size", "12px")
+                    .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.3)")
+                    .style("z-index", "1000");
+
+                // Add bars
+                svg.selectAll(".bar")
+                    .data(chartInfo.data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d.strike))
+                    .attr("width", x.bandwidth())
+                    .attr("y", d => d.gex >= 0 ? y(d.gex) : y(0))
+                    .attr("height", d => Math.abs(y(d.gex) - y(0)))
+                    .attr("fill", d => d.gex >= 0 ? "#34d399" : "#ef4444")
+                    .style("cursor", "pointer")
+                    .on("mouseover", function(event, d) {
+                        d3.select(this).style("opacity", 0.7);
+                        tooltip.style("opacity", 1)
+                            .html(`
+                                <strong>Strike:</strong> $${d.strike.toFixed(2)}<br>
+                                <strong>GEX:</strong> $${d3.format(",.2f")(d.gex)}
+                            `)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 20) + "px");
+                    })
+                    .on("mousemove", function(event) {
+                        tooltip.style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 20) + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this).style("opacity", 1);
+                        tooltip.style("opacity", 0);
+                    });
+
+                // Add zero line
+                svg.append("line")
+                    .attr("x1", 0)
+                    .attr("x2", width)
+                    .attr("y1", y(0))
+                    .attr("y2", y(0))
+                    .style("stroke", "#9ca3af")
+                    .style("stroke-width", 2)
+                    .style("stroke-dasharray", "5,5");
+            });
         });
     </script>
 
