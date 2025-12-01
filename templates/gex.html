@@ -17,6 +17,7 @@
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <style>
             body {
                 font-family: "Inter", sans-serif;
@@ -46,21 +47,46 @@
                 background-color: rgba(0, 0, 0, 0.75);
             }
             .cta-button {
-                background: linear-gradient(to right, #34d399, #60a5fa);
+                position: relative;
+                background: linear-gradient(135deg, #34d399 0%, #60a5fa 100%);
                 color: white;
                 padding: 0.75rem 1.5rem;
-                border-radius: 0.5rem;
-                font-weight: 600;
-                transition:
-                    transform 0.3s ease,
-                    box-shadow 0.3s ease;
-                display: inline-block;
+                border-radius: 0.25rem;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.0625rem;
+                font-size: 0.875rem;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                overflow: hidden;
             }
             .cta-button:hover {
-                transform: translateY(-2px);
-                box-shadow:
-                    0 7px 10px -3px rgba(52, 211, 153, 0.3),
-                    0 4px 6px -2px rgba(96, 165, 250, 0.3);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            .cta-button:active {
+                transform: translateY(0);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            }
+            .cta-button::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.5);
+                transform: translate(-50%, -50%);
+                transition: width 0.6s, height 0.6s;
+            }
+            .cta-button:active::before {
+                width: 300px;
+                height: 300px;
             }
             .modal-overlay {
                 background-color: rgba(0, 0, 0, 0.75);
@@ -302,6 +328,7 @@
                         </div>
                         <div>
                             <button type="submit" class="w-full cta-button">
+                                <span class="material-icons" style="font-size: 20px;">insights</span>
                                 Generate Chart
                                 <span class="htmx-indicator">
                                     <svg class="inline w-4 h-4 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
