@@ -101,13 +101,13 @@ func btcEtfHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/btc_etf.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/btc_etf.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "btc_etf.html", nil)
 }
 
 func ethTxHandler(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func ethTxHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/eth.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/eth.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
@@ -144,104 +144,104 @@ func gexTradingHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/gex_trading.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/gex_trading.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "gex_trading.html", nil)
 }
 
 func strategiesHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/strategies.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/strategies.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "strategies.html", nil)
 }
 
 func faqHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/faq.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/faq.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "faq.html", nil)
 }
 
 func glossaryHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/glossary.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/glossary.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "glossary.html", nil)
 }
 
 func privacyHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/privacy.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/privacy.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "privacy.html", nil)
 }
 
 func termsHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/terms.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/terms.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "terms.html", nil)
 }
 
 func cookiesHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/cookies.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/cookies.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "cookies.html", nil)
 }
 
 func aboutUsHandler(w http.ResponseWriter, r *http.Request) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("Received request", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-	tmpl, err := template.ParseFiles("templates/about-us.html")
+	tmpl, err := template.ParseFiles("templates/navigation.html", "templates/about-us.html")
 	if err != nil {
 		http.Error(w, "Failed to load template", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	tmpl.ExecuteTemplate(w, "about-us.html", nil)
 }
 
 type AlchemyResponse struct {
