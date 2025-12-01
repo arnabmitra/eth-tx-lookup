@@ -16,6 +16,7 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
 	a.router.HandleFunc("/strategies", strategiesHandler)
+	a.router.HandleFunc("/faq", faqHandler)
 	a.router.HandleFunc("/glossary", glossaryHandler)
 	a.router.HandleFunc("/privacy", privacyHandler)
 	a.router.HandleFunc("/terms", termsHandler)

@@ -94,7 +94,7 @@
                             <a
                                 href="/about"
                                 class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                                >Learn Center</a
+                                >Home</a
                             >
                             <a
                                 href="/glossary"
@@ -160,64 +160,219 @@
 
                 <!-- What is GEX -->
                 <div class="content-section">
-                    <h1 class="text-3xl font-bold text-emerald-400 mb-6">What is Gamma Exposure (GEX)?</h1>
+                    <h1 class="text-3xl font-bold text-emerald-400 mb-6">
+                        What is Gamma Exposure (GEX)?
+                    </h1>
 
                     <p class="text-gray-300 leading-relaxed mb-6">
-                        <strong>Gamma Exposure (GEX)</strong>, also known as Gamma Levels, is a specialized metric that measures the change in delta exposure for options based on changes in the underlying price. It provides insight into potential market maker activities, helping traders anticipate market trends.
+                        <strong>Gamma Exposure (GEX)</strong>, also known as
+                        Gamma Levels, is a specialized metric that measures the
+                        change in delta exposure for options based on changes in
+                        the underlying price. It provides insight into potential
+                        market maker activities, helping traders anticipate
+                        market trends.
                     </p>
 
-                    <h2 class="text-2xl font-semibold text-white mb-4 mt-8">Function and Market Maker Hedging</h2>
+                    <h2 class="text-2xl font-semibold text-white mb-4 mt-8">
+                        Function and Market Maker Hedging
+                    </h2>
                     <p class="text-gray-300 leading-relaxed mb-4">
-                        GEX highlights important price levels where significant gamma exists due to market positioning and open interest.
+                        GEX highlights important price levels where significant
+                        gamma exists due to market positioning and open
+                        interest.
                     </p>
-                    <ul class="list-disc list-inside text-gray-300 space-y-3 ml-4 mb-6">
-                        <li>GEX reflects where <strong class="text-white">market-makers and dealers may need to hedge to mitigate their risk</strong>.</li>
-                        <li>In simpler terms, it shows how much market makers and dealers will need to buy or sell of an underlying asset to hedge their positions as the price moves.</li>
-                        <li>This hedging, known as <strong class="text-white">Delta Hedging</strong>, is a strategy market makers use to manage risks from price changes in underlying assets, maintaining balanced positions to ensure market stability and liquidity.</li>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-3 ml-4 mb-6"
+                    >
+                        <li>
+                            GEX reflects where
+                            <strong class="text-white"
+                                >market-makers and dealers may need to hedge to
+                                mitigate their risk</strong
+                            >.
+                        </li>
+                        <li>
+                            In simpler terms, it shows how much market makers
+                            and dealers will need to buy or sell of an
+                            underlying asset to hedge their positions as the
+                            price moves.
+                        </li>
+                        <li>
+                            This hedging, known as
+                            <strong class="text-white">Delta Hedging</strong>,
+                            is a strategy market makers use to manage risks from
+                            price changes in underlying assets, maintaining
+                            balanced positions to ensure market stability and
+                            liquidity.
+                        </li>
                     </ul>
 
-                    <h2 class="text-2xl font-semibold text-white mb-4 mt-8">Interpreting GEX: The "Price Magnet" Analogy</h2>
+                    <h2 class="text-2xl font-semibold text-white mb-4 mt-8">
+                        Interpreting GEX: The "Price Magnet" Analogy
+                    </h2>
                     <p class="text-gray-300 leading-relaxed mb-6">
-                        GEX can be conceptualized as a gravitational pull on the stock price. The net GEX position dictates whether market maker activity will stabilize or accelerate price movements:
+                        GEX can be conceptualized as a gravitational pull on the
+                        stock price. The net GEX position dictates whether
+                        market maker activity will stabilize or accelerate price
+                        movements:
                     </p>
 
                     <div class="overflow-x-auto mb-6">
-                        <table class="w-full border-collapse bg-gray-800/50 rounded-lg overflow-hidden">
+                        <table
+                            class="w-full border-collapse bg-gray-800/50 rounded-lg overflow-hidden"
+                        >
                             <thead>
                                 <tr class="bg-gray-700">
-                                    <th class="border border-gray-600 px-4 py-3 text-left text-white font-semibold">GEX Condition</th>
-                                    <th class="border border-gray-600 px-4 py-3 text-left text-white font-semibold">Market Effect</th>
-                                    <th class="border border-gray-600 px-4 py-3 text-left text-white font-semibold">Dealer Action & Price Impact</th>
-                                    <th class="border border-gray-600 px-4 py-3 text-left text-white font-semibold">Volatility</th>
+                                    <th
+                                        class="border border-gray-600 px-4 py-3 text-left text-white font-semibold"
+                                    >
+                                        GEX Condition
+                                    </th>
+                                    <th
+                                        class="border border-gray-600 px-4 py-3 text-left text-white font-semibold"
+                                    >
+                                        Market Effect
+                                    </th>
+                                    <th
+                                        class="border border-gray-600 px-4 py-3 text-left text-white font-semibold"
+                                    >
+                                        Dealer Action & Price Impact
+                                    </th>
+                                    <th
+                                        class="border border-gray-600 px-4 py-3 text-left text-white font-semibold"
+                                    >
+                                        Volatility
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300"><strong class="text-emerald-400">Positive GEX</strong> (Long Gamma)</td>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300">Acts like a <strong class="text-white">stabilizer</strong> or price magnet. Highlighted in green.</td>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300">Dealers will <strong class="text-white">buy as prices fall and sell as prices rise</strong> to hedge their positions. This creates support on the downside.</td>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300">Low overall volatility.</td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        <strong class="text-emerald-400"
+                                            >Positive GEX</strong
+                                        >
+                                        (Long Gamma)
+                                    </td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        Acts like a
+                                        <strong class="text-white"
+                                            >stabilizer</strong
+                                        >
+                                        or price magnet. Highlighted in green.
+                                    </td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        Dealers will
+                                        <strong class="text-white"
+                                            >buy as prices fall and sell as
+                                            prices rise</strong
+                                        >
+                                        to hedge their positions. This creates
+                                        support on the downside.
+                                    </td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        Low overall volatility.
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300"><strong class="text-red-400">Negative GEX</strong> (Short Gamma)</td>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300">Acts like an <strong class="text-white">accelerator</strong>. Highlighted in red.</td>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300">Dealers will <strong class="text-white">sell as prices fall and buy as prices rise</strong>. This amplifies price swings and can lead to accelerated moves to the downside.</td>
-                                    <td class="border border-gray-600 px-4 py-3 text-gray-300">Higher volatility.</td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        <strong class="text-red-400"
+                                            >Negative GEX</strong
+                                        >
+                                        (Short Gamma)
+                                    </td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        Acts like an
+                                        <strong class="text-white"
+                                            >accelerator</strong
+                                        >. Highlighted in red.
+                                    </td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        Dealers will
+                                        <strong class="text-white"
+                                            >sell as prices fall and buy as
+                                            prices rise</strong
+                                        >. This amplifies price swings and can
+                                        lead to accelerated moves to the
+                                        downside.
+                                    </td>
+                                    <td
+                                        class="border border-gray-600 px-4 py-3 text-gray-300"
+                                    >
+                                        Higher volatility.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <p class="text-gray-300 leading-relaxed mb-6">
-                        GEX theory suggests that the underlying asset tends to gravitate towards the strikes with the highest gamma exposure, which can act as a supply/resistance zone (calls) or a demand/support zone (puts).
+                        GEX theory suggests that the underlying asset tends to
+                        gravitate towards the strikes with the highest gamma
+                        exposure, which can act as a supply/resistance zone
+                        (calls) or a demand/support zone (puts).
                     </p>
 
-                    <h2 class="text-2xl font-semibold text-white mb-4 mt-8">Key GEX Levels and Quantification</h2>
-                    <ul class="list-disc list-inside text-gray-300 space-y-3 ml-4">
-                        <li><strong class="text-white">Zero Gamma Level (Gamma Flip Point):</strong> This is the tipping point where a change in the market's hedging dynamics can be signaled, shifting the environment from stable to volatile, or vice-versa.</li>
-                        <li><strong class="text-white">Data Calculation:</strong> GEX is calculated and updated throughout the trading day. By default, calculations are often based on a <strong class="text-white">1% move of the underlying security</strong> using gamma and open interest.</li>
-                        <li><strong class="text-white">Quantification Example:</strong> A GEX of $500M signifies that for every 1% move in the underlying stock, market makers would theoretically need to buy or sell <strong class="text-white">$500 million</strong> worth of the stock to remain hedged.</li>
-                        <li><strong class="text-white">Formula Components:</strong> GEX is calculated by adding up all Call and Put Gamma at each strike level to present the net Gamma Exposure. The calculation of the total option's change in delta based on a 1% move can involve: Option's Gamma * Open Interest * Spot Price * Spot Price.</li>
+                    <h2 class="text-2xl font-semibold text-white mb-4 mt-8">
+                        Key GEX Levels and Quantification
+                    </h2>
+                    <ul
+                        class="list-disc list-inside text-gray-300 space-y-3 ml-4"
+                    >
+                        <li>
+                            <strong class="text-white"
+                                >Zero Gamma Level (Gamma Flip Point):</strong
+                            >
+                            This is the tipping point where a change in the
+                            market's hedging dynamics can be signaled, shifting
+                            the environment from stable to volatile, or
+                            vice-versa.
+                        </li>
+                        <li>
+                            <strong class="text-white"
+                                >Data Calculation:</strong
+                            >
+                            GEX is calculated and updated throughout the trading
+                            day. By default, calculations are often based on a
+                            <strong class="text-white"
+                                >1% move of the underlying security</strong
+                            >
+                            using gamma and open interest.
+                        </li>
+                        <li>
+                            <strong class="text-white"
+                                >Quantification Example:</strong
+                            >
+                            A GEX of $500M signifies that for every 1% move in
+                            the underlying stock, market makers would
+                            theoretically need to buy or sell
+                            <strong class="text-white">$500 million</strong>
+                            worth of the stock to remain hedged.
+                        </li>
+                        <li>
+                            <strong class="text-white"
+                                >Formula Components:</strong
+                            >
+                            GEX is calculated by adding up all Call and Put
+                            Gamma at each strike level to present the net Gamma
+                            Exposure. The calculation of the total option's
+                            change in delta based on a 1% move can involve:
+                            Option's Gamma * Open Interest * Spot Price * Spot
+                            Price.
+                        </li>
                     </ul>
                 </div>
 
@@ -856,7 +1011,7 @@
                                 </li>
                                 <li>
                                     <a
-                                        href="/about#faq"
+                                        href="/faq"
                                         class="text-emerald-400 hover:text-emerald-300 underline"
                                         >Frequently Asked Questions</a
                                     >
