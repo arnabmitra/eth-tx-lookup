@@ -13,6 +13,23 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 	})
 	a.router.HandleFunc("/btc-etf", btcEtfHandler)
 	a.router.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
+	
+	// Serve SEO and verification files from root
+	a.router.HandleFunc("/ads.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		http.ServeFile(w, r, "./static/ads.txt")
+	})
+	
+	a.router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		http.ServeFile(w, r, "./static/robots.txt")
+	})
+	
+	a.router.HandleFunc("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/xml")
+		http.ServeFile(w, r, "./static/sitemap.xml")
+	})
+	
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
 	a.router.HandleFunc("/strategies", strategiesHandler)

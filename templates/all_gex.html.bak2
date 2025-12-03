@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Expiries GEX Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .g-title {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+        }
+        .g-subtitle {
+            font-size: 1.125rem; /* 18px */
+            color: #9ca3af;
+            max-width: 42rem; /* 672px */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 2rem;
+            line-height: 1.75;
+        }
+        .g-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .g-form-container {
+            margin-bottom: 0; /* Removed margin-bottom */
+        }
+        .g-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+        .g-input {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 0.375rem;
+            padding: 0.75rem 1rem;
+            color: #d1d5db;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .g-input:focus {
+            outline: none;
+            border-color: #34d399;
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
+        }
+        .g-button {
+            display: inline-block;
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .g-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 10px -3px rgba(52, 211, 153, 0.3), 0 4px 6px -2px rgba(96, 165, 250, 0.3);
+        }
+        .g-chart-container {
+            margin-top: 2.5rem;
+        }
+        .g-tradingview-container {
+            margin-top: 2.5rem;
+            height: 800px;
+            width: 100%;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .htmx-indicator {
+            display: none;
+        }
+        form.htmx-request .htmx-indicator,
+        #loading-indicator.htmx-swapping {
+            display: inline-block;
+        }
+        #loading-indicator.htmx-swapping {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #374151;
+            border-top: 4px solid #34d399;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+{{template "navigation"}}
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center">
+            <h1 class="g-title gradient-text">All Expiries GEX Analysis</h1>
+            <p class="g-subtitle">This tool analyzes gamma exposure (GEX) across all available expiry dates. Enter a symbol to generate a consolidated GEX chart.</p>
+        </div>
+
+        <div class="g-card">
+            <div class="g-form-container">
+                <form hx-post="/all-gex" hx-target="#gex-chart" hx-swap="innerHTML">
+                    <div>
+                        <label for="symbol" class="g-label">Symbol</label>
+                        <input type="text" name="symbol" id="symbol" required
+                               class="g-input"
+                               placeholder="e.g., TSLA, NVDA, DIS"
+                               value="SPY">
+                    </div>
+                    <button type="submit"
+                            class="g-button">
+                        Generate All-Expiry GEX Chart
+                        <span class="htmx-indicator">
+                            <svg class="inline w-4 h-4 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="loading-indicator" class="htmx-indicator g-chart-container">
+            <div class="text-center">
+                <div class="spinner"></div>
+                <p class="text-gray-400 mt-4">Loading GEX data...</p>
+            </div>
+        </div>
+
+        <div id="gex-chart" class="g-chart-container">
+            <!-- HTMX will replace this content -->
+        </div>
+        <div id="tradingview_chart" class="g-tradingview-container"></div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+        <div class="mt-2 space-x-4">
+            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+        </div>
+         <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // TradingView widget initialization
+        function initTradingViewWidget(symbol) {
+            const container = document.getElementById('tradingview_chart');
+            if (!container) return;
+            container.innerHTML = '';
+
+            new TradingView.widget({
+                "container_id": "tradingview_chart",
+                "symbol": symbol,
+                "interval": "D",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "studies": [
+                    "MASimple@tv-basicstudies",
+                    "MACD@tv-basicstudies"
+                ],
+                "height": 800,
+                "width": "100%"
+            });
+        }
+
+        const symbolInput = document.getElementById('symbol');
+        
+        // Add change listener to update chart when symbol is changed manually
+        if(symbolInput) {
+            symbolInput.addEventListener('change', function() {
+                const symbol = this.value.toUpperCase();
+                if (symbol) {
+                    initTradingViewWidget(symbol);
+                }
+            });
+        }
+
+        // Handle after HTMX loads content
+        const form = document.querySelector('form');
+        
+        // Show/hide loading indicator
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            document.getElementById('loading-indicator').style.display = 'block';
+        });
+        
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            document.getElementById('loading-indicator').style.display = 'none';
+        });
+        
+        if (form) {
+            form.addEventListener('htmx:afterOnLoad', function(evt) {
+                const symbol = document.getElementById('symbol').value.toUpperCase();
+                if (symbol) {
+                    setTimeout(() => {
+                        initTradingViewWidget(symbol);
+                    }, 500);
+                }
+            });
+        }
+
+        // Auto-submit form for SPY on initial load
+        if (symbolInput && symbolInput.value === 'SPY') {
+            const gexChart = document.getElementById('gex-chart');
+            if (!gexChart.innerHTML.trim()) {
+                if (form) {
+                    setTimeout(() => {
+                        form.dispatchEvent(new Event('submit'));
+                    }, 100);
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

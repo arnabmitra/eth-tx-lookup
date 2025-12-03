@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Trading Glossary - GEX Tracker</title>
+    <meta name="description" content="Comprehensive glossary of options trading terms, gamma exposure (GEX), delta, theta, implied volatility, and more.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glossary-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .glossary-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.2);
+        }
+        .term-letter {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #34d399;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #374151;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+{{template "navigation"}}
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center gradient-text">
+            Options Trading Glossary
+        </h1>
+        <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-400 mb-12 text-center">
+            Essential terms and definitions for understanding gamma exposure (GEX), options Greeks, and derivatives trading.
+        </p>
+
+        <!-- Quick Navigation -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-8">
+            <h2 class="text-lg font-semibold text-emerald-400 mb-3">Quick Navigation</h2>
+            <div class="flex flex-wrap gap-2">
+                <a href="#c" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">C</a>
+                <a href="#d" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">D</a>
+                <a href="#g" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">G</a>
+                <a href="#i" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">I</a>
+                <a href="#o" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">O</a>
+                <a href="#p" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">P</a>
+                <a href="#s" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">S</a>
+                <a href="#t" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">T</a>
+                <a href="#v" class="px-3 py-1 bg-gray-700 hover:bg-emerald-600 rounded text-sm">V</a>
+            </div>
+        </div>
+
+        <!-- C Terms -->
+        <div id="c">
+            <h2 class="term-letter">C</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Call Option</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    A financial contract that gives the buyer the right, but not the obligation, to purchase an underlying asset (such as a stock) at a specified strike price before or at the expiration date. Call options are typically purchased when traders expect the underlying asset's price to rise. The seller (writer) of a call option is obligated to sell the asset if the buyer exercises the option.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">Example: Buying a call option on AAPL at $150 strike gives you the right to buy Apple shares at $150 regardless of market price.</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Covered Call</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    An options strategy where an investor holds a long position in an asset and sells call options on that same asset to generate income from the option premiums. This strategy is used to generate additional income on stocks you already own, with the trade-off being limited upside potential if the stock price rises significantly.
+                </p>
+            </div>
+        </div>
+
+        <!-- D Terms -->
+        <div id="d" class="mt-8">
+            <h2 class="term-letter">D</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Delta (Δ)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    One of the most important options Greeks, delta measures the rate of change in an option's price relative to a $1 change in the underlying asset's price. Call options have positive delta (0 to 1), while put options have negative delta (-1 to 0). A delta of 0.50 means the option price will move approximately $0.50 for every $1 move in the underlying stock. Delta also approximates the probability of an option expiring in-the-money.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">Example: An option with delta of 0.70 will gain approximately $0.70 in value if the stock rises $1.</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Dealer Gamma Exposure</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The total gamma exposure that market makers and dealers hold in their options positions. When dealers have negative gamma exposure, they must buy stocks as prices rise and sell as prices fall (destabilizing). Positive gamma exposure means dealers buy dips and sell rallies (stabilizing). This metric is crucial for understanding potential market volatility and support/resistance levels.
+                </p>
+            </div>
+        </div>
+
+        <!-- G Terms -->
+        <div id="g" class="mt-8">
+            <h2 class="term-letter">G</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Gamma (Γ)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The rate of change in delta per $1 change in the underlying asset's price. Gamma is highest for at-the-money options and decreases as options move further in or out of the money. High gamma positions require frequent delta hedging and can lead to increased market volatility. Gamma is sometimes called the "acceleration" of an option's price movement.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">Higher gamma = more risk but also more profit potential from large price moves.</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">GEX (Gamma Exposure)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    A measure of the total gamma exposure in the options market, typically expressed in dollar terms. GEX levels at different strike prices indicate where dealers may need to hedge their positions, creating support or resistance zones. Large positive GEX at a strike suggests that level may act as a "pin" where the stock gravitates toward. Negative GEX indicates potential for increased volatility.
+                </p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Greeks</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    Risk measures used to assess different dimensions of risk in options positions. The main Greeks include Delta (price sensitivity), Gamma (delta sensitivity), Theta (time decay), Vega (volatility sensitivity), and Rho (interest rate sensitivity). Understanding Greeks is essential for managing options portfolios and assessing potential profits and losses under various market conditions.
+                </p>
+            </div>
+        </div>
+
+        <!-- I Terms -->
+        <div id="i" class="mt-8">
+            <h2 class="term-letter">I</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Implied Volatility (IV)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The market's forecast of a likely movement in an asset's price, derived from option prices. Unlike historical volatility (which looks backward), IV looks forward and is one of the most important inputs in options pricing models. High IV means expensive options premiums, while low IV means cheaper options. IV often spikes before earnings announcements or major events.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">IV is expressed as an annualized percentage and can be compared to historical volatility to find trading opportunities.</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">In-the-Money (ITM)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    An option with intrinsic value. For call options, this means the stock price is above the strike price. For put options, the stock price is below the strike price. ITM options have a higher probability of expiring with value and typically have higher premiums than out-of-the-money options due to their intrinsic value component.
+                </p>
+            </div>
+        </div>
+
+        <!-- O Terms -->
+        <div id="o" class="mt-8">
+            <h2 class="term-letter">O</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Open Interest</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The total number of outstanding option contracts that have not been settled or closed. Unlike volume (which resets daily), open interest accumulates until contracts are closed or expire. High open interest at particular strikes can indicate significant levels of market interest and potential support/resistance zones, especially when combined with GEX analysis.
+                </p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Out-of-the-Money (OTM)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    An option with no intrinsic value. For call options, the stock price is below the strike price. For put options, the stock price is above the strike price. OTM options consist entirely of time value and are cheaper than ITM options, but they have a lower probability of expiring with value. They're often used for speculative strategies due to higher potential percentage returns.
+                </p>
+            </div>
+        </div>
+
+        <!-- P Terms -->
+        <div id="p" class="mt-8">
+            <h2 class="term-letter">P</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Put Option</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    A financial contract giving the buyer the right, but not obligation, to sell an underlying asset at a specified strike price before or at expiration. Put options increase in value as the underlying asset decreases in price. They're commonly used for portfolio protection (hedging) or to speculate on declining prices. The put seller is obligated to buy the asset if the option is exercised.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">Example: Buying puts on your stock portfolio acts as insurance against market declines.</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Premium</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The price paid by the option buyer to the option seller for the rights conveyed by the option contract. Premium consists of intrinsic value (if any) and time value. Factors affecting premium include the underlying asset price, strike price, time to expiration, implied volatility, interest rates, and dividends. Premium is the maximum risk for option buyers and maximum profit for option sellers.
+                </p>
+            </div>
+        </div>
+
+        <!-- S Terms -->
+        <div id="s" class="mt-8">
+            <h2 class="term-letter">S</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Strike Price</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The predetermined price at which the owner of an option can buy (call) or sell (put) the underlying asset. The strike price is a critical component in determining an option's value and is fixed for the life of the contract. The relationship between the strike price and the current asset price determines whether an option is in-the-money, at-the-money, or out-of-the-money.
+                </p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Spot Price</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The current market price of the underlying asset. This is the price at which an asset can be bought or sold immediately. The spot price is constantly changing during market hours and is crucial for determining option values and whether options are profitable to exercise. The relationship between spot price and strike price determines an option's moneyness.
+                </p>
+            </div>
+        </div>
+
+        <!-- T Terms -->
+        <div id="t" class="mt-8">
+            <h2 class="term-letter">T</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Theta (Θ)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The rate of decline in an option's value due to the passage of time, also known as time decay. Theta is typically negative for long options positions, meaning options lose value as expiration approaches, all else being equal. Theta accelerates as expiration nears, especially for at-the-money options. Options sellers benefit from positive theta.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">Example: A theta of -0.05 means the option loses approximately $5 in value each day (per 100 shares).</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Time Value</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The portion of an option's premium that exceeds its intrinsic value. Time value represents the possibility that the option could gain intrinsic value before expiration. Longer time to expiration generally means higher time value. Time value decreases as expiration approaches (time decay) and goes to zero at expiration. ATM options have the highest time value.
+                </p>
+            </div>
+        </div>
+
+        <!-- V Terms -->
+        <div id="v" class="mt-8">
+            <h2 class="term-letter">V</h2>
+            
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Vega (ν)</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    The measurement of an option's sensitivity to changes in implied volatility. Vega represents the amount an option's price will change for a 1% change in implied volatility. Long options have positive vega (benefit from IV increases), while short options have negative vega (suffer from IV increases). Vega is highest for at-the-money options with longer time to expiration.
+                </p>
+                <p class="text-sm text-gray-500 mt-2">Rising volatility generally increases option premiums, which benefits option buyers.</p>
+            </div>
+
+            <div class="glossary-card">
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Volatility</h3>
+                <p class="text-gray-300 leading-relaxed">
+                    A statistical measure of the dispersion of returns for a given security or market index. In options trading, there are two main types: historical volatility (actual past price movements) and implied volatility (market's expectation of future volatility). Higher volatility generally means higher option premiums. Volatility is often measured by the VIX index for the broader market.
+                </p>
+            </div>
+        </div>
+
+        <!-- Related Links -->
+        <div class="mt-12 bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-lg p-8 border border-emerald-700/30">
+            <h2 class="text-2xl font-bold text-white mb-4">Start Tracking GEX Levels</h2>
+            <p class="text-gray-300 mb-6">
+                Now that you understand the terminology, use our tools to track real-time gamma exposure and make more informed trading decisions.
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <a href="/gex" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition">
+                    GEX Tracker
+                </a>
+                <a href="/all-gex" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition">
+                    All Expiries GEX
+                </a>
+                <a href="/about" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition">
+                    Learn More
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 mt-20 border-t border-gray-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+        <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+        <div class="mt-2 space-x-4">
+            <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+            <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+        </div>
+        <p class="text-sm text-gray-500 mt-2">Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only.</p>
+    </div>
+</footer>
+
+<script>
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenuButton) {
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+</script>
+
+</body>
+</html>

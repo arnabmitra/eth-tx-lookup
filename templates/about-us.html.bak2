@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>About Us - GEX Tracker</title>
+        <meta
+            name="description"
+            content="Learn about GEX Tracker - our mission to provide traders with powerful gamma exposure tracking tools and educational resources."
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+            src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+            defer
+        ></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+                background-color: #111827;
+                color: #d1d5db;
+            }
+            .gradient-text {
+                background: linear-gradient(to right, #34d399, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .content-section {
+                background-color: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 0.75rem;
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+            .feature-card {
+                background-color: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 0.75rem;
+                padding: 1.5rem;
+                transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+            }
+            .feature-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px -5px rgba(52, 211, 153, 0.2);
+            }
+        </style>
+    </head>
+    <body class="antialiased">
+        {{template "navigation"}}
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="max-w-4xl mx-auto">
+                <!-- Disclaimer -->
+                <div
+                    class="content-section bg-yellow-900/20 border-yellow-700/50"
+                >
+                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">
+                        Important Disclaimer
+                    </h2>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        GEX Tracker is an educational platform and data tool. We
+                        are <strong>not</strong> registered investment advisors,
+                        broker-dealers, or financial planners. Nothing on this
+                        site constitutes investment advice, financial advice, or
+                        trading advice.
+                    </p>
+                    <p class="text-gray-300 leading-relaxed mb-4">
+                        All content is provided for informational and
+                        educational purposes only. Trading options involves
+                        substantial risk and is not suitable for all investors.
+                        You should carefully consider your financial situation
+                        and consult with licensed financial professionals before
+                        making any investment decisions.
+                    </p>
+                    <p class="text-gray-300 leading-relaxed">
+                        Past performance and historical GEX levels are not
+                        indicative of future results. While we strive for
+                        accuracy, we make no warranties about the completeness,
+                        reliability, or accuracy of the data presented.
+                    </p>
+                </div>
+
+                <!-- Contact Section -->
+                <div class="content-section">
+                    <h2 class="text-2xl font-bold text-emerald-400 mb-4">
+                        Get in Touch
+                    </h2>
+                    <p class="text-center text-gray-400">
+                        Contact:
+                        <a
+                            href="mailto:gextracker@gmail.com"
+                            class="text-blue-400 hover:text-blue-300"
+                            >gextracker@gmail.com</a
+                        >
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="mt-8 bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        Legal & Privacy
+                    </h3>
+                    <div class="flex flex-wrap gap-4">
+                        <a
+                            href="/privacy"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            >Privacy Policy</a
+                        >
+                        <a
+                            href="/terms"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            >Terms of Service</a
+                        >
+                        <a
+                            href="/cookies"
+                            class="text-emerald-400 hover:text-emerald-300 underline"
+                            >Cookie Policy</a
+                        >
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 py-6 mt-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <p class="text-center text-gray-400">
+                    Contact:
+                    <a
+                        href="mailto:gextracker@gmail.com"
+                        class="text-blue-400 hover:text-blue-300"
+                        >gextracker@gmail.com</a
+                    >
+                </p>
+            </div>
+        </footer>
+    </body>
+</html>
