@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Economic Calendar - GEX Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="alternate icon" href="/static/favicon.svg" />
+    <link rel="shortcut icon" href="/static/favicon.svg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    {{template "navigation"}}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold gradient-text mb-4">Economic Calendar</h1>
+                <p class="text-xl text-gray-400">Track major U.S. economic releases from FRED</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card p-6">
+                    <div class="text-sm text-gray-400 mb-2">Total Events</div>
+                    <div id="totalCount" class="text-4xl font-bold text-white">-</div>
+                </div>
+                <div class="card p-6" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);">
+                    <div class="text-sm text-red-400 mb-2">High Impact</div>
+                    <div id="highCount" class="text-4xl font-bold text-red-400">-</div>
+                </div>
+                <div class="card p-6" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);">
+                    <div class="text-sm text-yellow-400 mb-2">Medium Impact</div>
+                    <div id="mediumCount" class="text-4xl font-bold text-yellow-400">-</div>
+                </div>
+                <div class="card p-6" style="background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);">
+                    <div class="text-sm text-green-400 mb-2">Low Impact</div>
+                    <div id="lowCount" class="text-4xl font-bold text-green-400">-</div>
+                </div>
+            </div>
+
+            <!-- Events Table -->
+            <div class="card overflow-hidden mb-8">
+                <div class="px-6 py-4 border-b border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-white">Past 7 Days & Next 7 Days</h2>
+                        <div id="lastUpdated" class="text-sm text-gray-400"></div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Event</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTable" class="divide-y divide-gray-700">
+                            <tr>
+                                <td colspan="3" class="px-6 py-12 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <span class="material-icons text-6xl text-gray-600 mb-4">calendar_today</span>
+                                        <span>Loading events...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="card p-6" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);">
+                <div class="flex items-start">
+                    <span class="material-icons text-blue-400 mr-3">info</span>
+                    <div>
+                        <p class="text-sm text-gray-300">
+                            <strong class="text-blue-400">Data Source:</strong> Federal Reserve Economic Data (FRED)
+                            <br/>
+                            <strong class="text-blue-400">Updates:</strong> Daily at midnight
+                            <br/>
+                            <strong class="text-blue-400">High-impact events:</strong> CPI, Employment, Retail Sales, JOLTS
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 mt-20 border-t border-gray-700">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+            <p>&copy; 2025 GEX Tracker. All Rights Reserved.</p>
+            <div class="mt-2 space-x-4">
+                <a href="/privacy" class="text-sm text-gray-500 hover:text-emerald-400">Privacy Policy</a>
+                <a href="/terms" class="text-sm text-gray-500 hover:text-emerald-400">Terms of Service</a>
+                <a href="/cookies" class="text-sm text-gray-500 hover:text-emerald-400">Cookie Policy</a>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">
+                Disclaimer: Trading options involves significant risk and is not suitable for all investors. 
+                The information provided on this site is for educational purposes only.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener("click", () => {
+                mobileMenu.classList.toggle("hidden");
+            });
+        }
+
+        function formatDate(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            const date = new Date(year, month - 1, day);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short', month: 'short', day: 'numeric'
+            });
+        }
+
+        function getImpactBadge(impact) {
+            const styles = {
+                'High': 'bg-red-500/20 text-red-400 border border-red-500/30',
+                'Medium': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+                'Low': 'bg-green-500/20 text-green-400 border border-green-500/30'
+            };
+            const style = styles[impact] || 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
+            return `<span class="px-3 py-1 text-xs font-bold rounded-full ${style}">${impact}</span>`;
+        }
+
+        async function loadEvents() {
+            try {
+                const response = await fetch('/api/economic-calendar/week');
+                const data = await response.json();
+                
+                const releases = data.releases || [];
+                
+                // Update counts
+                document.getElementById('totalCount').textContent = releases.length;
+                document.getElementById('highCount').textContent = releases.filter(r => r.impact === 'High').length;
+                document.getElementById('mediumCount').textContent = releases.filter(r => r.impact === 'Medium').length;
+                document.getElementById('lowCount').textContent = releases.filter(r => r.impact === 'Low').length;
+                
+                // Update table
+                const tbody = document.getElementById('eventsTable');
+                if (releases.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="material-icons text-6xl text-gray-600 mb-4">event_busy</span>
+                            <span class="text-gray-500">No events in this time period</span>
+                        </div>
+                    </td></tr>`;
+                } else {
+                    tbody.innerHTML = releases.map(r => `
+                        <tr class="hover:bg-gray-800/50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                                ${formatDate(r.release_date)}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-300">${r.release_name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${getImpactBadge(r.impact)}</td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // Update timestamp
+                const now = new Date().toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                });
+                document.getElementById('lastUpdated').textContent = `Updated: ${now}`;
+                
+            } catch (error) {
+                console.error('Error loading events:', error);
+                document.getElementById('eventsTable').innerHTML = `
+                    <tr><td colspan="3" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="material-icons text-6xl text-red-600 mb-4">error</span>
+                            <span class="text-red-400">Error loading events. Please try again.</span>
+                        </div>
+                    </td></tr>`;
+            }
+        }
+
+        // Load on page load
+        loadEvents();
+        
+        // Refresh every hour
+        setInterval(loadEvents, 60 * 60 * 1000);
+    </script>
+</body>
+</html>

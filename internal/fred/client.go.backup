@@ -1,0 +1,124 @@
+package fred
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+const (
+	baseURL = "https://api.stlouisfed.org/fred"
+)
+
+// Client for FRED API
+type Client struct {
+	apiKey     string
+	httpClient *http.Client
+}
+
+// NewClient creates a new FRED API client
+func NewClient(apiKey string) *Client {
+	return &Client{
+		apiKey: apiKey,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+// ReleaseDatesResponse represents the FRED API response for release dates
+type ReleaseDatesResponse struct {
+	RealtimeStart string        `json:"realtime_start"`
+	RealtimeEnd   string        `json:"realtime_end"`
+	OrderBy       string        `json:"order_by"`
+	SortOrder     string        `json:"sort_order"`
+	Count         int           `json:"count"`
+	Offset        int           `json:"offset"`
+	Limit         int           `json:"limit"`
+	ReleaseDates  []ReleaseDate `json:"release_dates"`
+}
+
+// ReleaseDate represents a single economic release date
+type ReleaseDate struct {
+	ReleaseID   int    `json:"release_id"`
+	ReleaseName string `json:"release_name"`
+	Date        string `json:"date"`
+}
+
+// GetUpcomingReleases fetches all releases for the next N days
+func (c *Client) GetUpcomingReleases(days int) (*ReleaseDatesResponse, error) {
+	startDate := time.Now().Format("2006-01-02")
+	endDate := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+
+	url := fmt.Sprintf("%s/releases/dates?realtime_start=%s&realtime_end=%s&api_key=%s&file_type=json&limit=1000",
+		baseURL, startDate, endDate, c.apiKey)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch releases: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API returned status %d", resp.StatusCode)
+	}
+
+	var result ReleaseDatesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// FilteredRelease represents a release we care about with impact level
+type FilteredRelease struct {
+	ReleaseID   int
+	ReleaseName string
+	Date        time.Time
+	Impact      string // High, Medium, Low
+}
+
+// GetFilteredReleases returns only the releases we care about with impact levels
+func (c *Client) GetFilteredReleases(days int) ([]FilteredRelease, error) {
+	response, err := c.GetUpcomingReleases(days)
+	if err != nil {
+		return nil, err
+	}
+
+	filtered := make([]FilteredRelease, 0)
+
+	// Map of release IDs we care about with their impact levels
+	importantReleases := map[int]string{
+		// High Impact
+		10:  "High",   // Consumer Price Index (CPI)
+		192: "High",   // Job Openings and Labor Turnover Survey (JOLTS)
+		101: "High",   // FOMC Press Release
+		50:  "High",   // Employment Situation (NFP + Unemployment)
+		
+		// Medium Impact
+		479: "Medium", // Consumer Expenditure Surveys
+		46:  "Medium", // Producer Price Index (PPI)
+		
+		// Filter out daily updates (SOFR, SONIA, Fed Funds, etc.)
+	}
+
+	for _, release := range response.ReleaseDates {
+		if impact, ok := importantReleases[release.ReleaseID]; ok {
+			releaseDate, err := time.Parse("2006-01-02", release.Date)
+			if err != nil {
+				continue
+			}
+
+			filtered = append(filtered, FilteredRelease{
+				ReleaseID:   release.ReleaseID,
+				ReleaseName: release.ReleaseName,
+				Date:        releaseDate,
+				Impact:      impact,
+			})
+		}
+	}
+
+	return filtered, nil
+}

@@ -22,11 +22,12 @@ import (
 )
 
 type App struct {
-	logger       *slog.Logger
-	router       *http.ServeMux
-	db           *pgxpool.Pool
-	rdb          *redis.Client
-	gexCollector *worker.GexCollector
+	logger                    *slog.Logger
+	router                    *http.ServeMux
+	db                        *pgxpool.Pool
+	rdb                       *redis.Client
+	gexCollector              *worker.GexCollector
+	economicCalendarCollector *worker.EconomicCalendarCollector
 }
 
 func New(logger *slog.Logger) *App {
@@ -58,13 +59,16 @@ func (a *App) Start(ctx context.Context) error {
 
 	tmpl := template.Must(template.New("").ParseGlob("./templates/*"))
 
-	gexHandler := a.loadRoutes()
+	gexHandler, queries := a.loadRoutes()
 
 	// Initialize the GexCollector with the handler and symbols
-	symbols := []string{"SPY", "QQQ", "AAPL"} // Add your preferred symbols here
+	symbols := []string{"SPY", "QQQ", "AAPL"}
 	a.gexCollector = worker.NewGEXCollector(gexHandler, symbols)
-	// Start the collector
 	a.gexCollector.Start()
+
+	// Initialize Economic Calendar Collector
+	a.economicCalendarCollector = worker.NewEconomicCalendarCollector(queries)
+	a.economicCalendarCollector.Start()
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
@@ -86,9 +90,11 @@ func (a *App) Start(ctx context.Context) error {
 		break
 	case <-ctx.Done():
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-		// Stop the collector
 		if a.gexCollector != nil {
 			a.gexCollector.Stop()
+		}
+		if a.economicCalendarCollector != nil {
+			a.economicCalendarCollector.Stop()
 		}
 		server.Shutdown(ctx)
 		cancel()

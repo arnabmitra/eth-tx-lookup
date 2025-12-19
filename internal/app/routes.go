@@ -1,35 +1,37 @@
 package app
 
 import (
-	"github.com/arnabmitra/eth-proxy/internal/handler"
 	"html/template"
 	"net/http"
+
+	"github.com/arnabmitra/eth-proxy/internal/handler"
+	"github.com/arnabmitra/eth-proxy/internal/repository"
 )
 
-func (a *App) loadRoutes() *handler.GEXHandler {
+func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	a.router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
 	a.router.HandleFunc("/btc-etf", btcEtfHandler)
 	a.router.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
-	
+
 	// Serve SEO and verification files from root
 	a.router.HandleFunc("/ads.txt", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		http.ServeFile(w, r, "./static/ads.txt")
 	})
-	
+
 	a.router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		http.ServeFile(w, r, "./static/robots.txt")
 	})
-	
+
 	a.router.HandleFunc("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/xml")
 		http.ServeFile(w, r, "./static/sitemap.xml")
 	})
-	
+
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
 	a.router.HandleFunc("/strategies", strategiesHandler)
@@ -51,5 +53,12 @@ func (a *App) loadRoutes() *handler.GEXHandler {
 
 	a.router.HandleFunc("/gex-history", gexHandler.DisplayGEXHistoryPage)
 	a.router.HandleFunc("/mag7-gex", gexHandler.MAG7GEXHandler)
-	return gexHandler
+
+	// Economic Calendar
+	queries := repository.New(a.db)
+	economicCalendarHandler := handler.NewEconomicCalendarHandler(a.logger, tmpl, a.db)
+	a.router.HandleFunc("/economic-calendar", economicCalendarHandler.ServeHTTP)
+	a.router.HandleFunc("/api/economic-calendar/week", economicCalendarHandler.GetThisWeek)
+
+	return gexHandler, queries
 }

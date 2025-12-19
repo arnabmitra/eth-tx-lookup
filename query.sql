@@ -83,3 +83,24 @@ FROM gex_history
 WHERE symbol = $1 AND recorded_at >= $2
 ORDER BY recorded_at DESC
     LIMIT $3;
+
+-- Economic Releases (FRED API)
+-- name: UpsertEconomicRelease :one
+INSERT INTO economic_releases (release_id, release_name, release_date, impact)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (release_id, release_date)
+DO UPDATE SET
+    release_name = EXCLUDED.release_name,
+    impact = EXCLUDED.impact,
+    updated_at = now()
+RETURNING *;
+
+-- name: GetThisWeekReleases :many
+SELECT * FROM economic_releases
+WHERE release_date >= CURRENT_DATE - 7 AND release_date <= CURRENT_DATE + 7
+ORDER BY release_date DESC, impact DESC;
+
+-- name: GetUpcomingReleases :many
+SELECT * FROM economic_releases
+WHERE release_date >= $1 AND release_date <= $2
+ORDER BY release_date ASC, impact DESC;
