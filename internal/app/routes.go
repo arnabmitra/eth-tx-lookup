@@ -32,6 +32,11 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 		http.ServeFile(w, r, "./static/sitemap.xml")
 	})
 
+	a.router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		http.ServeFile(w, r, "./static/favicon.svg")
+	})
+
 	a.router.HandleFunc("/eth-tx", ethTxHandler)
 	a.router.HandleFunc("/about", gexTradingHandler)
 	a.router.HandleFunc("/strategies", strategiesHandler)
