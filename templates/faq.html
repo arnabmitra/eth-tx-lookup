@@ -1,59 +1,91 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FAQ - GEX Tracker</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=2" />
-    <link rel="alternate icon" href="/static/favicon.svg?v=2" />
-    <link rel="shortcut icon" href="/static/favicon.svg?v=2" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@100;300;400;500;600;700&display=swap" rel="stylesheet"/>
-    <style>
-        body {
-            font-family: "Inter", sans-serif;
-            background-color: #111827;
-            color: #f3f4f6;
-        }
-        .hero-fancy {
-            font-family: "IBM Plex Sans", sans-serif;
-            font-weight: 100;
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #34d399, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
-</head>
-<body class="antialiased">
-    {{template "navigation"}}
-    
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <section class="max-w-3xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-8">
-                <span class="hero-fancy text-blue-400">Frequently Asked</span> Questions
-            </h2>
-            <div class="space-y-4">
-                <div class="bg-gray-800 rounded-lg p-6">
-                    <h3 class="text-xl font-semibold text-emerald-400 mb-2">What is GEX?</h3>
-                    <p class="text-gray-300">GEX (Gamma Exposure) measures the rate of change in delta. It helps predict price movements based on options positioning.</p>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FAQ - GEX Tracker</title>
+        <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=2" />
+        <link rel="alternate icon" href="/static/favicon.svg?v=2" />
+        <link rel="shortcut icon" href="/static/favicon.svg?v=2" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+            src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+            defer
+        ></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@100;300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+                background-color: #111827;
+                color: #f3f4f6;
+            }
+            .hero-fancy {
+                font-family: "IBM Plex Sans", sans-serif;
+                font-weight: 100;
+            }
+            .gradient-text {
+                background: linear-gradient(to right, #34d399, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+        </style>
+    </head>
+    <body class="antialiased">
+        {{template "navigation"}}
+
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <section class="max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-8">
+                    <span class="hero-fancy text-blue-400"
+                        >Frequently Asked</span
+                    >
+                    Questions!
+                </h2>
+                <div class="space-y-4">
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-2">
+                            What is GEX?
+                        </h3>
+                        <p class="text-gray-300">
+                            GEX (Gamma Exposure) measures the rate of change in
+                            delta. It helps predict price movements based on
+                            options positioning.
+                        </p>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-2">
+                            How do I use this tool?
+                        </h3>
+                        <p class="text-gray-300">
+                            Enter a stock symbol and expiration date to see the
+                            GEX chart. Green bars indicate support levels, red
+                            bars indicate potential volatility.
+                        </p>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-2">
+                            What does positive GEX mean?
+                        </h3>
+                        <p class="text-gray-300">
+                            Positive GEX acts as a stabilizer, creating
+                            support/resistance levels where dealers buy dips and
+                            sell rips.
+                        </p>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-2">
+                            What does negative GEX mean?
+                        </h3>
+                        <p class="text-gray-300">
+                            Negative GEX acts as an accelerator, amplifying
+                            price movements as dealers chase the trend.
+                        </p>
+                    </div>
                 </div>
-                <div class="bg-gray-800 rounded-lg p-6">
-                    <h3 class="text-xl font-semibold text-emerald-400 mb-2">How do I use this tool?</h3>
-                    <p class="text-gray-300">Enter a stock symbol and expiration date to see the GEX chart. Green bars indicate support levels, red bars indicate potential volatility.</p>
-                </div>
-                <div class="bg-gray-800 rounded-lg p-6">
-                    <h3 class="text-xl font-semibold text-emerald-400 mb-2">What does positive GEX mean?</h3>
-                    <p class="text-gray-300">Positive GEX acts as a stabilizer, creating support/resistance levels where dealers buy dips and sell rips.</p>
-                </div>
-                <div class="bg-gray-800 rounded-lg p-6">
-                    <h3 class="text-xl font-semibold text-emerald-400 mb-2">What does negative GEX mean?</h3>
-                    <p class="text-gray-300">Negative GEX acts as an accelerator, amplifying price movements as dealers chase the trend.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-</body>
+            </section>
+        </main>
+    </body>
 </html>
