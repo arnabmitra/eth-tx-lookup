@@ -46,16 +46,16 @@
                             
                             {{ if gt .GammaFlipLevel 0.0 }}
                             <div class="grid grid-cols-3 gap-4 mb-6">
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <p class="text-xs font-medium text-blue-600 uppercase tracking-wide">Current Price</p>
-                                    <p class="text-3xl font-bold text-blue-900 mt-2">${{ printf "%.2f" .SpotPrice }}</p>
+                                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Current Price</p>
+                                    <p class="text-3xl font-bold text-gray-900 mt-2">${{ printf "%.2f" .SpotPrice }}</p>
                                 </div>
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                    <p class="text-xs font-medium text-yellow-700 uppercase tracking-wide">Gamma Flip Level</p>
-                                    <p class="text-3xl font-bold text-yellow-900 mt-2">${{ printf "%.2f" .GammaFlipLevel }}</p>
+                                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Gamma Flip Level</p>
+                                    <p class="text-3xl font-bold text-gray-900 mt-2">${{ printf "%.2f" .GammaFlipLevel }}</p>
                                 </div>
-                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Total GEX</p>
+                                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Total GEX</p>
                                     <p class="text-2xl font-bold {{ if gt .TotalGEX 0.0 }}text-green-600{{ else }}text-red-600{{ end }} mt-2">{{ .TotalGEXFormatted }}</p>
                                 </div>
                             </div>
