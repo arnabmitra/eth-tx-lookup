@@ -157,6 +157,24 @@
                     };
                 }
 
+                // Check if market is open
+                function isMarketOpen() {
+                    const now = new Date();
+                    const etTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+                    const day = etTime.getDay();
+                    const hour = etTime.getHours();
+                    const minute = etTime.getMinutes();
+                    
+                    // Check if weekday (1 = Monday, 5 = Friday)
+                    if (day === 0 || day === 6) return false;
+                    
+                    // Check market hours (9:30 AM - 4:00 PM ET)
+                    if (hour < 9 || (hour === 9 && minute < 30)) return false;
+                    if (hour >= 16) return false;
+                    
+                    return true;
+                }
+
                 // Fetch expiry dates function
                 const debouncedFetchExpiryDates = debounce(function () {
                     const symbol = document.getElementById("symbol").value;
@@ -170,10 +188,29 @@
                             const expirationSelect =
                                 document.getElementById("expiration");
                             expirationSelect.innerHTML = "";
-                            data.forEach((date) => {
+                            
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            let defaultIndex = 0;
+                            
+                            // If market is closed, find next available expiry
+                            if (!isMarketOpen() && data.length > 0) {
+                                for (let i = 0; i < data.length; i++) {
+                                    const expiryDate = new Date(data[i]);
+                                    if (expiryDate > today) {
+                                        defaultIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            data.forEach((date, index) => {
                                 const option = document.createElement("option");
                                 option.value = date;
                                 option.textContent = date;
+                                if (index === defaultIndex) {
+                                    option.selected = true;
+                                }
                                 expirationSelect.appendChild(option);
                             });
                             

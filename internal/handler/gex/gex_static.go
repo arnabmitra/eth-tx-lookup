@@ -140,6 +140,77 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 	return gexByStrike
 }
 
+// CalculateGammaFlipLevel calculates the gamma flip level using the same logic as the Python reference
+// implementation. It finds the strike price where cumulative GEX is closest to zero.
+// 
+// The algorithm:
+// 1. Sort all strikes with their GEX values
+// 2. Calculate cumulative sum of GEX at each strike
+// 3. Check if initial cumulative is negative or positive
+// 4. Find the strike where cumulative GEX is closest to zero (either min or max depending on initial sign)
+//
+// This matches the Python _zero_gex function from the reference implementation.
+func CalculateGammaFlipLevel(gexByStrike map[float64]float64) float64 {
+	if len(gexByStrike) == 0 {
+		return 0
+	}
+
+	// Sort strikes in ascending order and create list of (strike, gex) tuples
+	strikes := make([]float64, 0, len(gexByStrike))
+	for strike := range gexByStrike {
+		strikes = append(strikes, strike)
+	}
+	sort.Float64s(strikes)
+
+	// Calculate cumulative GEX at each strike (mimics itertools.accumulate)
+	type StrikeGEX struct {
+		Strike float64
+		CumGEX float64
+	}
+	
+	cumulative := make([]StrikeGEX, len(strikes))
+	sum := 0.0
+	for i, strike := range strikes {
+		sum += gexByStrike[strike]
+		cumulative[i] = StrikeGEX{
+			Strike: strike,
+			CumGEX: sum,
+		}
+	}
+
+	// Check the cumulative GEX at ~10% of strikes to determine direction
+	// (matches Python's cumsum[len(strikes) // 10][1] < 0)
+	checkIndex := len(strikes) / 10
+	if checkIndex >= len(cumulative) {
+		checkIndex = 0
+	}
+
+	var flipStrike float64
+	if cumulative[checkIndex].CumGEX < 0 {
+		// If early cumulative is negative, find the minimum (most negative) cumulative GEX
+		minCumGEX := cumulative[0].CumGEX
+		flipStrike = cumulative[0].Strike
+		for _, sg := range cumulative {
+			if sg.CumGEX < minCumGEX {
+				minCumGEX = sg.CumGEX
+				flipStrike = sg.Strike
+			}
+		}
+	} else {
+		// If early cumulative is positive, find the maximum (most positive) cumulative GEX
+		maxCumGEX := cumulative[0].CumGEX
+		flipStrike = cumulative[0].Strike
+		for _, sg := range cumulative {
+			if sg.CumGEX > maxCumGEX {
+				maxCumGEX = sg.CumGEX
+				flipStrike = sg.Strike
+			}
+		}
+	}
+
+	return flipStrike
+}
+
 func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, spotPrice float64) error {
 	p := plot.New()
 	p.Title.Text = fmt.Sprintf("GEX Distribution for %s, Spot Price %f", symbol, spotPrice)

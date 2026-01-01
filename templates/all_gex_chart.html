@@ -2,6 +2,35 @@
     {{ if .ChartData }}
     <div class="bg-gray-800 rounded-lg p-6">
         <h3 class="text-xl font-semibold text-white mb-4">GEX Distribution for {{ .Symbol }} - All Expiries (Spot: ${{ printf "%.2f" .SpotPrice }})</h3>
+        
+        {{ if gt .GammaFlipLevel 0.0 }}
+        <div class="bg-gray-700 rounded-lg p-4 mb-4 border-2 border-yellow-500">
+            <div class="grid grid-cols-1 gap-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="text-lg font-semibold text-yellow-400">⚡ Gamma Flip Level</h4>
+                        <p class="text-2xl font-bold text-white mt-1">${{ printf "%.2f" .GammaFlipLevel }}</p>
+                    </div>
+                    <div class="border-l-2 border-gray-600 pl-6">
+                        <p class="text-sm text-gray-300">Current Price</p>
+                        <p class="text-2xl font-bold text-blue-400 mt-1">${{ printf "%.2f" .SpotPrice }}</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-300">Total GEX</p>
+                    <p class="text-lg font-semibold {{ if gt .TotalGEX 0.0 }}text-green-400{{ else }}text-red-400{{ end }}">{{ .TotalGEXFormatted }}</p>
+                </div>
+            </div>
+            <div class="mt-3 text-sm text-gray-300">
+                {{ if gt .SpotPrice .GammaFlipLevel }}
+                <p>✅ <strong>Above flip:</strong> Market in <span class="text-green-400">positive GEX zone</span> - dealer hedging stabilizes price</p>
+                {{ else }}
+                <p>⚠️ <strong>Below flip:</strong> Market in <span class="text-red-400">negative GEX zone</span> - dealer hedging amplifies moves</p>
+                {{ end }}
+            </div>
+        </div>
+        {{ end }}
+        
         <div id="d3-chart-partial" class="w-full"></div>
     </div>
     <script>
@@ -13,6 +42,8 @@
         }
         // Chart data from Go
         const chartData = {{ .ChartData }};
+        const spotPrice = {{ .SpotPrice }};
+        const gammaFlipLevel = {{ .GammaFlipLevel }};
         
         // Clear any existing chart
         d3.select("#d3-chart-partial").selectAll("*").remove();
@@ -166,6 +197,48 @@
             .style("font-size", "12px")
             .style("font-weight", "600")
             .text("Zero Gamma Level");
+
+        // Add spot price line
+        if (spotPrice > 0) {
+            svg.append("line")
+                .attr("x1", 0)
+                .attr("x2", width)
+                .attr("y1", height / 2)
+                .attr("y2", height / 2)
+                .style("stroke", "#60a5fa")
+                .style("stroke-width", 2)
+                .style("stroke-dasharray", "8,4");
+
+            svg.append("text")
+                .attr("x", width - 10)
+                .attr("y", height / 2 - 5)
+                .style("text-anchor", "end")
+                .style("fill", "#60a5fa")
+                .style("font-size", "12px")
+                .style("font-weight", "700")
+                .text(`Spot: $${spotPrice.toFixed(2)}`);
+        }
+
+        // Add gamma flip level line
+        if (gammaFlipLevel > 0) {
+            svg.append("line")
+                .attr("x1", 0)
+                .attr("x2", width)
+                .attr("y1", height / 3)
+                .attr("y2", height / 3)
+                .style("stroke", "#fbbf24")
+                .style("stroke-width", 3)
+                .style("stroke-dasharray", "10,5");
+
+            svg.append("text")
+                .attr("x", 10)
+                .attr("y", height / 3 - 8)
+                .style("text-anchor", "start")
+                .style("fill", "#fbbf24")
+                .style("font-size", "14px")
+                .style("font-weight", "700")
+                .text(`⚡ Gamma Flip: $${gammaFlipLevel.toFixed(2)}`);
+        }
     })();
     </script>
     {{ end }}

@@ -223,14 +223,36 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 			return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
 		})
 
+		// Calculate gamma flip level
+		gammaFlipLevel := gex.CalculateGammaFlipLevel(gexByStrike)
+
+		// Calculate total GEX
+		totalGEX := 0.0
+		for _, gexValue := range gexByStrike {
+			totalGEX += gexValue
+		}
+
+		// Format total GEX properly
+		totalGEXFormatted := fmt.Sprintf("$%s", humanize.Commaf(totalGEX))
+
+		h.logger.Info("GEX calculation complete",
+			"symbol", symbol,
+			"totalGEX", totalGEX,
+			"totalGEXFormatted", totalGEXFormatted,
+			"gammaFlipLevel", gammaFlipLevel,
+			"strikeCount", len(gexByStrike))
+
 		// Set proper content type for HTML response
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		err = h.tmpl.ExecuteTemplate(w, "all_gex_chart.html", map[string]interface{}{
-			"Symbol":    symbol,
-			"SpotPrice": price,
-			"GEXData":   gexData,
-			"ChartData": chartData,
+			"Symbol":            symbol,
+			"SpotPrice":         price,
+			"GEXData":           gexData,
+			"ChartData":         chartData,
+			"GammaFlipLevel":    gammaFlipLevel,
+			"TotalGEX":          totalGEX,
+			"TotalGEXFormatted": totalGEXFormatted,
 		})
 		if err != nil {
 			h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
@@ -282,8 +304,21 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// If no expiration provided, use the next available expiration date
+		if expiration == "" {
+			if len(expiryDates) > 0 {
+				expiration = expiryDates[0]
+				h.logger.Info("No expiration provided, using next available", "expiration", expiration)
+			} else {
+				http.Error(w, "No expiration dates available", http.StatusInternalServerError)
+				return
+			}
+		}
+
 		expirationDatePgType, err := stringToPgDate(expiration)
 		if err != nil {
+			h.logger.Error("failed to parse expiration date", "error", err, "expiration", expiration)
+			http.Error(w, fmt.Sprintf("Invalid expiration date: %v", err), http.StatusBadRequest)
 			return
 		}
 		var options []gex.Option
@@ -407,11 +442,32 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
 		})
 
+		// Calculate gamma flip level
+		gammaFlipLevel := gex.CalculateGammaFlipLevel(gexByStrike)
+
+		// Calculate total GEX
+		totalGEX := 0.0
+		for _, gexValue := range gexByStrike {
+			totalGEX += gexValue
+		}
+
+		// Format total GEX properly
+		totalGEXFormatted := fmt.Sprintf("$%s", humanize.Commaf(totalGEX))
+
+		h.logger.Info("GEX calculation complete for single expiry",
+			"symbol", symbol,
+			"totalGEX", totalGEX,
+			"totalGEXFormatted", totalGEXFormatted,
+			"gammaFlipLevel", gammaFlipLevel)
+
 		err = h.tmpl.ExecuteTemplate(w, "gex_chart.html", map[string]interface{}{
-			"Symbol":    symbol,
-			"SpotPrice": price,
-			"GEXData":   gexData,
-			"ChartData": chartData,
+			"Symbol":            symbol,
+			"SpotPrice":         price,
+			"GEXData":           gexData,
+			"ChartData":         chartData,
+			"GammaFlipLevel":    gammaFlipLevel,
+			"TotalGEX":          totalGEX,
+			"TotalGEXFormatted": totalGEXFormatted,
 		})
 		if err != nil {
 			h.renderError(w, fmt.Sprintf("Error fetching options chain: %v", err))
@@ -728,7 +784,7 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 		SpotPrice float64
 		ChartData []map[string]interface{}
 	}
-	
+
 	var charts []Mag7Chart
 	apiKey := os.Getenv("TRADIER_API_KEY")
 
@@ -767,7 +823,7 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 			SpotPrice: price,
 			ChartData: chartData,
 		})
-		
+
 		// Add small delay between symbols to avoid rate limiting
 		time.Sleep(150 * time.Millisecond)
 	}
