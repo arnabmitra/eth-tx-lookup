@@ -140,75 +140,126 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 	return gexByStrike
 }
 
-// CalculateGammaFlipLevel calculates the gamma flip level using the same logic as the Python reference
-// implementation. It finds the strike price where cumulative GEX is closest to zero.
-// 
+// CalculateGammaFlipLevel calculates the gamma flip level by finding where cumulative GEX crosses zero.
 // The algorithm:
-// 1. Sort all strikes with their GEX values
-// 2. Calculate cumulative sum of GEX at each strike
-// 3. Check if initial cumulative is negative or positive
-// 4. Find the strike where cumulative GEX is closest to zero (either min or max depending on initial sign)
-//
-// This matches the Python _zero_gex function from the reference implementation.
+// 1. Filter out strikes with insignificant GEX (noise reduction)
+// 2. Sort remaining strikes in ascending order
+// 3. Calculate cumulative sum of GEX from lowest to highest strike
+// 4. Find the strike where cumulative GEX crosses from negative to positive (or vice versa)
+// This represents the price level where dealer hedging behavior changes from stabilizing to destabilizing.
 func CalculateGammaFlipLevel(gexByStrike map[float64]float64) float64 {
 	if len(gexByStrike) == 0 {
 		return 0
 	}
 
-	// Sort strikes in ascending order and create list of (strike, gex) tuples
-	strikes := make([]float64, 0, len(gexByStrike))
-	for strike := range gexByStrike {
-		strikes = append(strikes, strike)
-	}
-	sort.Float64s(strikes)
-
-	// Calculate cumulative GEX at each strike (mimics itertools.accumulate)
-	type StrikeGEX struct {
-		Strike float64
-		CumGEX float64
+	// Calculate total absolute GEX for filtering threshold
+	totalAbsGEX := 0.0
+	for _, gex := range gexByStrike {
+		totalAbsGEX += abs(gex)
 	}
 	
-	cumulative := make([]StrikeGEX, len(strikes))
+	// Filter threshold: 0.1% of total absolute GEX
+	// This removes strikes with negligible gamma exposure
+	threshold := totalAbsGEX * 0.001
+	
+	// Filter strikes with meaningful GEX only
+	filteredStrikes := make([]float64, 0)
+	for strike, gex := range gexByStrike {
+		if abs(gex) > threshold {
+			filteredStrikes = append(filteredStrikes, strike)
+		}
+	}
+	
+	if len(filteredStrikes) == 0 {
+		return 0
+	}
+	
+	sort.Float64s(filteredStrikes)
+	
+	fmt.Printf("\nGamma Flip Level Calculation:\n")
+	fmt.Printf("Total strikes: %d, Filtered strikes with GEX > %.2f: %d\n", 
+		len(gexByStrike), threshold, len(filteredStrikes))
+
+	// Calculate cumulative GEX from lowest to highest strike
+	cumGEX := make([]float64, len(filteredStrikes))
 	sum := 0.0
-	for i, strike := range strikes {
+	for i, strike := range filteredStrikes {
 		sum += gexByStrike[strike]
-		cumulative[i] = StrikeGEX{
-			Strike: strike,
-			CumGEX: sum,
+		cumGEX[i] = sum
+	}
+	
+	// Debug: print first and last few meaningful strikes
+	fmt.Printf("First 5 meaningful strikes:\n")
+	for i := 0; i < min(5, len(filteredStrikes)); i++ {
+		fmt.Printf("  Strike %.2f: GEX=%.2f, CumGEX=%.2f\n", 
+			filteredStrikes[i], gexByStrike[filteredStrikes[i]], cumGEX[i])
+	}
+	if len(filteredStrikes) > 5 {
+		fmt.Printf("Last 5 meaningful strikes:\n")
+		for i := max(0, len(filteredStrikes)-5); i < len(filteredStrikes); i++ {
+			fmt.Printf("  Strike %.2f: GEX=%.2f, CumGEX=%.2f\n", 
+				filteredStrikes[i], gexByStrike[filteredStrikes[i]], cumGEX[i])
 		}
 	}
-
-	// Check the cumulative GEX at ~10% of strikes to determine direction
-	// (matches Python's cumsum[len(strikes) // 10][1] < 0)
-	checkIndex := len(strikes) / 10
-	if checkIndex >= len(cumulative) {
-		checkIndex = 0
-	}
-
-	var flipStrike float64
-	if cumulative[checkIndex].CumGEX < 0 {
-		// If early cumulative is negative, find the minimum (most negative) cumulative GEX
-		minCumGEX := cumulative[0].CumGEX
-		flipStrike = cumulative[0].Strike
-		for _, sg := range cumulative {
-			if sg.CumGEX < minCumGEX {
-				minCumGEX = sg.CumGEX
-				flipStrike = sg.Strike
+	
+	// Find where cumulative GEX crosses zero
+	// Look for sign change in cumulative GEX
+	flipStrike := filteredStrikes[0]
+	minDist := abs(cumGEX[0])
+	
+	for i := 0; i < len(filteredStrikes)-1; i++ {
+		// Check if we cross zero between this strike and the next
+		if (cumGEX[i] < 0 && cumGEX[i+1] > 0) || (cumGEX[i] > 0 && cumGEX[i+1] < 0) {
+			// Found a zero crossing - use the strike closer to zero
+			if abs(cumGEX[i]) < abs(cumGEX[i+1]) {
+				flipStrike = filteredStrikes[i]
+				fmt.Printf("Found zero-cross: strike %.2f (cumGEX=%.2f) -> strike %.2f (cumGEX=%.2f)\n",
+					filteredStrikes[i], cumGEX[i], filteredStrikes[i+1], cumGEX[i+1])
+			} else {
+				flipStrike = filteredStrikes[i+1]
+				fmt.Printf("Found zero-cross: strike %.2f (cumGEX=%.2f) -> strike %.2f (cumGEX=%.2f)\n",
+					filteredStrikes[i], cumGEX[i], filteredStrikes[i+1], cumGEX[i+1])
 			}
+			break
 		}
-	} else {
-		// If early cumulative is positive, find the maximum (most positive) cumulative GEX
-		maxCumGEX := cumulative[0].CumGEX
-		flipStrike = cumulative[0].Strike
-		for _, sg := range cumulative {
-			if sg.CumGEX > maxCumGEX {
-				maxCumGEX = sg.CumGEX
-				flipStrike = sg.Strike
-			}
+		
+		// Track the strike closest to zero cumGEX
+		if abs(cumGEX[i]) < minDist {
+			minDist = abs(cumGEX[i])
+			flipStrike = filteredStrikes[i]
 		}
 	}
-
+	
+	// If no zero crossing found, use the strike with cumGEX closest to zero
+	if minDist == abs(cumGEX[0]) {
+		fmt.Printf("No zero-cross found. Using closest strike %.2f with cumGEX=%.2f (distance from zero: %.2f)\n",
+			flipStrike, gexByStrike[flipStrike], minDist)
+	}
+	
+	fmt.Printf("Final gamma flip level: %.2f\n", flipStrike)
 	return flipStrike
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// abs returns the absolute value of a float64
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, spotPrice float64) error {
