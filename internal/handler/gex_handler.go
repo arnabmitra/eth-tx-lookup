@@ -96,8 +96,8 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			ExpiryDate: expirationDatePgType,
 		})
 
-		// Use longer cache time (5 minutes) for better performance
-		cacheTime := 15 * time.Minute
+		// Use 4 hour cache time for better performance
+		cacheTime := 4 * time.Hour
 		if err == nil && time.Since(expiry.UpdatedAt) <= cacheTime {
 			// Use cached data
 			var response gex.Response
@@ -785,47 +785,112 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 		ChartData []map[string]interface{}
 	}
 
-	var charts []Mag7Chart
 	apiKey := os.Getenv("TRADIER_API_KEY")
 
-	// Process sequentially to avoid API rate limits
-	for _, symbol := range mag7 {
-		gexByStrike, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
-		if err != nil {
-			h.logger.Error("failed to calculate GEX for all expiries", "error", err, "symbol", symbol)
-			continue
-		}
+	// Channel to collect results
+	type result struct {
+		chart Mag7Chart
+		err   error
+		index int
+	}
+	results := make(chan result, len(mag7))
 
-		price, err := gex.GetSpotPrice(apiKey, symbol)
-		if err != nil {
-			h.logger.Error("failed to get spot price", "error", err, "symbol", symbol)
-			continue
-		}
+	// Launch goroutines for concurrent fetching
+	for idx, symbol := range mag7 {
+		go func(sym string, position int) {
+			// Retry logic for rate limiting
+			var gexByStrike map[float64]float64
+			var price float64
+			var err error
 
-		// Prepare chart data for D3.js
-		chartData := make([]map[string]interface{}, 0)
-		for strike, gexValue := range gexByStrike {
-			if gexValue < -100 || gexValue > 100 {
-				chartData = append(chartData, map[string]interface{}{
-					"strike": strike,
-					"gex":    gexValue,
-				})
+			maxRetries := 3
+			for attempt := 0; attempt < maxRetries; attempt++ {
+				gexByStrike, err = h.CalculateGEXForAllExpiries(r.Context(), sym)
+				if err == nil {
+					break
+				}
+
+				// Check if it's a rate limit error
+				if attempt < maxRetries-1 {
+					// Exponential backoff: 1s, 2s, 4s
+					backoff := time.Duration(1<<uint(attempt)) * time.Second
+					h.logger.Warn("retrying after error", "symbol", sym, "attempt", attempt+1, "backoff", backoff, "error", err)
+					time.Sleep(backoff)
+				}
 			}
+
+			if err != nil {
+				h.logger.Error("failed to calculate GEX after retries", "error", err, "symbol", sym)
+				results <- result{err: err, index: position}
+				return
+			}
+
+			// Get spot price with retry
+			for attempt := 0; attempt < maxRetries; attempt++ {
+				price, err = gex.GetSpotPrice(apiKey, sym)
+				if err == nil {
+					break
+				}
+
+				if attempt < maxRetries-1 {
+					backoff := time.Duration(1<<uint(attempt)) * time.Second
+					h.logger.Warn("retrying price fetch", "symbol", sym, "attempt", attempt+1, "backoff", backoff, "error", err)
+					time.Sleep(backoff)
+				}
+			}
+
+			if err != nil {
+				h.logger.Error("failed to get spot price after retries", "error", err, "symbol", sym)
+				results <- result{err: err, index: position}
+				return
+			}
+
+			// Prepare chart data
+			chartData := make([]map[string]interface{}, 0)
+			for strike, gexValue := range gexByStrike {
+				if gexValue < -100 || gexValue > 100 {
+					chartData = append(chartData, map[string]interface{}{
+						"strike": strike,
+						"gex":    gexValue,
+					})
+				}
+			}
+
+			// Sort by strike price
+			sort.Slice(chartData, func(i, j int) bool {
+				return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
+			})
+
+			results <- result{
+				chart: Mag7Chart{
+					Symbol:    sym,
+					SpotPrice: price,
+					ChartData: chartData,
+				},
+				index: position,
+			}
+		}(symbol, idx)
+
+		// Small stagger to avoid thundering herd on API
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// Collect results
+	chartsByIndex := make(map[int]Mag7Chart)
+	for range mag7 {
+		res := <-results
+		if res.err == nil {
+			chartsByIndex[res.index] = res.chart
 		}
+	}
+	close(results)
 
-		// Sort by strike price
-		sort.Slice(chartData, func(i, j int) bool {
-			return chartData[i]["strike"].(float64) < chartData[j]["strike"].(float64)
-		})
-
-		charts = append(charts, Mag7Chart{
-			Symbol:    symbol,
-			SpotPrice: price,
-			ChartData: chartData,
-		})
-
-		// Add small delay between symbols to avoid rate limiting
-		time.Sleep(150 * time.Millisecond)
+	// Build ordered charts array
+	charts := make([]Mag7Chart, 0, len(chartsByIndex))
+	for i := 0; i < len(mag7); i++ {
+		if chart, ok := chartsByIndex[i]; ok {
+			charts = append(charts, chart)
+		}
 	}
 
 	err := h.tmpl.ExecuteTemplate(w, "mag7_gex.html", map[string]interface{}{
