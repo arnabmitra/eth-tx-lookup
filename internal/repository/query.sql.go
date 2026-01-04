@@ -58,6 +58,93 @@ func (q *Queries) FindAll(ctx context.Context, limit int32) ([]Guest, error) {
 	return items, nil
 }
 
+const getGEXChangeForSymbols = `-- name: GetGEXChangeForSymbols :many
+WITH latest AS (
+    SELECT DISTINCT ON (symbol)
+        symbol,
+        gex_value as current_gex,
+        spot_price as current_price,
+        expiry_date,
+        recorded_at as current_time
+    FROM gex_history
+    WHERE gex_history.recorded_at >= $1
+    ORDER BY symbol, expiry_date ASC, gex_history.recorded_at DESC
+),
+previous AS (
+    SELECT DISTINCT ON (symbol)
+        symbol,
+        gex_value as previous_gex,
+        recorded_at as previous_time
+    FROM gex_history
+    WHERE gex_history.recorded_at >= $2 AND gex_history.recorded_at < $1
+    ORDER BY symbol, expiry_date ASC, gex_history.recorded_at DESC
+)
+SELECT
+    l.symbol,
+    l.current_gex,
+    l.current_price,
+    l.expiry_date,
+    l.current_time,
+    COALESCE(p.previous_gex, 0) as previous_gex,
+    p.previous_time,
+    (l.current_gex - COALESCE(p.previous_gex, 0))::numeric as gex_change,
+    (CASE
+        WHEN COALESCE(p.previous_gex, 0) != 0
+        THEN ((l.current_gex - COALESCE(p.previous_gex, 0)) / ABS(p.previous_gex)) * 100
+        ELSE 0
+    END)::numeric as gex_change_pct
+FROM latest l
+LEFT JOIN previous p ON l.symbol = p.symbol
+ORDER BY ABS(l.current_gex - COALESCE(p.previous_gex, 0)) DESC
+`
+
+type GetGEXChangeForSymbolsParams struct {
+	RecordedAt   time.Time
+	RecordedAt_2 time.Time
+}
+
+type GetGEXChangeForSymbolsRow struct {
+	Symbol       string
+	CurrentGex   pgtype.Numeric
+	CurrentPrice pgtype.Text
+	ExpiryDate   pgtype.Date
+	CurrentTime  time.Time
+	PreviousGex  pgtype.Numeric
+	PreviousTime pgtype.Timestamptz
+	GexChange    pgtype.Numeric
+	GexChangePct pgtype.Numeric
+}
+
+func (q *Queries) GetGEXChangeForSymbols(ctx context.Context, arg GetGEXChangeForSymbolsParams) ([]GetGEXChangeForSymbolsRow, error) {
+	rows, err := q.db.Query(ctx, getGEXChangeForSymbols, arg.RecordedAt, arg.RecordedAt_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGEXChangeForSymbolsRow
+	for rows.Next() {
+		var i GetGEXChangeForSymbolsRow
+		if err := rows.Scan(
+			&i.Symbol,
+			&i.CurrentGex,
+			&i.CurrentPrice,
+			&i.ExpiryDate,
+			&i.CurrentTime,
+			&i.PreviousGex,
+			&i.PreviousTime,
+			&i.GexChange,
+			&i.GexChangePct,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getGexHistoryBySymbolAndExpiry = `-- name: GetGexHistoryBySymbolAndExpiry :many
 SELECT id, symbol, expiry_date, expiry_type, option_chain, gex_value, recorded_at, spot_price FROM gex_history
 WHERE symbol = $1 AND expiry_date = $2
@@ -89,6 +176,56 @@ func (q *Queries) GetGexHistoryBySymbolAndExpiry(ctx context.Context, arg GetGex
 			&i.GexValue,
 			&i.RecordedAt,
 			&i.SpotPrice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getLatestGEXForAllSymbols = `-- name: GetLatestGEXForAllSymbols :many
+WITH latest_records AS (
+    SELECT DISTINCT ON (gh.symbol)
+        gh.symbol,
+        gh.gex_value,
+        gh.spot_price,
+        gh.expiry_date,
+        gh.recorded_at
+    FROM gex_history gh
+    WHERE gh.recorded_at >= $1
+    ORDER BY gh.symbol, gh.recorded_at DESC
+)
+SELECT symbol, gex_value, spot_price, expiry_date, recorded_at FROM latest_records
+ORDER BY symbol
+`
+
+type GetLatestGEXForAllSymbolsRow struct {
+	Symbol     string
+	GexValue   pgtype.Numeric
+	SpotPrice  pgtype.Text
+	ExpiryDate pgtype.Date
+	RecordedAt time.Time
+}
+
+func (q *Queries) GetLatestGEXForAllSymbols(ctx context.Context, recordedAt time.Time) ([]GetLatestGEXForAllSymbolsRow, error) {
+	rows, err := q.db.Query(ctx, getLatestGEXForAllSymbols, recordedAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLatestGEXForAllSymbolsRow
+	for rows.Next() {
+		var i GetLatestGEXForAllSymbolsRow
+		if err := rows.Scan(
+			&i.Symbol,
+			&i.GexValue,
+			&i.SpotPrice,
+			&i.ExpiryDate,
+			&i.RecordedAt,
 		); err != nil {
 			return nil, err
 		}

@@ -59,6 +59,10 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	a.router.HandleFunc("/gex-history", gexHandler.DisplayGEXHistoryPage)
 	a.router.HandleFunc("/mag7-gex", gexHandler.MAG7GEXHandler)
 
+	// GEX Scanner
+	gexScannerHandler := handler.NewGEXScannerHandler(a.logger, tmpl, a.db)
+	a.router.HandleFunc("/gex-scanner", gexScannerHandler.HandleGEXScanner)
+
 	// Economic Calendar
 	queries := repository.New(a.db)
 	economicCalendarHandler := handler.NewEconomicCalendarHandler(a.logger, tmpl, a.db)

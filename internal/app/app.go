@@ -62,8 +62,7 @@ func (a *App) Start(ctx context.Context) error {
 	gexHandler, queries := a.loadRoutes()
 
 	// Initialize the GexCollector with the handler and symbols
-	symbols := []string{"SPY", "QQQ", "AAPL"}
-	a.gexCollector = worker.NewGEXCollector(gexHandler, symbols)
+	a.gexCollector = worker.NewGEXCollector(gexHandler, worker.SP500Symbols(), 1*time.Hour)
 	a.gexCollector.Start()
 
 	// Initialize Economic Calendar Collector

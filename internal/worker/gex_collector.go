@@ -11,18 +11,25 @@ import (
 )
 
 type GexCollector struct {
-	gexHandler *handler.GEXHandler
-	symbols    []string
-	interval   time.Duration
-	stop       chan struct{}
+	gexHandler       *handler.GEXHandler
+	symbols          []string
+	interval         time.Duration
+	stop             chan struct{}
+	maxConcurrent    int
+	rateLimitDelay   time.Duration
 }
 
-func NewGEXCollector(gexHandler *handler.GEXHandler, symbols []string) *GexCollector {
+func NewGEXCollector(gexHandler *handler.GEXHandler, symbols []string, interval time.Duration) *GexCollector {
+	if interval == 0 {
+		interval = 1 * time.Hour // Default to 1 hour
+	}
 	return &GexCollector{
-		gexHandler: gexHandler,
-		symbols:    symbols,
-		interval:   30 * time.Minute,
-		stop:       make(chan struct{}),
+		gexHandler:     gexHandler,
+		symbols:        symbols,
+		interval:       interval,
+		stop:           make(chan struct{}),
+		maxConcurrent:  5, // Process 5 stocks concurrently to avoid rate limits
+		rateLimitDelay: 2 * time.Second,
 	}
 }
 
@@ -79,87 +86,152 @@ func isMarketOpen() bool {
 	return true
 }
 
+type gexResult struct {
+	symbol string
+	err    error
+}
+
 func (c *GexCollector) collectGEXData() {
-	if !isMarketOpen() {
-		fmt.Printf("[%s] Market is closed. Skipping GEX data collection.\\n", time.Now().Format(time.RFC3339))
+	startTime := time.Now()
+	fmt.Printf("[%s] Starting GEX data collection for %d symbols\\n", startTime.Format(time.RFC3339), len(c.symbols))
+
+	// Create channels for work distribution and results
+	symbolChan := make(chan string, len(c.symbols))
+	resultChan := make(chan gexResult, len(c.symbols))
+
+	// Create context with timeout for entire operation
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
+	// Start worker goroutines
+	for i := 0; i < c.maxConcurrent; i++ {
+		go c.worker(ctx, symbolChan, resultChan)
+	}
+
+	// Send all symbols to the work channel
+	for _, symbol := range c.symbols {
+		symbolChan <- symbol
+	}
+	close(symbolChan)
+
+	// Collect results
+	successCount := 0
+	errorCount := 0
+	for i := 0; i < len(c.symbols); i++ {
+		result := <-resultChan
+		if result.err != nil {
+			errorCount++
+			fmt.Printf("[%s] Error collecting GEX for %s: %v\\n",
+				time.Now().Format(time.RFC3339), result.symbol, result.err)
+		} else {
+			successCount++
+		}
+	}
+
+	fmt.Printf("[%s] Completed GEX data collection in %v. Success: %d, Errors: %d\\n",
+		time.Now().Format(time.RFC3339), time.Since(startTime), successCount, errorCount)
+}
+
+func (c *GexCollector) worker(ctx context.Context, symbolChan <-chan string, resultChan chan<- gexResult) {
+	apiKey := os.Getenv("TRADIER_API_KEY")
+	if apiKey == "" {
 		return
 	}
 
-	startTime := time.Now()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-	fmt.Printf("[%s] Starting GEX data collection for symbols: %v\\n", startTime.Format(time.RFC3339), c.symbols)
-	for _, symbol := range c.symbols {
+	for symbol := range symbolChan {
+		// Rate limiting delay
+		time.Sleep(c.rateLimitDelay)
 
-		// Get the nearest expiry date
-		expiryDates, err := c.gexHandler.GetExpiryDates(ctx, symbol)
-		if err != nil || len(expiryDates) == 0 {
-			apiKey := os.Getenv("TRADIER_API_KEY")
-			if apiKey == "" {
-				continue
-			}
-			expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
-			if err != nil {
-				return
-			}
+		err := c.collectSymbolGEX(ctx, symbol, apiKey)
+		resultChan <- gexResult{symbol: symbol, err: err}
+	}
+}
 
-			expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
-			if err != nil {
-				fmt.Printf("Error marshalling expiration dates to JSON: %v\\n", err)
-				return
-			}
-			fmt.Println(string(expirationDatesJSON))
-
-			err = c.gexHandler.StoreExpiryDatesInOptionExpiryDates(ctx, symbol, expirationDatesJSON)
-			if err != nil {
-				return
-			}
-			expiryDates, err = c.gexHandler.GetExpiryDates(ctx, symbol)
-			if err != nil {
-				return
-			}
-		}
-
-		// Use only the nearest expiry date
-		nearestExpiry := expiryDates[0]
-
-		// Get the options chain for that expiry
-		apiKey := os.Getenv("TRADIER_API_KEY")
-		if apiKey == "" {
-			continue
-		}
-
-		// Get current price
-		price, err := gex.GetSpotPrice(apiKey, symbol)
+func (c *GexCollector) collectSymbolGEX(ctx context.Context, symbol string, apiKey string) error {
+	// Get the nearest expiry date
+	expiryDates, err := c.gexHandler.GetExpiryDates(ctx, symbol)
+	if err != nil || len(expiryDates) == 0 {
+		expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
 		if err != nil {
-			continue
+			return fmt.Errorf("failed to get expiration dates: %w", err)
 		}
 
-		// Fetch options chain
-		options, jsonOption, err := gex.FetchOptionsChain(symbol, nearestExpiry, apiKey)
-		if err != nil || jsonOption == nil {
-			continue
-		}
-
-		// Calculate GEX for the nearest expiry
-		gexByStrike := gex.CalculateGEXPerStrike(options, price)
-
-		// Calculate total GEX (sum of all strikes)
-		totalGEX := 0.0
-		for _, gexValue := range gexByStrike {
-			totalGEX += gexValue
-		}
-		fmt.Printf("[%s] Total GEX for %s (expiry %s): %.2f\\n",
-			time.Now().Format(time.RFC3339), symbol, nearestExpiry, totalGEX)
-
-		// Store in the database
-		err = c.gexHandler.StoreOptionChain(ctx, options, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
+		expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
 		if err != nil {
-			return
+			return fmt.Errorf("failed to marshal expiration dates: %w", err)
+		}
+
+		err = c.gexHandler.StoreExpiryDatesInOptionExpiryDates(ctx, symbol, expirationDatesJSON)
+		if err != nil {
+			return fmt.Errorf("failed to store expiry dates: %w", err)
+		}
+
+		expiryDates, err = c.gexHandler.GetExpiryDates(ctx, symbol)
+		if err != nil {
+			return fmt.Errorf("failed to get stored expiry dates: %w", err)
 		}
 	}
 
-	fmt.Printf("[%s] Completed GEX data collection in %v\\n",
-		time.Now().Format(time.RFC3339),
-		time.Since(startTime))
+	if len(expiryDates) == 0 {
+		return fmt.Errorf("no expiry dates available")
+	}
+
+	// Use only the nearest expiry date
+	nearestExpiry := expiryDates[0]
+
+	// Get current price
+	price, err := gex.GetSpotPrice(apiKey, symbol)
+	if err != nil {
+		// Check if it's a rate limit error (403)
+		if err.Error() == "unexpected status code: 403" {
+			time.Sleep(5 * time.Second) // Back off on rate limit
+			// Retry once
+			price, err = gex.GetSpotPrice(apiKey, symbol)
+			if err != nil {
+				return fmt.Errorf("failed to get spot price after retry: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to get spot price: %w", err)
+		}
+	}
+
+	// Fetch options chain
+	options, jsonOption, err := gex.FetchOptionsChain(symbol, nearestExpiry, apiKey)
+	if err != nil {
+		// Check if it's a rate limit error
+		if err.Error() == "unexpected status code: 403" {
+			time.Sleep(5 * time.Second)
+			// Retry once
+			options, jsonOption, err = gex.FetchOptionsChain(symbol, nearestExpiry, apiKey)
+			if err != nil {
+				return fmt.Errorf("failed to fetch options chain after retry: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to fetch options chain: %w", err)
+		}
+	}
+
+	if jsonOption == nil {
+		return fmt.Errorf("nil options chain returned")
+	}
+
+	// Calculate GEX for the nearest expiry
+	gexByStrike := gex.CalculateGEXPerStrike(options, price)
+
+	// Calculate total GEX (sum of all strikes)
+	totalGEX := 0.0
+	for _, gexValue := range gexByStrike {
+		totalGEX += gexValue
+	}
+
+	fmt.Printf("[%s] %s: Total GEX=%.2f, Price=%.2f, Expiry=%s\\n",
+		time.Now().Format(time.RFC3339), symbol, totalGEX, price, nearestExpiry)
+
+	// Store in the database
+	err = c.gexHandler.StoreOptionChain(ctx, options, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
+	if err != nil {
+		return fmt.Errorf("failed to store option chain: %w", err)
+	}
+
+	return nil
 }
