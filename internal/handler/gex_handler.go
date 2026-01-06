@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -139,7 +140,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 
 func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		symbol := r.FormValue("symbol")
+		symbol := strings.ToUpper(strings.TrimSpace(r.FormValue("symbol")))
 
 		apiKey := os.Getenv("TRADIER_API_KEY")
 		if apiKey == "" {
@@ -270,7 +271,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		symbol := r.FormValue("symbol")
+		symbol := strings.ToUpper(strings.TrimSpace(r.FormValue("symbol")))
 		expiration := r.FormValue("expiration")
 
 		apiKey := os.Getenv("TRADIER_API_KEY")
@@ -598,7 +599,7 @@ func (h *GEXHandler) GetExpiryDates(ctx context.Context, symbol string) ([]strin
 }
 
 func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Request) {
-	symbol := r.URL.Query().Get("symbol")
+	symbol := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("symbol")))
 	if symbol == "" {
 		http.Error(w, "Symbol is required", http.StatusBadRequest)
 		return
@@ -639,7 +640,7 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *GEXHandler) DisplayGEXHistoryPage(w http.ResponseWriter, r *http.Request) {
-	symbol := r.URL.Query().Get("symbol")
+	symbol := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("symbol")))
 	if symbol == "" {
 		http.Error(w, "Symbol is required", http.StatusBadRequest)
 		return

@@ -13,16 +13,22 @@ import (
 )
 
 type GEXScannerHandler struct {
-	logger *slog.Logger
-	tmpl   *template.Template
-	repo   *repository.Queries
+	logger         *slog.Logger
+	tmpl           *template.Template
+	repo           *repository.Queries
+	allowedSymbols map[string]bool
 }
 
-func NewGEXScannerHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Pool) *GEXScannerHandler {
+func NewGEXScannerHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Pool, allowedSymbols []string) *GEXScannerHandler {
+	allowed := make(map[string]bool)
+	for _, s := range allowedSymbols {
+		allowed[s] = true
+	}
 	return &GEXScannerHandler{
-		logger: logger,
-		tmpl:   tmpl,
-		repo:   repository.New(db),
+		logger:         logger,
+		tmpl:           tmpl,
+		repo:           repository.New(db),
+		allowedSymbols: allowed,
 	}
 }
 
@@ -62,6 +68,11 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 	// Convert to display items
 	items := make([]GEXScanItem, 0, len(results))
 	for _, result := range results {
+		// Filter out symbols not in our allowed list
+		if !h.allowedSymbols[result.Symbol] {
+			continue
+		}
+
 		currentGEX := 0.0
 		if result.CurrentGex.Valid {
 			if val, err := result.CurrentGex.Float64Value(); err == nil && val.Valid {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/arnabmitra/eth-proxy/internal/handler"
 	"github.com/arnabmitra/eth-proxy/internal/repository"
+	"github.com/arnabmitra/eth-proxy/internal/worker"
 )
 
 func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
@@ -60,7 +61,7 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	a.router.HandleFunc("/mag7-gex", gexHandler.MAG7GEXHandler)
 
 	// GEX Scanner
-	gexScannerHandler := handler.NewGEXScannerHandler(a.logger, tmpl, a.db)
+	gexScannerHandler := handler.NewGEXScannerHandler(a.logger, tmpl, a.db, worker.SP500Symbols())
 	a.router.HandleFunc("/gex-scanner", gexScannerHandler.HandleGEXScanner)
 
 	// Economic Calendar

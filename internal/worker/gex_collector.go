@@ -92,6 +92,10 @@ type gexResult struct {
 }
 
 func (c *GexCollector) collectGEXData() {
+	if !isMarketOpen() {
+		fmt.Printf("Market is closed. Skipping GEX data collection.\\n")
+		return
+	}
 	startTime := time.Now()
 	fmt.Printf("[%s] Starting GEX data collection for %d symbols\\n", startTime.Format(time.RFC3339), len(c.symbols))
 
@@ -139,6 +143,12 @@ func (c *GexCollector) worker(ctx context.Context, symbolChan <-chan string, res
 	}
 
 	for symbol := range symbolChan {
+		// Check if market is still open
+		if !isMarketOpen() {
+			resultChan <- gexResult{symbol: symbol, err: fmt.Errorf("market closed")}
+			continue
+		}
+
 		// Rate limiting delay
 		time.Sleep(c.rateLimitDelay)
 
