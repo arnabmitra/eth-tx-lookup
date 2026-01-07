@@ -70,9 +70,13 @@
                         {{ range .Items }}
                         <tr class="gex-row transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <a href="/gex?symbol={{ .Symbol }}" class="text-blue-400 hover:text-blue-300 font-semibold">
-                                    {{ .Symbol }}
-                                </a>
+                                <form action="/gex" method="POST" class="inline">
+                                    <input type="hidden" name="symbol" value="{{ .Symbol }}">
+                                    <input type="hidden" name="expiration" value="{{ .ExpiryDate }}">
+                                    <button type="submit" class="text-blue-400 hover:text-blue-300 font-semibold focus:outline-none">
+                                        {{ .Symbol }}
+                                    </button>
+                                </form>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
                                 ${{ printf "%.2f" .CurrentPrice }}
