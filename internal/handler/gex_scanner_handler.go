@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/arnabmitra/eth-proxy/internal/repository"
-	"github.com/dustin/go-humanize"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -33,78 +32,88 @@ func NewGEXScannerHandler(logger *slog.Logger, tmpl *template.Template, db *pgxp
 }
 
 type GEXScanItem struct {
-	Symbol         string
-	CurrentGEX     float64
-	CurrentGEXFmt  string
-	PreviousGEX    float64
-	PreviousGEXFmt string
-	GEXChange      float64
-	GEXChangeFmt   string
-	GEXChangePct   float64
-	CurrentPrice   float64
-	ExpiryDate     string
-	Direction      string // "up" or "down"
+	Symbol       string
+	CurrentGEX   float64
+	PreviousGEX  float64
+	GEXChange    float64
+	GEXChangePct float64
+	CurrentPrice float64
+	ExpiryDate   string
+	Direction    string // "up" or "down"
 }
 
 func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	// Get GEX changes comparing last hour to previous hour
 	now := time.Now()
-	currentWindowStart := now.Add(-1 * time.Hour)
-	previousWindowStart := now.Add(-2 * time.Hour)
+	loc, _ := time.LoadLocation("America/New_York")
+	nowInET := now.In(loc)
 
-	results, err := h.repo.GetGEXChangeForSymbols(ctx, repository.GetGEXChangeForSymbolsParams{
-		RecordedAt:   currentWindowStart,
-		RecordedAt_2: previousWindowStart,
-	})
+	var items []GEXScanItem
+	var err error
+
+	// Market hours: 9:30 AM to 4:00 PM ET
+	marketOpen := time.Date(nowInET.Year(), nowInET.Month(), nowInET.Day(), 9, 30, 0, 0, loc)
+	marketClose := time.Date(nowInET.Year(), nowInET.Month(), nowInET.Day(), 16, 0, 0, 0, loc)
+
+	// Check if today is a weekday
+	isWeekday := nowInET.Weekday() >= time.Monday && nowInET.Weekday() <= time.Friday
+
+	if isWeekday && nowInET.After(marketOpen) && nowInET.Before(marketClose) {
+		// Market is open, get GEX changes
+		currentWindowStart := now.Add(-1 * time.Hour)
+		previousWindowStart := now.Add(-2 * time.Hour)
+
+		results, err_ := h.repo.GetGEXChangeForSymbols(ctx, repository.GetGEXChangeForSymbolsParams{
+			RecordedAt:   currentWindowStart,
+			RecordedAt_2: previousWindowStart,
+		})
+		err = err_
+		if err == nil {
+			items = h.processGEXChangeResults(results)
+		}
+	} else {
+		// Market is closed, get the last known GEX data from the last 24 hours
+		results, err_ := h.repo.GetLatestGEXForAllSymbols(ctx, now.Add(-24*time.Hour))
+		err = err_
+		if err == nil {
+			items = h.processLatestGEXResults(results)
+		}
+	}
 
 	if err != nil {
-		h.logger.Error("failed to get GEX changes", "error", err)
+		h.logger.Error("failed to get GEX data", "error", err)
 		http.Error(w, "Failed to load GEX scanner data", http.StatusInternalServerError)
 		return
 	}
 
-	// Convert to display items
+	data := map[string]interface{}{
+		"Items":       items,
+		"LastUpdated": now.Format("Jan 02, 2006 3:04 PM MST"),
+	}
+
+	err = h.tmpl.ExecuteTemplate(w, "gex_scanner.html", data)
+	if err != nil {
+		h.logger.Error("failed to render template", "error", err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
+}
+
+func (h *GEXScannerHandler) processGEXChangeResults(results []repository.GetGEXChangeForSymbolsRow) []GEXScanItem {
 	items := make([]GEXScanItem, 0, len(results))
 	for _, result := range results {
-		// Filter out symbols not in our allowed list
 		if !h.allowedSymbols[result.Symbol] {
 			continue
 		}
 
-		currentGEX := 0.0
-		if result.CurrentGex.Valid {
-			if val, err := result.CurrentGex.Float64Value(); err == nil && val.Valid {
-				currentGEX = val.Float64
-			}
-		}
-
-		previousGEX := 0.0
-		if result.PreviousGex.Valid {
-			if val, err := result.PreviousGex.Float64Value(); err == nil && val.Valid {
-				previousGEX = val.Float64
-			}
-		}
-
-		gexChange := 0.0
-		if result.GexChange.Valid {
-			if val, err := result.GexChange.Float64Value(); err == nil && val.Valid {
-				gexChange = val.Float64
-			}
-		}
-
-		gexChangePct := 0.0
-		if result.GexChangePct.Valid {
-			if val, err := result.GexChangePct.Float64Value(); err == nil && val.Valid {
-				gexChangePct = val.Float64
-			}
-		}
+		currentGEX, _ := result.CurrentGex.Float64Value()
+		previousGEX, _ := result.PreviousGex.Float64Value()
+		gexChange, _ := result.GexChange.Float64Value()
+		gexChangePct, _ := result.GexChangePct.Float64Value()
 
 		direction := "neutral"
-		if gexChange > 0 {
+		if gexChange.Float64 > 0 {
 			direction = "up"
-		} else if gexChange < 0 {
+		} else if gexChange.Float64 < 0 {
 			direction = "down"
 		}
 
@@ -121,28 +130,46 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 		}
 
 		items = append(items, GEXScanItem{
-			Symbol:         result.Symbol,
-			CurrentGEX:     currentGEX,
-			CurrentGEXFmt:  humanize.CommafWithDigits(currentGEX, 0),
-			PreviousGEX:    previousGEX,
-			PreviousGEXFmt: humanize.CommafWithDigits(previousGEX, 0),
-			GEXChange:      gexChange,
-			GEXChangeFmt:   humanize.CommafWithDigits(gexChange, 0),
-			GEXChangePct:   gexChangePct,
-			CurrentPrice:   currentPrice,
-			ExpiryDate:     expiryDate,
-			Direction:      direction,
+			Symbol:       result.Symbol,
+			CurrentGEX:   currentGEX.Float64,
+			PreviousGEX:  previousGEX.Float64,
+			GEXChange:    gexChange.Float64,
+			GEXChangePct: gexChangePct.Float64,
+			CurrentPrice: currentPrice,
+			ExpiryDate:   expiryDate,
+			Direction:    direction,
 		})
 	}
+	return items
+}
 
-	data := map[string]interface{}{
-		"Items":       items,
-		"LastUpdated": now.Format("Jan 02, 2006 3:04 PM MST"),
-	}
+func (h *GEXScannerHandler) processLatestGEXResults(results []repository.GetLatestGEXForAllSymbolsRow) []GEXScanItem {
+	items := make([]GEXScanItem, 0, len(results))
+	for _, result := range results {
+		if !h.allowedSymbols[result.Symbol] {
+			continue
+		}
 
-	err = h.tmpl.ExecuteTemplate(w, "gex_scanner.html", data)
-	if err != nil {
-		h.logger.Error("failed to render template", "error", err)
-		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+		currentGEX, _ := result.GexValue.Float64Value()
+		currentPrice := 0.0
+		if result.SpotPrice.Valid {
+			if price, err := strconv.ParseFloat(result.SpotPrice.String, 64); err == nil {
+				currentPrice = price
+			}
+		}
+
+		expiryDate := ""
+		if result.ExpiryDate.Valid {
+			expiryDate = result.ExpiryDate.Time.Format("2006-01-02")
+		}
+
+		items = append(items, GEXScanItem{
+			Symbol:       result.Symbol,
+			CurrentGEX:   currentGEX.Float64,
+			CurrentPrice: currentPrice,
+			ExpiryDate:   expiryDate,
+			Direction:    "neutral", // No change to show
+		})
 	}
+	return items
 }

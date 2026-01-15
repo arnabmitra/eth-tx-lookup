@@ -4,19 +4,20 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
-	"github.com/arnabmitra/eth-proxy/internal/handler"
-	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 	"os"
 	"time"
+
+	"github.com/arnabmitra/eth-proxy/internal/handler"
+	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 )
 
 type GexCollector struct {
-	gexHandler       *handler.GEXHandler
-	symbols          []string
-	interval         time.Duration
-	stop             chan struct{}
-	maxConcurrent    int
-	rateLimitDelay   time.Duration
+	gexHandler     *handler.GEXHandler
+	symbols        []string
+	interval       time.Duration
+	stop           chan struct{}
+	maxConcurrent  int
+	rateLimitDelay time.Duration
 }
 
 func NewGEXCollector(gexHandler *handler.GEXHandler, symbols []string, interval time.Duration) *GexCollector {
@@ -55,11 +56,11 @@ func (c *GexCollector) Stop() {
 	close(c.stop)
 }
 
-// isMarketOpen checks if the US stock market is currently open (9:30 AM - 4:00 PM ET, Mon-Fri).
+// isMarketOpen checks if the US stock market is currently open (7:30 AM - 4:00 PM ET, Mon-Fri).
 func isMarketOpen() bool {
 	loc, err := time.LoadLocation("America/New_York")
 	if err != nil {
-		fmt.Printf("Error loading location: %v\\n", err)
+		fmt.Printf("Error loading location: %v\n", err)
 		return false // Default to not open if location cannot be loaded
 	}
 
@@ -78,7 +79,8 @@ func isMarketOpen() bool {
 	if hour < 9 || (hour == 9 && minute < 30) {
 		return false
 	}
-	// Market closes at 16:00
+
+	// Market closes at 4:00 PM ET
 	if hour >= 16 {
 		return false
 	}

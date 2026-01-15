@@ -82,13 +82,13 @@
                                 ${{ printf "%.2f" .CurrentPrice }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-200 font-medium">
-                                {{ .CurrentGEXFmt }}
+                                {{ printf "%.0f" .CurrentGEX }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400">
-                                {{ .PreviousGEXFmt }}
+                                {{ printf "%.0f" .PreviousGEX }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
-                                {{ if eq .Direction "up" }}+{{ end }}{{ .GEXChangeFmt }}
+                                {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.0f" .GEXChange }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
                                 {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.2f" .GEXChangePct }}%
