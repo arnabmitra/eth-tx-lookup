@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -48,6 +49,8 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 	loc, _ := time.LoadLocation("America/New_York")
 	nowInET := now.In(loc)
 
+	sortParam := r.URL.Query().Get("sort")
+
 	var items []GEXScanItem
 	var err error
 
@@ -60,8 +63,8 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 
 	if isWeekday && nowInET.After(marketOpen) && nowInET.Before(marketClose) {
 		// Market is open, get GEX changes
-		currentWindowStart := now.Add(-1 * time.Hour)
-		previousWindowStart := now.Add(-2 * time.Hour)
+		currentWindowStart := now.Add(-30 * time.Minute)
+		previousWindowStart := now.Add(-60 * time.Minute)
 
 		results, err_ := h.repo.GetGEXChangeForSymbols(ctx, repository.GetGEXChangeForSymbolsParams{
 			RecordedAt:   currentWindowStart,
@@ -86,12 +89,29 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Sort items
+	if sortParam == "gex_asc" {
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].CurrentGEX < items[j].CurrentGEX
+		})
+	} else if sortParam == "gex_desc" {
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].CurrentGEX > items[j].CurrentGEX
+		})
+	}
+
 	data := map[string]interface{}{
 		"Items":       items,
 		"LastUpdated": now.Format("Jan 02, 2006 3:04 PM MST"),
+		"Sort":        sortParam,
 	}
 
-	err = h.tmpl.ExecuteTemplate(w, "gex_scanner.html", data)
+	if r.Header.Get("HX-Request") == "true" {
+		err = h.tmpl.ExecuteTemplate(w, "gex_scanner_table.html", data)
+	} else {
+		err = h.tmpl.ExecuteTemplate(w, "gex_scanner.html", data)
+	}
+
 	if err != nil {
 		h.logger.Error("failed to render template", "error", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)

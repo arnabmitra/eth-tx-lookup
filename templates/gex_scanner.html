@@ -6,6 +6,7 @@
     <title>GEX Scanner - Real-time Gamma Exposure Changes | GEX Tracker</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -59,7 +60,13 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Symbol</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Current Price</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Current GEX</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <a href="#" hx-get="?sort={{ if eq .Sort "gex_asc" }}gex_desc{{ else }}gex_asc{{ end }}" hx-target="tbody" hx-swap="outerHTML" class="flex items-center justify-end">
+                                    Current GEX
+                                    {{ if eq .Sort "gex_asc" }}<span class="material-icons">arrow_upward</span>{{ end }}
+                                    {{ if eq .Sort "gex_desc" }}<span class="material-icons">arrow_downward</span>{{ end }}
+                                </a>
+                            </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Previous GEX</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">GEX Change</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Change %</th>

@@ -1,0 +1,39 @@
+<tbody class="bg-gray-900 divide-y divide-gray-700">
+    {{ range .Items }}
+    <tr class="gex-row transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap">
+            <form action="/gex" method="POST" class="inline">
+                <input type="hidden" name="symbol" value="{{ .Symbol }}">
+                <input type="hidden" name="expiration" value="{{ .ExpiryDate }}">
+                <button type="submit" class="text-blue-400 hover:text-blue-300 font-semibold focus:outline-none">
+                    {{ .Symbol }}
+                </button>
+            </form>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
+            ${{ printf "%.2f" .CurrentPrice }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-200 font-medium">
+            {{ printf "%.0f" .CurrentGEX }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400">
+            {{ printf "%.0f" .PreviousGEX }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
+            {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.0f" .GEXChange }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
+            {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.2f" .GEXChangePct }}%
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">
+            {{ .ExpiryDate }}
+        </td>
+    </tr>
+    {{ else }}
+    <tr>
+        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+            No GEX data available. Data collection in progress...
+        </td>
+    </tr>
+    {{ end }}
+</tbody>
