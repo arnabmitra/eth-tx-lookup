@@ -74,12 +74,21 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 		if err == nil {
 			items = h.processGEXChangeResults(results)
 		}
+
+		// If no items found during market hours (e.g. just opened or delay), fall back to latest changes
+		if len(items) == 0 {
+			results, err_ := h.repo.GetLatestGEXChanges(ctx)
+			err = err_
+			if err == nil {
+				items = h.processLatestGEXChangesResults(results)
+			}
+		}
 	} else {
-		// Market is closed, get the last known GEX data from the last 24 hours
-		results, err_ := h.repo.GetLatestGEXForAllSymbols(ctx, now.Add(-24*time.Hour))
+		// Market is closed, get the last known GEX changes
+		results, err_ := h.repo.GetLatestGEXChanges(ctx)
 		err = err_
 		if err == nil {
-			items = h.processLatestGEXResults(results)
+			items = h.processLatestGEXChangesResults(results)
 		}
 	}
 
@@ -163,17 +172,28 @@ func (h *GEXScannerHandler) processGEXChangeResults(results []repository.GetGEXC
 	return items
 }
 
-func (h *GEXScannerHandler) processLatestGEXResults(results []repository.GetLatestGEXForAllSymbolsRow) []GEXScanItem {
+func (h *GEXScannerHandler) processLatestGEXChangesResults(results []repository.GetLatestGEXChangesRow) []GEXScanItem {
 	items := make([]GEXScanItem, 0, len(results))
 	for _, result := range results {
 		if !h.allowedSymbols[result.Symbol] {
 			continue
 		}
 
-		currentGEX, _ := result.GexValue.Float64Value()
+		currentGEX, _ := result.CurrentGex.Float64Value()
+		previousGEX, _ := result.PreviousGex.Float64Value()
+		gexChange, _ := result.GexChange.Float64Value()
+		gexChangePct, _ := result.GexChangePct.Float64Value()
+
+		direction := "neutral"
+		if gexChange.Float64 > 0 {
+			direction = "up"
+		} else if gexChange.Float64 < 0 {
+			direction = "down"
+		}
+
 		currentPrice := 0.0
-		if result.SpotPrice.Valid {
-			if price, err := strconv.ParseFloat(result.SpotPrice.String, 64); err == nil {
+		if result.CurrentPrice.Valid {
+			if price, err := strconv.ParseFloat(result.CurrentPrice.String, 64); err == nil {
 				currentPrice = price
 			}
 		}
@@ -186,9 +206,12 @@ func (h *GEXScannerHandler) processLatestGEXResults(results []repository.GetLate
 		items = append(items, GEXScanItem{
 			Symbol:       result.Symbol,
 			CurrentGEX:   currentGEX.Float64,
+			PreviousGEX:  previousGEX.Float64,
+			GEXChange:    gexChange.Float64,
+			GEXChangePct: gexChangePct.Float64,
 			CurrentPrice: currentPrice,
 			ExpiryDate:   expiryDate,
-			Direction:    "neutral", // No change to show
+			Direction:    direction,
 		})
 	}
 	return items

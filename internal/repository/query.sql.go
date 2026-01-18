@@ -187,45 +187,85 @@ func (q *Queries) GetGexHistoryBySymbolAndExpiry(ctx context.Context, arg GetGex
 	return items, nil
 }
 
-const getLatestGEXForAllSymbols = `-- name: GetLatestGEXForAllSymbols :many
-WITH latest_records AS (
-    SELECT DISTINCT ON (gh.symbol)
-        gh.symbol,
-        gh.gex_value,
-        gh.spot_price,
-        gh.expiry_date,
-        gh.recorded_at
-    FROM gex_history gh
-    WHERE gh.recorded_at >= $1
-    ORDER BY gh.symbol, gh.recorded_at DESC
+const getLatestGEXChanges = `-- name: GetLatestGEXChanges :many
+WITH ranked_history AS (
+    SELECT
+        symbol,
+        gex_value,
+        spot_price,
+        expiry_date,
+        recorded_at,
+        ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY recorded_at DESC) as rn
+    FROM gex_history
+),
+latest AS (
+    SELECT
+        symbol,
+        gex_value as current_gex,
+        spot_price as current_price,
+        expiry_date,
+        recorded_at as current_time
+    FROM ranked_history
+    WHERE rn = 1
+),
+previous AS (
+    SELECT
+        symbol,
+        gex_value as previous_gex,
+        recorded_at as previous_time
+    FROM ranked_history
+    WHERE rn = 2
 )
-SELECT symbol, gex_value, spot_price, expiry_date, recorded_at FROM latest_records
-ORDER BY symbol
+SELECT
+    l.symbol,
+    l.current_gex,
+    l.current_price,
+    l.expiry_date,
+    l.current_time,
+    COALESCE(p.previous_gex, 0) as previous_gex,
+    p.previous_time,
+    (l.current_gex - COALESCE(p.previous_gex, 0))::numeric as gex_change,
+    (CASE
+        WHEN COALESCE(p.previous_gex, 0) != 0
+        THEN ((l.current_gex - COALESCE(p.previous_gex, 0)) / ABS(p.previous_gex)) * 100
+        ELSE 0
+    END)::numeric as gex_change_pct
+FROM latest l
+LEFT JOIN previous p ON l.symbol = p.symbol
+ORDER BY ABS(l.current_gex - COALESCE(p.previous_gex, 0)) DESC
 `
 
-type GetLatestGEXForAllSymbolsRow struct {
-	Symbol     string
-	GexValue   pgtype.Numeric
-	SpotPrice  pgtype.Text
-	ExpiryDate pgtype.Date
-	RecordedAt time.Time
+type GetLatestGEXChangesRow struct {
+	Symbol       string
+	CurrentGex   pgtype.Numeric
+	CurrentPrice pgtype.Text
+	ExpiryDate   pgtype.Date
+	CurrentTime  time.Time
+	PreviousGex  pgtype.Numeric
+	PreviousTime pgtype.Timestamptz
+	GexChange    pgtype.Numeric
+	GexChangePct pgtype.Numeric
 }
 
-func (q *Queries) GetLatestGEXForAllSymbols(ctx context.Context, recordedAt time.Time) ([]GetLatestGEXForAllSymbolsRow, error) {
-	rows, err := q.db.Query(ctx, getLatestGEXForAllSymbols, recordedAt)
+func (q *Queries) GetLatestGEXChanges(ctx context.Context) ([]GetLatestGEXChangesRow, error) {
+	rows, err := q.db.Query(ctx, getLatestGEXChanges)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetLatestGEXForAllSymbolsRow
+	var items []GetLatestGEXChangesRow
 	for rows.Next() {
-		var i GetLatestGEXForAllSymbolsRow
+		var i GetLatestGEXChangesRow
 		if err := rows.Scan(
 			&i.Symbol,
-			&i.GexValue,
-			&i.SpotPrice,
+			&i.CurrentGex,
+			&i.CurrentPrice,
 			&i.ExpiryDate,
-			&i.RecordedAt,
+			&i.CurrentTime,
+			&i.PreviousGex,
+			&i.PreviousTime,
+			&i.GexChange,
+			&i.GexChangePct,
 		); err != nil {
 			return nil, err
 		}

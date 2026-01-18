@@ -84,20 +84,52 @@ WHERE symbol = $1 AND recorded_at >= $2
 ORDER BY recorded_at DESC
     LIMIT $3;
 
--- name: GetLatestGEXForAllSymbols :many
-WITH latest_records AS (
-    SELECT DISTINCT ON (gh.symbol)
-        gh.symbol,
-        gh.gex_value,
-        gh.spot_price,
-        gh.expiry_date,
-        gh.recorded_at
-    FROM gex_history gh
-    WHERE gh.recorded_at >= $1
-    ORDER BY gh.symbol, gh.recorded_at DESC
+-- name: GetLatestGEXChanges :many
+WITH ranked_history AS (
+    SELECT
+        symbol,
+        gex_value,
+        spot_price,
+        expiry_date,
+        recorded_at,
+        ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY recorded_at DESC) as rn
+    FROM gex_history
+),
+latest AS (
+    SELECT
+        symbol,
+        gex_value as current_gex,
+        spot_price as current_price,
+        expiry_date,
+        recorded_at as current_time
+    FROM ranked_history
+    WHERE rn = 1
+),
+previous AS (
+    SELECT
+        symbol,
+        gex_value as previous_gex,
+        recorded_at as previous_time
+    FROM ranked_history
+    WHERE rn = 2
 )
-SELECT * FROM latest_records
-ORDER BY symbol;
+SELECT
+    l.symbol,
+    l.current_gex,
+    l.current_price,
+    l.expiry_date,
+    l.current_time,
+    COALESCE(p.previous_gex, 0) as previous_gex,
+    p.previous_time,
+    (l.current_gex - COALESCE(p.previous_gex, 0))::numeric as gex_change,
+    (CASE
+        WHEN COALESCE(p.previous_gex, 0) != 0
+        THEN ((l.current_gex - COALESCE(p.previous_gex, 0)) / ABS(p.previous_gex)) * 100
+        ELSE 0
+    END)::numeric as gex_change_pct
+FROM latest l
+LEFT JOIN previous p ON l.symbol = p.symbol
+ORDER BY ABS(l.current_gex - COALESCE(p.previous_gex, 0)) DESC;
 
 -- name: GetGEXChangeForSymbols :many
 WITH latest AS (
