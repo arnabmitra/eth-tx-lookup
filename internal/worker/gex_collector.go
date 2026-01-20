@@ -22,7 +22,7 @@ type GexCollector struct {
 
 func NewGEXCollector(gexHandler *handler.GEXHandler, symbols []string, interval time.Duration) *GexCollector {
 	if interval == 0 {
-		interval = 1 * time.Hour // Default to 1 hour
+		interval = 30 * time.Minute // Default to 15 minutes
 	}
 	return &GexCollector{
 		gexHandler:     gexHandler,

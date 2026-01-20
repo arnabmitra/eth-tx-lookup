@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/arnabmitra/eth-proxy/internal/database"
-	"github.com/arnabmitra/eth-proxy/internal/middleware"
-	"github.com/arnabmitra/eth-proxy/internal/worker"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -19,6 +14,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/arnabmitra/eth-proxy/internal/database"
+	"github.com/arnabmitra/eth-proxy/internal/middleware"
+	"github.com/arnabmitra/eth-proxy/internal/worker"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -62,7 +63,7 @@ func (a *App) Start(ctx context.Context) error {
 	gexHandler, queries := a.loadRoutes()
 
 	// Initialize the GexCollector with the handler and symbols
-	a.gexCollector = worker.NewGEXCollector(gexHandler, worker.SP500Symbols(), 1*time.Hour)
+	a.gexCollector = worker.NewGEXCollector(gexHandler, worker.SP500Symbols(), 30*time.Minute)
 	a.gexCollector.Start()
 
 	// Initialize Economic Calendar Collector
