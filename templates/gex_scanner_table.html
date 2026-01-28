@@ -10,19 +10,19 @@
                 </button>
             </form>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300" data-sort="{{ printf "%.2f" .CurrentPrice }}">
             ${{ printf "%.2f" .CurrentPrice }}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-200 font-medium">
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-200 font-medium" data-sort="{{ printf "%.0f" .CurrentGEX }}">
             {{ printf "%.0f" .CurrentGEX }}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400">
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400" data-sort="{{ printf "%.0f" .PreviousGEX }}">
             {{ printf "%.0f" .PreviousGEX }}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}" data-sort="{{ printf "%.0f" .GEXChange }}">
             {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.0f" .GEXChange }}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}" data-sort="{{ printf "%.2f" .GEXChangePct }}">
             {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.2f" .GEXChangePct }}%
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">

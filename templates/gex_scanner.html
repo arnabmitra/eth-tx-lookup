@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script src="/static/js/tablesort.min.js"></script>
+    <script src="/static/js/tablesort.number.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -16,6 +18,37 @@
             background-color: #111827;
             color: #d1d5db;
         }
+        /* Tablesort Styles */
+        th[role=columnheader]:not(.no-sort) {
+            cursor: pointer;
+        }
+        th[role=columnheader]:not(.no-sort):after {
+            content: '';
+            float: right;
+            margin-top: 7px;
+            border-width: 0 4px 4px;
+            border-style: solid;
+            border-color: #404040 transparent;
+            visibility: hidden;
+            opacity: 0;
+            -ms-user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+        th[aria-sort=ascending]:not(.no-sort):after {
+            border-bottom: none;
+            border-width: 4px 4px 0;
+        }
+        th[aria-sort]:not(.no-sort):after {
+            visibility: visible;
+            opacity: 1;
+        }
+        th[role=columnheader]:not(.no-sort):hover:after {
+            visibility: visible;
+            opacity: 1;
+        }
+
         .gradient-text {
             background: linear-gradient(to right, #34d399, #60a5fa);
             -webkit-background-clip: text;
@@ -55,21 +88,15 @@
 
         <div class="card overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-700">
+                <table id="sortable-table" class="min-w-full divide-y divide-gray-700">
                     <thead class="bg-gray-800">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Symbol</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Current Price</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                <a href="#" hx-get="?sort={{ if eq .Sort "gex_asc" }}gex_desc{{ else }}gex_asc{{ end }}" hx-target="tbody" hx-swap="outerHTML" class="flex items-center justify-end">
-                                    Current GEX
-                                    {{ if eq .Sort "gex_asc" }}<span class="material-icons">arrow_upward</span>{{ end }}
-                                    {{ if eq .Sort "gex_desc" }}<span class="material-icons">arrow_downward</span>{{ end }}
-                                </a>
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Previous GEX</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">GEX Change</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Change %</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Current Price</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Current GEX</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Previous GEX</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">GEX Change</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Change %</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Expiry</th>
                         </tr>
                     </thead>
@@ -85,19 +112,19 @@
                                     </button>
                                 </form>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300" data-sort="{{ printf "%.2f" .CurrentPrice }}">
                                 ${{ printf "%.2f" .CurrentPrice }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-200 font-medium">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-200 font-medium" data-sort="{{ printf "%.0f" .CurrentGEX }}">
                                 {{ printf "%.0f" .CurrentGEX }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400" data-sort="{{ printf "%.0f" .PreviousGEX }}">
                                 {{ printf "%.0f" .PreviousGEX }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}" data-sort="{{ printf "%.0f" .GEXChange }}">
                                 {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.0f" .GEXChange }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if eq .Direction "up" }}direction-up{{ else if eq .Direction "down" }}direction-down{{ else }}text-gray-400{{ end }}" data-sort="{{ printf "%.2f" .GEXChangePct }}">
                                 {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.2f" .GEXChangePct }}%
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">
@@ -125,5 +152,20 @@
             </p>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var table = document.getElementById('sortable-table');
+            if (table) {
+                var sort = new Tablesort(table);
+                
+                // Handle HTMX updates
+                document.body.addEventListener('htmx:afterSwap', function(evt) {
+                    if (sort) {
+                        sort.refresh();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
