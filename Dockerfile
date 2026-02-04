@@ -54,6 +54,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
     apk --update add \
         ca-certificates \
         tzdata \
+        mailcap \
         && \
         update-ca-certificates
 
