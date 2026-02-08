@@ -1,0 +1,14 @@
+# ads.txt file for gextracker.site
+# This file is used by ad networks to verify authorized sellers
+# Format: <DOMAIN>, <PUBLISHER_ID>, <RELATIONSHIP>, <CERTIFICATION_AUTHORITY_ID>
+
+# Google AdSense (add your publisher ID when you get approved)
+ google.com, pub-0318971566325934, DIRECT, f08c47fec0942fa0
+
+# Placeholder - replace with your actual ad network information when you sign up
+# Example for other networks:
+# revcontent.com, 123456, DIRECT
+# media.net, 8CUX12345, DIRECT
+# taboola.com, 1234567, DIRECT, c228e6794e811952
+
+# Contact: webmaster@gextracker.site
