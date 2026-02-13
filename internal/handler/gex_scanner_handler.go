@@ -3,6 +3,7 @@ package handler
 import (
 	"html/template"
 	"log/slog"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -41,6 +42,7 @@ type GEXScanItem struct {
 	CurrentPrice float64
 	ExpiryDate   string
 	Direction    string // "up" or "down"
+	ZScore       float64
 }
 
 func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +100,26 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Fetch anomalies/z-scores
+	anomalies, err := h.repo.GetGEXAnomalies(ctx)
+	if err != nil {
+		h.logger.Error("failed to fetch GEX anomalies", "error", err)
+	} else {
+		// Create a map for fast lookup
+		zScoreMap := make(map[string]float64)
+		for _, anomaly := range anomalies {
+			z, _ := anomaly.ZScore.Float64Value()
+			zScoreMap[anomaly.Symbol] = z.Float64
+		}
+
+		// Enhance items with ZScore
+		for i := range items {
+			if z, ok := zScoreMap[items[i].Symbol]; ok {
+				items[i].ZScore = z
+			}
+		}
+	}
+
 	// Sort items
 	if sortParam == "gex_asc" {
 		sort.Slice(items, func(i, j int) bool {
@@ -106,6 +128,10 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 	} else if sortParam == "gex_desc" {
 		sort.Slice(items, func(i, j int) bool {
 			return items[i].CurrentGEX > items[j].CurrentGEX
+		})
+	} else if sortParam == "zscore_abs_desc" {
+		sort.Slice(items, func(i, j int) bool {
+			return math.Abs(items[i].ZScore) > math.Abs(items[j].ZScore)
 		})
 	}
 

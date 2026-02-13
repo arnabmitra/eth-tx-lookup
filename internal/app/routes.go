@@ -70,5 +70,10 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	a.router.HandleFunc("/economic-calendar", economicCalendarHandler.ServeHTTP)
 	a.router.HandleFunc("/api/economic-calendar/week", economicCalendarHandler.GetThisWeek)
 
+	// Blog
+	blogHandler := handler.NewBlogHandler(a.logger, tmpl)
+	a.router.HandleFunc("/blog", blogHandler.ServeIndex)
+	a.router.HandleFunc("/blog/", blogHandler.ServePost)
+
 	return gexHandler, queries
 }

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GEX Tracker Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #111827; color: #d1d5db; }
+        .card { background-color: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-5px); border-color: #60a5fa; }
+    </style>
+</head>
+<body>
+{{ template "navigation" . }}
+
+<div class="min-h-screen py-12">
+    <div class="container mx-auto px-4 max-w-5xl">
+        <h1 class="text-4xl font-bold mb-2 text-white">Latest Insights</h1>
+        <p class="text-gray-400 mb-12">Analysis, education, and updates from the GEX Tracker team.</p>
+
+        <div class="grid gap-8 md:grid-cols-2">
+            {{ range .Posts }}
+            <a href="/blog/{{ .Slug }}" class="card block overflow-hidden group">
+                {{ if .Image }}
+                <div class="h-48 w-full bg-cover bg-center" style="background-image: url('{{ .Image }}')"></div>
+                {{ end }}
+                <div class="p-6">
+                    <div class="text-sm text-blue-400 mb-2 font-medium">{{ .FormattedDate }}</div>
+                    <h2 class="text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">{{ .Title }}</h2>
+                    <p class="text-gray-400 line-clamp-3">{{ .Summary }}</p>
+                </div>
+            </a>
+            {{ end }}
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

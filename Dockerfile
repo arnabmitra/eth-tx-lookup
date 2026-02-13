@@ -80,6 +80,7 @@ COPY --from=build /bin/server /bin/
 COPY ./migrations ./migrations
 COPY ./templates ./templates
 COPY ./static ./static
+COPY ./posts ./posts
 
 # Ensure proper permissions after copying
 RUN chown -R appuser:appuser /static && \

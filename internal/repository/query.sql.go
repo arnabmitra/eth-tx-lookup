@@ -58,6 +58,90 @@ func (q *Queries) FindAll(ctx context.Context, limit int32) ([]Guest, error) {
 	return items, nil
 }
 
+const getGEXAnomalies = `-- name: GetGEXAnomalies :many
+WITH daily_closes AS (
+    SELECT DISTINCT ON (symbol, recorded_at::date)
+        symbol,
+        gex_value,
+        recorded_at
+    FROM gex_history
+    WHERE recorded_at >= NOW() - INTERVAL '30 days'
+    ORDER BY symbol, recorded_at::date DESC, recorded_at DESC
+),
+stats AS (
+    SELECT
+        symbol,
+        AVG(gex_value) as avg_gex,
+        STDDEV(gex_value) as stddev_gex
+    FROM daily_closes
+    GROUP BY symbol
+),
+latest AS (
+    SELECT DISTINCT ON (symbol)
+        symbol,
+        gex_value,
+        spot_price,
+        recorded_at
+    FROM gex_history
+    ORDER BY symbol, recorded_at DESC
+)
+SELECT
+    l.symbol,
+    l.gex_value,
+    l.spot_price,
+    l.recorded_at,
+    COALESCE(s.avg_gex, 0)::numeric as avg_gex,
+    COALESCE(s.stddev_gex, 0)::numeric as stddev_gex,
+    (CASE 
+        WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
+        ELSE (l.gex_value - s.avg_gex) / s.stddev_gex 
+    END)::numeric as z_score
+FROM latest l
+JOIN stats s ON l.symbol = s.symbol
+ORDER BY ABS((CASE 
+        WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
+        ELSE (l.gex_value - s.avg_gex) / s.stddev_gex 
+    END)) DESC
+`
+
+type GetGEXAnomaliesRow struct {
+	Symbol     string
+	GexValue   pgtype.Numeric
+	SpotPrice  pgtype.Text
+	RecordedAt time.Time
+	AvgGex     pgtype.Numeric
+	StddevGex  pgtype.Numeric
+	ZScore     pgtype.Numeric
+}
+
+func (q *Queries) GetGEXAnomalies(ctx context.Context) ([]GetGEXAnomaliesRow, error) {
+	rows, err := q.db.Query(ctx, getGEXAnomalies)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGEXAnomaliesRow
+	for rows.Next() {
+		var i GetGEXAnomaliesRow
+		if err := rows.Scan(
+			&i.Symbol,
+			&i.GexValue,
+			&i.SpotPrice,
+			&i.RecordedAt,
+			&i.AvgGex,
+			&i.StddevGex,
+			&i.ZScore,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getGEXChangeForSymbols = `-- name: GetGEXChangeForSymbols :many
 WITH latest AS (
     SELECT DISTINCT ON (symbol)
