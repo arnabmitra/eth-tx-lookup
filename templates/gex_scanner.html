@@ -97,7 +97,9 @@
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Previous GEX</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">GEX Change</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Change %</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number">Deviation (Z)</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider" data-sort-method="number" aria-sort="{{ if eq .Sort "zscore_abs_desc" }}descending{{ end }}">
+                                <a href="/gex-scanner?sort=zscore_abs_desc" class="hover:text-white">Deviation (Z)</a>
+                            </th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Expiry</th>
                         </tr>
                     </thead>

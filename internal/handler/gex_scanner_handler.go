@@ -52,6 +52,9 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 	nowInET := now.In(loc)
 
 	sortParam := r.URL.Query().Get("sort")
+	if sortParam == "" {
+		sortParam = "zscore_abs_desc"
+	}
 
 	var items []GEXScanItem
 	var err error
