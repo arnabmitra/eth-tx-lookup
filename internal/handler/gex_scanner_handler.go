@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"html/template"
 	"log/slog"
 	"math"
@@ -154,6 +155,38 @@ func (h *GEXScannerHandler) HandleGEXScanner(w http.ResponseWriter, r *http.Requ
 		h.logger.Error("failed to render template", "error", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
+}
+
+func (h *GEXScannerHandler) HandleZScoreHistory(w http.ResponseWriter, r *http.Request) {
+	symbol := r.URL.Query().Get("symbol")
+	if symbol == "" {
+		http.Error(w, "Symbol is required", http.StatusBadRequest)
+		return
+	}
+
+	results, err := h.repo.GetHistoricalGEXAnomalies(r.Context(), symbol)
+	if err != nil {
+		h.logger.Error("failed to fetch historical anomalies", "symbol", symbol, "error", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+
+	type HistoryPoint struct {
+		Time   string  `json:"time"`
+		ZScore float64 `json:"zscore"`
+	}
+
+	points := make([]HistoryPoint, 0, len(results))
+	for _, r := range results {
+		z, _ := r.ZScore.Float64Value()
+		points = append(points, HistoryPoint{
+			Time:   r.RecordedAt.Format(time.RFC3339),
+			ZScore: z.Float64,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(points)
 }
 
 func (h *GEXScannerHandler) processGEXChangeResults(results []repository.GetGEXChangeForSymbolsRow) []GEXScanItem {

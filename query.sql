@@ -235,3 +235,22 @@ ORDER BY ABS((CASE
         WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
         ELSE (l.gex_value - s.avg_gex) / s.stddev_gex 
     END)) DESC;
+
+-- name: GetHistoricalGEXAnomalies :many
+WITH stats AS (
+    SELECT
+        AVG(gex_value) as avg_gex,
+        STDDEV(gex_value) as stddev_gex
+    FROM gex_history
+    WHERE symbol = $1 AND recorded_at >= NOW() - INTERVAL '30 days'
+)
+SELECT
+    recorded_at,
+    gex_value,
+    (CASE 
+        WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
+        ELSE (gex_value - s.avg_gex) / s.stddev_gex 
+    END)::numeric as z_score
+FROM gex_history, stats s
+WHERE gex_history.symbol = $1 AND recorded_at >= NOW() - INTERVAL '7 days'
+ORDER BY recorded_at ASC;

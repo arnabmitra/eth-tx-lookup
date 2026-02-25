@@ -63,6 +63,7 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	// GEX Scanner
 	gexScannerHandler := handler.NewGEXScannerHandler(a.logger, tmpl, a.db, worker.SP500Symbols())
 	a.router.HandleFunc("/gex-scanner", gexScannerHandler.HandleGEXScanner)
+	a.router.HandleFunc("/api/gex-zscore-history", gexScannerHandler.HandleZScoreHistory)
 
 	// Economic Calendar
 	queries := repository.New(a.db)

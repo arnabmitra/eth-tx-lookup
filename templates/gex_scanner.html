@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/js/tablesort.min.js"></script>
     <script src="/static/js/tablesort.number.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -131,7 +132,12 @@
                                 {{ if eq .Direction "up" }}+{{ end }}{{ printf "%.2f" .GEXChangePct }}%
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ if gt .ZScore 2.0 }}text-green-400{{ else if lt .ZScore -2.0 }}text-red-400{{ else }}text-gray-400{{ end }}" data-sort="{{ printf "%.2f" .ZScore }}">
-                                {{ printf "%.2f" .ZScore }}σ
+                                <div class="flex items-center justify-end space-x-2">
+                                    <span>{{ printf "%.2f" .ZScore }}σ</span>
+                                    <button class="text-blue-400 hover:text-blue-300" onclick="showTrend('{{ .Symbol }}')">
+                                        <span class="material-icons text-sm">trending_up</span>
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">
                                 {{ .ExpiryDate }}
@@ -172,6 +178,88 @@
                 });
             }
         });
+
+        let trendChart = null;
+
+        function showTrend(symbol) {
+            const modal = document.getElementById('trendModal');
+            const title = document.getElementById('modalTitle');
+            title.innerText = `${symbol} - 7 Day Z-Score Trend`;
+            modal.classList.remove('hidden');
+
+            fetch(`/api/gex-zscore-history?symbol=${symbol}`)
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('trendChart').getContext('2d');
+                    
+                    if (trendChart) {
+                        trendChart.destroy();
+                    }
+
+                    trendChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(p => new Date(p.time).toLocaleDateString() + ' ' + new Date(p.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
+                            datasets: [{
+                                label: 'Z-Score (σ)',
+                                data: data.map(p => p.zscore),
+                                borderColor: '#60a5fa',
+                                backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    grid: { color: '#374151' },
+                                    ticks: { color: '#9ca3af' }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { 
+                                        color: '#9ca3af',
+                                        maxRotation: 0,
+                                        autoSkip: true,
+                                        maxTicksLimit: 8
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                });
+        }
+
+        function closeModal() {
+            document.getElementById('trendModal').classList.add('hidden');
+        }
     </script>
+
+    <!-- Modal -->
+    <div id="trendModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-gray-700">
+                <div class="bg-gray-800 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-white" id="modalTitle">Trend</h3>
+                    <button type="button" class="text-gray-400 hover:text-white" onclick="closeModal()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="bg-gray-900 p-6">
+                    <div style="height: 400px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

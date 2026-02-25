@@ -271,6 +271,52 @@ func (q *Queries) GetGexHistoryBySymbolAndExpiry(ctx context.Context, arg GetGex
 	return items, nil
 }
 
+const getHistoricalGEXAnomalies = `-- name: GetHistoricalGEXAnomalies :many
+WITH stats AS (
+    SELECT
+        AVG(gex_value) as avg_gex,
+        STDDEV(gex_value) as stddev_gex
+    FROM gex_history
+    WHERE symbol = $1 AND recorded_at >= NOW() - INTERVAL '30 days'
+)
+SELECT
+    recorded_at,
+    gex_value,
+    (CASE 
+        WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
+        ELSE (gex_value - s.avg_gex) / s.stddev_gex 
+    END)::numeric as z_score
+FROM gex_history, stats s
+WHERE gex_history.symbol = $1 AND recorded_at >= NOW() - INTERVAL '7 days'
+ORDER BY recorded_at ASC
+`
+
+type GetHistoricalGEXAnomaliesRow struct {
+	RecordedAt time.Time
+	GexValue   pgtype.Numeric
+	ZScore     pgtype.Numeric
+}
+
+func (q *Queries) GetHistoricalGEXAnomalies(ctx context.Context, symbol string) ([]GetHistoricalGEXAnomaliesRow, error) {
+	rows, err := q.db.Query(ctx, getHistoricalGEXAnomalies, symbol)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetHistoricalGEXAnomaliesRow
+	for rows.Next() {
+		var i GetHistoricalGEXAnomaliesRow
+		if err := rows.Scan(&i.RecordedAt, &i.GexValue, &i.ZScore); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLatestGEXChanges = `-- name: GetLatestGEXChanges :many
 WITH ranked_history AS (
     SELECT
