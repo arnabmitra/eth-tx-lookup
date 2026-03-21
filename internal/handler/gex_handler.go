@@ -42,15 +42,16 @@ func NewGEXHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Poo
 
 // CalculateGEXForAllExpiries calculates GEX across all expiry dates for a symbol
 func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol string) (map[float64]float64, error) {
-	apiKey := os.Getenv("TRADIER_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("TRADIER_API_KEY environment variable is not set")
+	apiKey := os.Getenv("ALPACA_API_KEY")
+	apiSecret := os.Getenv("ALPACA_API_SECRET")
+	if apiKey == "" || apiSecret == "" {
+		return nil, fmt.Errorf("ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set")
 	}
 	expiryDates, err := h.GetExpiryDates(ctx, symbol)
 
 	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
 
-		expiryDates, err = gex.GetExpirationDates(apiKey, symbol)
+		expiryDates, err = gex.GetExpirationDates(apiKey, apiSecret, symbol)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get expiration dates: %v", err)
 		}
@@ -66,7 +67,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	}
 
 	// Get current price
-	price, err := gex.GetSpotPrice(apiKey, symbol)
+	price, err := gex.GetSpotPrice(apiKey, apiSecret, symbol)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching price: %v", err)
 	}
@@ -108,7 +109,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			}
 		} else {
 			// Fetch fresh data
-			optionsFromApi, jsonOption, errFromApi := gex.FetchOptionsChain(symbol, expiryDate, apiKey)
+			optionsFromApi, jsonOption, errFromApi := gex.FetchOptionsChain(symbol, expiryDate, apiKey, apiSecret)
 			if errFromApi != nil || jsonOption == nil {
 				continue // Skip this expiry if there's an error
 			}
@@ -142,9 +143,10 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		symbol := strings.ToUpper(strings.TrimSpace(r.FormValue("symbol")))
 
-		apiKey := os.Getenv("TRADIER_API_KEY")
-		if apiKey == "" {
-			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
+		apiKey := os.Getenv("ALPACA_API_KEY")
+		apiSecret := os.Getenv("ALPACA_API_SECRET")
+		if apiKey == "" || apiSecret == "" {
+			http.Error(w, "ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set", http.StatusInternalServerError)
 			return
 		}
 
@@ -156,7 +158,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Get current price
-		price, err := gex.GetSpotPrice(apiKey, symbol)
+		price, err := gex.GetSpotPrice(apiKey, apiSecret, symbol)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
 			return
@@ -274,16 +276,17 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		symbol := strings.ToUpper(strings.TrimSpace(r.FormValue("symbol")))
 		expiration := r.FormValue("expiration")
 
-		apiKey := os.Getenv("TRADIER_API_KEY")
-		if apiKey == "" {
-			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
+		apiKey := os.Getenv("ALPACA_API_KEY")
+		apiSecret := os.Getenv("ALPACA_API_SECRET")
+		if apiKey == "" || apiSecret == "" {
+			http.Error(w, "ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set", http.StatusInternalServerError)
 			return
 		}
 
 		expiryDates, err := h.GetExpiryDates(r.Context(), symbol)
 
 		if err != nil || len(expiryDates) == 0 {
-			expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
+			expirationDates, err := gex.GetExpirationDates(apiKey, apiSecret, symbol)
 			if err != nil {
 				return
 			}
@@ -346,12 +349,12 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			price = priceFloat
 		} else {
 			//always get the spot price
-			price, err = gex.GetSpotPrice(apiKey, symbol)
+			price, err = gex.GetSpotPrice(apiKey, apiSecret, symbol)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
 				return
 			}
-			options, jsonOption, err = gex.FetchOptionsChain(symbol, expiration, apiKey)
+			options, jsonOption, err = gex.FetchOptionsChain(symbol, expiration, apiKey, apiSecret)
 
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
@@ -608,29 +611,38 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 	expiryDates, err := h.GetExpiryDates(r.Context(), symbol)
 
 	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
-		apiKey := os.Getenv("TRADIER_API_KEY")
-		if apiKey == "" {
-			http.Error(w, "TRADIER_API_KEY environment variable is not set", http.StatusInternalServerError)
+		apiKey := os.Getenv("ALPACA_API_KEY")
+		apiSecret := os.Getenv("ALPACA_API_SECRET")
+		if apiKey == "" || apiSecret == "" {
+			h.logger.Error("ALPACA_API_KEY or ALPACA_API_SECRET not set")
+			http.Error(w, "ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set", http.StatusInternalServerError)
 			return
 		}
 
-		expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
+		expirationDates, err := gex.GetExpirationDates(apiKey, apiSecret, symbol)
 		if err != nil {
+			h.logger.Error("failed to get expiration dates from Alpaca", "error", err, "symbol", symbol)
+			http.Error(w, fmt.Sprintf("Error fetching expiration dates: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		expirationDatesJSON, err := json.MarshalIndent(expirationDates, "", "  ")
 		if err != nil {
-			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
+			h.logger.Error("failed to marshal expiration dates", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		err = h.StoreExpiryDatesInOptionExpiryDates(r.Context(), symbol, expirationDatesJSON)
 		if err != nil {
+			h.logger.Error("failed to store expiry dates", "error", err)
+			http.Error(w, "Internal server error storing dates", http.StatusInternalServerError)
 			return
 		}
 		expiryDates, err = h.GetExpiryDates(r.Context(), symbol)
 		if err != nil {
+			h.logger.Error("failed to get stored expiry dates after storing", "error", err)
+			http.Error(w, "Internal server error retrieving stored dates", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -786,7 +798,8 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 		ChartData []map[string]interface{}
 	}
 
-	apiKey := os.Getenv("TRADIER_API_KEY")
+	apiKey := os.Getenv("ALPACA_API_KEY")
+		apiSecret := os.Getenv("ALPACA_API_SECRET")
 
 	// Channel to collect results
 	type result struct {
@@ -828,7 +841,7 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 
 			// Get spot price with retry
 			for attempt := 0; attempt < maxRetries; attempt++ {
-				price, err = gex.GetSpotPrice(apiKey, sym)
+				price, err = gex.GetSpotPrice(apiKey, apiSecret, sym)
 				if err == nil {
 					break
 				}

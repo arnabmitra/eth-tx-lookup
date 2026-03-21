@@ -7,9 +7,12 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"image/color"
-	"io/ioutil"
-	"net/http"
 	"sort"
+	"time"
+
+	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
+	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
+	"cloud.google.com/go/civil"
 )
 
 // Option represents an individual option in the chain
@@ -31,93 +34,128 @@ type Response struct {
 	} `json:"options"`
 }
 
-// Response structure for the Tradier API
-type QuoteResponse struct {
-	Quotes struct {
-		Quote struct {
-			Symbol string  `json:"symbol"`
-			Last   float64 `json:"last"` // Spot price
-		} `json:"quote"`
-	} `json:"quotes"`
+func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
+	mdClient := marketdata.NewClient(marketdata.ClientOpts{
+		APIKey:    apiKey,
+		APISecret: apiSecret,
+		BaseURL:   "https://data.alpaca.markets",
+	})
+
+	snapshot, err := mdClient.GetSnapshot(symbol, marketdata.GetSnapshotRequest{})
+	if err != nil {
+		return 0, fmt.Errorf("error getting snapshot: %v", err)
+	}
+
+	if snapshot == nil || snapshot.LatestQuote == nil {
+		return 0, fmt.Errorf("no quote available for %s", symbol)
+	}
+
+	return snapshot.LatestQuote.BidPrice, nil
 }
 
-func GetSpotPrice(apiToken, symbol string) (float64, error) {
-	url := fmt.Sprintf("https://api.tradier.com/v1/markets/quotes?symbols=%s", symbol)
+// FetchOptionsChain fetches the options chain for the given symbol and expiration date using Alpaca
+func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]Option, *string, error) {
+	mdClient := marketdata.NewClient(marketdata.ClientOpts{
+		APIKey:    apiKey,
+		APISecret: apiSecret,
+		BaseURL:   "https://data.alpaca.markets",
+	})
 
-	// Create a new request
-	req, err := http.NewRequest("GET", url, nil)
+	tradeClient := alpaca.NewClient(alpaca.ClientOpts{
+		APIKey:    apiKey,
+		APISecret: apiSecret,
+		BaseURL:   "https://paper-api.alpaca.markets",
+	})
+
+	expDate, err := civil.ParseDate(expiration)
 	if err != nil {
-		return 0, err
+		return nil, nil, fmt.Errorf("error parsing expiration date: %v", err)
 	}
 
-	// Set headers
-	req.Header.Set("Authorization", "Bearer "+apiToken)
-	req.Header.Set("Accept", "application/json")
-
-	// Make the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	// 1. Get all contracts for the symbol + expiration to get OpenInterest and Strikes
+	contracts, err := tradeClient.GetOptionContracts(alpaca.GetOptionContractsRequest{
+		UnderlyingSymbols: symbol,
+		ExpirationDate:    expDate,
+		Status:            alpaca.OptionStatusActive,
+	})
 	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	// Parse the response
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
+		return nil, nil, fmt.Errorf("error getting contracts: %v", err)
 	}
 
-	var quoteResp QuoteResponse
-	err = json.Unmarshal(body, &quoteResp)
-	if err != nil {
-		return 0, err
+	if len(contracts) == 0 {
+		return nil, nil, fmt.Errorf("no contracts found for %s on %s", symbol, expiration)
 	}
 
-	// Return the spot price
-	return quoteResp.Quotes.Quote.Last, nil
+	// 2. Get Snapshots for the option chain to get Greeks
+	chain, err := mdClient.GetOptionChain(symbol, marketdata.GetOptionChainRequest{
+		ExpirationDate: expDate,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting option chain snapshots: %v", err)
+	}
+
+	// 3. Combine contract data with snapshots
+	var options []Option
+	for _, c := range contracts {
+		oi := 0
+		if c.OpenInterest != nil {
+			oi = int(c.OpenInterest.InexactFloat64())
+		}
+		opt := Option{
+			Strike:         c.StrikePrice.InexactFloat64(),
+			OptionType:     string(c.Type),
+			OpenInterest:   oi,
+			ExpirationDate: c.ExpirationDate.String(),
+			ExpirationType: string(c.Style),
+		}
+
+		if snap, ok := chain[c.Symbol]; ok && snap.Greeks != nil {
+			opt.Greeks.Gamma = snap.Greeks.Gamma
+		}
+		options = append(options, opt)
+	}
+
+	// Wrap in Response struct for JSON compatibility
+	resp := Response{}
+	resp.Options.Option = options
+	jsonData, err := json.Marshal(resp)
+	if err != nil {
+		return options, nil, nil
+	}
+	bodyStr := string(jsonData)
+
+	return options, &bodyStr, nil
 }
 
-// FetchOptionsChain fetches the options chain for the given symbol and expiration date
-// also now return the raw json also please
-func FetchOptionsChain(symbol, expiration string, apiKey string) ([]Option, *string, error) {
-	url := fmt.Sprintf("https://api.tradier.com/v1/markets/options/chains?symbol=%s&expiration=%s&greeks=true", symbol, expiration)
+func GetExpirationDates(apiKey, apiSecret, symbol string) ([]string, error) {
+	tradeClient := alpaca.NewClient(alpaca.ClientOpts{
+		APIKey:    apiKey,
+		APISecret: apiSecret,
+		BaseURL:   "https://paper-api.alpaca.markets",
+	})
 
-	// Create HTTP request
-	req, err := http.NewRequest("GET", url, nil)
+	now := civil.DateOf(time.Now())
+	contracts, err := tradeClient.GetOptionContracts(alpaca.GetOptionContractsRequest{
+		UnderlyingSymbols: symbol,
+		ExpirationDateGTE: now,
+		Status:            alpaca.OptionStatusActive,
+	})
 	if err != nil {
-		return nil, nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	req.Header.Set("Accept", "application/json")
-
-	// Make HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer resp.Body.Close()
-
-	// Check HTTP response status
-	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("failed to fetch data: %s", resp.Status)
+		return nil, fmt.Errorf("error getting options contracts: %v", err)
 	}
 
-	// Parse response body
-	var response Response
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, err
+	expMap := make(map[string]bool)
+	var dates []string
+	for _, c := range contracts {
+		dateStr := c.ExpirationDate.String()
+		if !expMap[dateStr] {
+			expMap[dateStr] = true
+			dates = append(dates, dateStr)
+		}
 	}
+	sort.Strings(dates)
 
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bodyStr := string(body)
-	return response.Options.Option, &bodyStr, nil
+	return dates, nil
 }
 
 func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]float64 {
@@ -140,29 +178,18 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 	return gexByStrike
 }
 
-// CalculateGammaFlipLevel calculates the gamma flip level by finding where cumulative GEX crosses zero.
-// The algorithm:
-// 1. Filter out strikes with insignificant GEX (noise reduction)
-// 2. Sort remaining strikes in ascending order
-// 3. Calculate cumulative sum of GEX from lowest to highest strike
-// 4. Find the strike where cumulative GEX crosses from negative to positive (or vice versa)
-// This represents the price level where dealer hedging behavior changes from stabilizing to destabilizing.
 func CalculateGammaFlipLevel(gexByStrike map[float64]float64) float64 {
 	if len(gexByStrike) == 0 {
 		return 0
 	}
 
-	// Calculate total absolute GEX for filtering threshold
 	totalAbsGEX := 0.0
 	for _, gex := range gexByStrike {
 		totalAbsGEX += abs(gex)
 	}
 	
-	// Filter threshold: 0.1% of total absolute GEX
-	// This removes strikes with negligible gamma exposure
 	threshold := totalAbsGEX * 0.001
 	
-	// Filter strikes with meaningful GEX only
 	filteredStrikes := make([]float64, 0)
 	for strike, gex := range gexByStrike {
 		if abs(gex) > threshold {
@@ -176,11 +203,6 @@ func CalculateGammaFlipLevel(gexByStrike map[float64]float64) float64 {
 	
 	sort.Float64s(filteredStrikes)
 	
-	fmt.Printf("\nGamma Flip Level Calculation:\n")
-	fmt.Printf("Total strikes: %d, Filtered strikes with GEX > %.2f: %d\n", 
-		len(gexByStrike), threshold, len(filteredStrikes))
-
-	// Calculate cumulative GEX from lowest to highest strike
 	cumGEX := make([]float64, len(filteredStrikes))
 	sum := 0.0
 	for i, strike := range filteredStrikes {
@@ -188,73 +210,28 @@ func CalculateGammaFlipLevel(gexByStrike map[float64]float64) float64 {
 		cumGEX[i] = sum
 	}
 	
-	// Debug: print first and last few meaningful strikes
-	fmt.Printf("First 5 meaningful strikes:\n")
-	for i := 0; i < min(5, len(filteredStrikes)); i++ {
-		fmt.Printf("  Strike %.2f: GEX=%.2f, CumGEX=%.2f\n", 
-			filteredStrikes[i], gexByStrike[filteredStrikes[i]], cumGEX[i])
-	}
-	if len(filteredStrikes) > 5 {
-		fmt.Printf("Last 5 meaningful strikes:\n")
-		for i := max(0, len(filteredStrikes)-5); i < len(filteredStrikes); i++ {
-			fmt.Printf("  Strike %.2f: GEX=%.2f, CumGEX=%.2f\n", 
-				filteredStrikes[i], gexByStrike[filteredStrikes[i]], cumGEX[i])
-		}
-	}
-	
-	// Find where cumulative GEX crosses zero
-	// Look for sign change in cumulative GEX
 	flipStrike := filteredStrikes[0]
 	minDist := abs(cumGEX[0])
 	
 	for i := 0; i < len(filteredStrikes)-1; i++ {
-		// Check if we cross zero between this strike and the next
 		if (cumGEX[i] < 0 && cumGEX[i+1] > 0) || (cumGEX[i] > 0 && cumGEX[i+1] < 0) {
-			// Found a zero crossing - use the strike closer to zero
 			if abs(cumGEX[i]) < abs(cumGEX[i+1]) {
 				flipStrike = filteredStrikes[i]
-				fmt.Printf("Found zero-cross: strike %.2f (cumGEX=%.2f) -> strike %.2f (cumGEX=%.2f)\n",
-					filteredStrikes[i], cumGEX[i], filteredStrikes[i+1], cumGEX[i+1])
 			} else {
 				flipStrike = filteredStrikes[i+1]
-				fmt.Printf("Found zero-cross: strike %.2f (cumGEX=%.2f) -> strike %.2f (cumGEX=%.2f)\n",
-					filteredStrikes[i], cumGEX[i], filteredStrikes[i+1], cumGEX[i+1])
 			}
 			break
 		}
 		
-		// Track the strike closest to zero cumGEX
 		if abs(cumGEX[i]) < minDist {
 			minDist = abs(cumGEX[i])
 			flipStrike = filteredStrikes[i]
 		}
 	}
 	
-	// If no zero crossing found, use the strike with cumGEX closest to zero
-	if minDist == abs(cumGEX[0]) {
-		fmt.Printf("No zero-cross found. Using closest strike %.2f with cumGEX=%.2f (distance from zero: %.2f)\n",
-			flipStrike, gexByStrike[flipStrike], minDist)
-	}
-	
-	fmt.Printf("Final gamma flip level: %.2f\n", flipStrike)
 	return flipStrike
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-// abs returns the absolute value of a float64
 func abs(x float64) float64 {
 	if x < 0 {
 		return -x
@@ -268,7 +245,6 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 	p.X.Label.Text = "Strike Price"
 	p.Y.Label.Text = "GEX"
 
-	// Convert map to sorted slices
 	var strikes []float64
 	for strike, gex := range gexByStrike {
 		if gex < -100 || gex > 100 {
@@ -277,29 +253,23 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 	}
 	sort.Float64s(strikes)
 
-	// Create separate bars for positive and negative values
 	var posPoints plotter.Values
 	var negPoints plotter.Values
 	var labels []string
 
-	// Split data into positive and negative values
 	for _, strike := range strikes {
 		gex := gexByStrike[strike]
 		if gex >= 0 && gex > 5000 {
-			//print labels and values
-			fmt.Printf(" +ve Strike: %.2f, GEX: %.2f\n", strike, gex)
 			labels = append(labels, fmt.Sprintf("%.2f", strike))
 			posPoints = append(posPoints, gex)
 			negPoints = append(negPoints, 0)
 		} else if gex < -5000 {
-			fmt.Printf(" -ve Strike: %.2f, GEX: %.2f\n", strike, gex)
 			labels = append(labels, fmt.Sprintf("%.2f", strike))
 			posPoints = append(posPoints, 0)
 			negPoints = append(negPoints, gex)
 		}
 	}
 
-	// Create positive bars (green)
 	posBar, err := plotter.NewBarChart(posPoints, vg.Points(5))
 	if err != nil {
 		return err
@@ -307,7 +277,6 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 	posBar.Color = color.RGBA{G: 255, A: 255}
 	posBar.Offset = vg.Points(0)
 
-	// Create negative bars (red)
 	negBar, err := plotter.NewBarChart(negPoints, vg.Points(5))
 	if err != nil {
 		return err
@@ -315,9 +284,8 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 	negBar.Color = color.RGBA{R: 255, A: 255}
 	negBar.Offset = vg.Points(0)
 
-	// Create labels for the bars
 	labelPoints := make(plotter.XYs, len(labels))
-	for i, _ := range labels {
+	for i := range labels {
 		labelPoints[i].X = float64(i)
 		labelPoints[i].Y = posPoints[i] + negPoints[i]
 	}
@@ -331,7 +299,6 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 
 	p.Add(posBar, negBar, barLabels)
 
-	// Custom y-axis ticker
 	p.Y.Tick.Marker = plot.TickerFunc(func(min, max float64) []plot.Tick {
 		ticks := plot.DefaultTicks{}.Ticks(min, max)
 		for i := range ticks {
@@ -339,74 +306,20 @@ func CreateGEXPlot(gexByStrike map[float64]float64, symbol string, path string, 
 		}
 		return ticks
 	})
-	// Set X axis labels
 	p.NominalX(makeXAxisLabels(strikes)...)
 
 	return p.Save(16*vg.Inch, 8*vg.Inch, path)
 }
 
-// makeXAxisLabels converts strike prices to formatted labels
 func makeXAxisLabels(strikePrices []float64) []string {
-	step := 5 // Show every 5th strike price (adjust as needed)
+	step := 5
 	labels := make([]string, len(strikePrices))
-	for i, _ := range strikePrices {
+	for i := range strikePrices {
 		if i%step == 0 {
-			// labels[i] = fmt.Sprintf("%.2f", strike) // Add label
 			labels[i] = ""
 		} else {
-			labels[i] = "" // Leave blank for others
+			labels[i] = ""
 		}
 	}
 	return labels
-}
-
-// Expiration date for the options chain
-type ExpirationResponse struct {
-	Expirations struct {
-		Expiration []struct {
-			Date           string `json:"date"`
-			ExpirationType string `json:"expiration_type"`
-		} `json:"expiration"`
-	} `json:"expirations"`
-}
-
-func GetExpirationDates(apiToken, symbol string) ([]string, error) {
-	url := fmt.Sprintf("https://api.tradier.com/v1/markets/options/expirations?symbol=%s&expirationType=true", symbol)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error executing request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
-	}
-
-	var data ExpirationResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("error decoding response: %v", err)
-	}
-
-	dates := make([]string, 0, len(data.Expirations.Expiration))
-	for _, exp := range data.Expirations.Expiration {
-		dates = append(dates, exp.Date)
-	}
-
-	// print expiration dates
-	fmt.Println("Expiration Dates:")
-	for _, date := range dates {
-		fmt.Println(date)
-	}
-
-	return dates, nil
 }

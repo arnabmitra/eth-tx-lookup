@@ -459,6 +459,68 @@ func (q *Queries) GetLatestGEXHistoryBySymbol(ctx context.Context, arg GetLatest
 	return items, nil
 }
 
+const getLatestZScores = `-- name: GetLatestZScores :many
+WITH stats AS (
+    SELECT
+        symbol,
+        AVG(gex_value) as avg_gex,
+        STDDEV(gex_value) as stddev_gex
+    FROM gex_history
+    WHERE recorded_at >= NOW() - INTERVAL '30 days'
+    GROUP BY symbol
+),
+latest AS (
+    SELECT DISTINCT ON (symbol)
+        symbol,
+        gex_value,
+        recorded_at
+    FROM gex_history
+    ORDER BY symbol, recorded_at DESC
+)
+SELECT
+    l.symbol,
+    l.gex_value,
+    l.recorded_at,
+    (CASE 
+        WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
+        ELSE (l.gex_value - s.avg_gex) / s.stddev_gex 
+    END)::numeric as z_score
+FROM latest l
+JOIN stats s ON l.symbol = s.symbol
+`
+
+type GetLatestZScoresRow struct {
+	Symbol     string
+	GexValue   pgtype.Numeric
+	RecordedAt time.Time
+	ZScore     pgtype.Numeric
+}
+
+func (q *Queries) GetLatestZScores(ctx context.Context) ([]GetLatestZScoresRow, error) {
+	rows, err := q.db.Query(ctx, getLatestZScores)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLatestZScoresRow
+	for rows.Next() {
+		var i GetLatestZScoresRow
+		if err := rows.Scan(
+			&i.Symbol,
+			&i.GexValue,
+			&i.RecordedAt,
+			&i.ZScore,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOptionChainBySymbolAndExpiry = `-- name: GetOptionChainBySymbolAndExpiry :one
 SELECT id, symbol, spot_price, expiry_date, expiry_type, option_chain, created_at, updated_at FROM option_chain
 WHERE symbol = $1 and expiry_date = $2

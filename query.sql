@@ -254,3 +254,32 @@ SELECT
 FROM gex_history, stats s
 WHERE gex_history.symbol = $1 AND recorded_at >= NOW() - INTERVAL '7 days'
 ORDER BY recorded_at ASC;
+
+-- name: GetLatestZScores :many
+WITH stats AS (
+    SELECT
+        symbol,
+        AVG(gex_value) as avg_gex,
+        STDDEV(gex_value) as stddev_gex
+    FROM gex_history
+    WHERE recorded_at >= NOW() - INTERVAL '30 days'
+    GROUP BY symbol
+),
+latest AS (
+    SELECT DISTINCT ON (symbol)
+        symbol,
+        gex_value,
+        recorded_at
+    FROM gex_history
+    ORDER BY symbol, recorded_at DESC
+)
+SELECT
+    l.symbol,
+    l.gex_value,
+    l.recorded_at,
+    (CASE 
+        WHEN COALESCE(s.stddev_gex, 0) = 0 THEN 0 
+        ELSE (l.gex_value - s.avg_gex) / s.stddev_gex 
+    END)::numeric as z_score
+FROM latest l
+JOIN stats s ON l.symbol = s.symbol;

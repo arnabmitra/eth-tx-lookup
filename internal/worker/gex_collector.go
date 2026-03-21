@@ -139,8 +139,9 @@ func (c *GexCollector) collectGEXData() {
 }
 
 func (c *GexCollector) worker(ctx context.Context, symbolChan <-chan string, resultChan chan<- gexResult) {
-	apiKey := os.Getenv("TRADIER_API_KEY")
-	if apiKey == "" {
+	apiKey := os.Getenv("ALPACA_API_KEY")
+	apiSecret := os.Getenv("ALPACA_API_SECRET")
+	if apiKey == "" || apiSecret == "" {
 		return
 	}
 
@@ -154,16 +155,16 @@ func (c *GexCollector) worker(ctx context.Context, symbolChan <-chan string, res
 		// Rate limiting delay
 		time.Sleep(c.rateLimitDelay)
 
-		err := c.collectSymbolGEX(ctx, symbol, apiKey)
+		err := c.collectSymbolGEX(ctx, symbol, apiKey, apiSecret)
 		resultChan <- gexResult{symbol: symbol, err: err}
 	}
 }
 
-func (c *GexCollector) collectSymbolGEX(ctx context.Context, symbol string, apiKey string) error {
+func (c *GexCollector) collectSymbolGEX(ctx context.Context, symbol string, apiKey string, apiSecret string) error {
 	// Get the nearest expiry date
 	expiryDates, err := c.gexHandler.GetExpiryDates(ctx, symbol)
 	if err != nil || len(expiryDates) == 0 {
-		expirationDates, err := gex.GetExpirationDates(apiKey, symbol)
+		expirationDates, err := gex.GetExpirationDates(apiKey, apiSecret, symbol)
 		if err != nil {
 			return fmt.Errorf("failed to get expiration dates: %w", err)
 		}
@@ -192,13 +193,13 @@ func (c *GexCollector) collectSymbolGEX(ctx context.Context, symbol string, apiK
 	nearestExpiry := expiryDates[0]
 
 	// Get current price
-	price, err := gex.GetSpotPrice(apiKey, symbol)
+	price, err := gex.GetSpotPrice(apiKey, apiSecret, symbol)
 	if err != nil {
 		// Check if it's a rate limit error (403)
 		if err.Error() == "unexpected status code: 403" {
 			time.Sleep(5 * time.Second) // Back off on rate limit
 			// Retry once
-			price, err = gex.GetSpotPrice(apiKey, symbol)
+			price, err = gex.GetSpotPrice(apiKey, apiSecret, symbol)
 			if err != nil {
 				return fmt.Errorf("failed to get spot price after retry: %w", err)
 			}
@@ -208,13 +209,13 @@ func (c *GexCollector) collectSymbolGEX(ctx context.Context, symbol string, apiK
 	}
 
 	// Fetch options chain
-	options, jsonOption, err := gex.FetchOptionsChain(symbol, nearestExpiry, apiKey)
+	options, jsonOption, err := gex.FetchOptionsChain(symbol, nearestExpiry, apiKey, apiSecret)
 	if err != nil {
 		// Check if it's a rate limit error
 		if err.Error() == "unexpected status code: 403" {
 			time.Sleep(5 * time.Second)
 			// Retry once
-			options, jsonOption, err = gex.FetchOptionsChain(symbol, nearestExpiry, apiKey)
+			options, jsonOption, err = gex.FetchOptionsChain(symbol, nearestExpiry, apiKey, apiSecret)
 			if err != nil {
 				return fmt.Errorf("failed to fetch options chain after retry: %w", err)
 			}

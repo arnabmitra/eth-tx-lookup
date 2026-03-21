@@ -29,6 +29,7 @@ type App struct {
 	rdb                       *redis.Client
 	gexCollector              *worker.GexCollector
 	economicCalendarCollector *worker.EconomicCalendarCollector
+	alertWorker               *worker.AlertWorker
 }
 
 func New(logger *slog.Logger) *App {
@@ -70,6 +71,10 @@ func (a *App) Start(ctx context.Context) error {
 	a.economicCalendarCollector = worker.NewEconomicCalendarCollector(queries)
 	a.economicCalendarCollector.Start()
 
+	// Initialize Alert Worker
+	a.alertWorker = worker.NewAlertWorker(queries, a.logger)
+	a.alertWorker.Start()
+
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: middleware.Logging(a.logger, middleware.HandleBadCode(tmpl, a.router)),
@@ -95,6 +100,9 @@ func (a *App) Start(ctx context.Context) error {
 		}
 		if a.economicCalendarCollector != nil {
 			a.economicCalendarCollector.Stop()
+		}
+		if a.alertWorker != nil {
+			a.alertWorker.Stop()
 		}
 		server.Shutdown(ctx)
 		cancel()
