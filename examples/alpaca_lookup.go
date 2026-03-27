@@ -68,26 +68,47 @@ func main() {
 	if !firstExpiration.IsZero() {
 		fmt.Printf("\n--- Option Chain for %s (Exp: %s) ---\n", symbol, firstExpiration)
 		
-		chain, err := mdClient.GetOptionChain(symbol, marketdata.GetOptionChainRequest{
-			ExpirationDate: firstExpiration,
+		// We need to match contracts with snapshots to see OI and Greeks
+		expDate := firstExpiration
+		
+		contracts, err := tradeClient.GetOptionContracts(alpaca.GetOptionContractsRequest{
+			UnderlyingSymbols: symbol,
+			ExpirationDate:    expDate,
+			Status:            alpaca.OptionStatusActive,
 		})
 		if err != nil {
-			log.Printf("Error getting option chain: %v", err)
+			log.Fatalf("Error getting contracts: %v", err)
+		}
+
+		chain, err := mdClient.GetOptionChain(symbol, marketdata.GetOptionChainRequest{
+			ExpirationDate: expDate,
+		})
+		if err != nil {
+			log.Printf("Error getting option chain snapshots: %v", err)
 		} else {
-			fmt.Printf("Found %d contracts in chain\n", len(chain))
+			fmt.Printf("Found %d snapshots and %d contracts\n", len(chain), len(contracts))
 			
-			count := 0
-			for sym, snap := range chain {
-				if count < 5 {
-					fmt.Printf("Contract: %s | Bid: %.2f | Ask: %.2f\n", 
-						sym, snap.LatestQuote.BidPrice, snap.LatestQuote.AskPrice)
-					if snap.Greeks != nil {
-						fmt.Printf("  Greeks: Delta: %.4f, Gamma: %.4f, Theta: %.4f, Vega: %.4f\n", 
-							snap.Greeks.Delta, snap.Greeks.Gamma, snap.Greeks.Theta, snap.Greeks.Vega)
+			greeksFound := 0
+			oiFound := 0
+			for _, c := range contracts {
+				oi := 0.0
+				if c.OpenInterest != nil {
+					oi, _ = c.OpenInterest.Float64()
+					if oi > 0 {
+						oiFound++
 					}
-					count++
+				}
+
+				if snap, ok := chain[c.Symbol]; ok && snap.Greeks != nil {
+					greeksFound++
+					if greeksFound < 10 {
+						fmt.Printf("Contract: %s | OI: %.0f | Gamma: %.6f\n", 
+							c.Symbol, oi, snap.Greeks.Gamma)
+					}
 				}
 			}
+			fmt.Printf("\nSummary: OI > 0: %d | Greeks Found: %d | Total Contracts: %d\n", 
+				oiFound, greeksFound, len(contracts))
 		}
 	}
 }

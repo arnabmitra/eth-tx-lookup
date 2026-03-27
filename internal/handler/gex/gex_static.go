@@ -13,7 +13,68 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"cloud.google.com/go/civil"
+	"os"
+	"strings"
+	"math"
 )
+
+// BlackScholesGamma calculates an approximate gamma if the provider doesn't supply it
+func EstimateGamma(spot, strike, iv, daysToExpiration float64) float64 {
+	if iv <= 0 || daysToExpiration <= 0 || spot <= 0 {
+		return 0
+	}
+
+	t := daysToExpiration / 365.0
+	r := 0.05 // assume 5% risk free rate
+	
+	d1 := (math.Log(spot/strike) + (r+0.5*iv*iv)*t) / (iv * math.Sqrt(t))
+	pdfD1 := math.Exp(-0.5*d1*d1) / math.Sqrt(2*math.Pi)
+	
+	gamma := pdfD1 / (spot * iv * math.Sqrt(t))
+	return gamma
+}
+
+func GetAlpacaConfig() (string, string) {
+	key := os.Getenv("ALPACA_API_KEY")
+	secret := os.Getenv("ALPACA_API_SECRET")
+
+	// If the value looks like a path or if we have a _FILE env var, read it
+	// First check direct env vars
+	if key != "" && (strings.HasPrefix(key, "/run/secrets/") || strings.HasPrefix(key, "./") || strings.HasPrefix(key, "/")) {
+		data, err := os.ReadFile(key)
+		if err == nil {
+			key = strings.TrimSpace(string(data))
+		}
+	}
+
+	if secret != "" && (strings.HasPrefix(secret, "/run/secrets/") || strings.HasPrefix(secret, "./") || strings.HasPrefix(secret, "/")) {
+		data, err := os.ReadFile(secret)
+		if err == nil {
+			secret = strings.TrimSpace(string(data))
+		}
+	}
+
+	// Also check _FILE suffixes (project's existing pattern)
+	if key == "" {
+		if keyFile := os.Getenv("ALPACA_API_KEY_FILE"); keyFile != "" {
+			data, err := os.ReadFile(keyFile)
+			if err == nil {
+				key = strings.TrimSpace(string(data))
+			}
+		}
+	}
+
+	if secret == "" {
+		if secretFile := os.Getenv("ALPACA_API_SECRET_FILE"); secretFile != "" {
+			data, err := os.ReadFile(secretFile)
+			if err == nil {
+				secret = strings.TrimSpace(string(data))
+			}
+		}
+	}
+
+	return key, secret
+}
 
 // Option represents an individual option in the chain
 type Option struct {
@@ -94,8 +155,25 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		return nil, nil, fmt.Errorf("error getting option chain snapshots: %v", err)
 	}
 
+	// Get spot price for estimation if needed
+	spotPrice, err := GetSpotPrice(apiKey, apiSecret, symbol)
+	if err != nil {
+		fmt.Printf("Warning: failed to get spot price for gamma estimation: %v\n", err)
+	}
+	
+	now := time.Now()
+	expTime := time.Date(expDate.Year, expDate.Month, expDate.Day, 16, 0, 0, 0, time.UTC)
+	daysToExpiry := expTime.Sub(now).Hours() / 24.0
+	if daysToExpiry < 0.01 {
+		daysToExpiry = 0.01 // handle 0DTE as small positive for math
+	}
+
+	fmt.Printf("Fetched %d snapshots from Alpaca market data for %s\n", len(chain), symbol)
+
 	// 3. Combine contract data with snapshots
 	var options []Option
+	greeksFound := 0
+	greeksEstimated := 0
 	for _, c := range contracts {
 		oi := 0
 		if c.OpenInterest != nil {
@@ -109,18 +187,28 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 			ExpirationType: string(c.Style),
 		}
 
-		if snap, ok := chain[c.Symbol]; ok && snap.Greeks != nil {
-			opt.Greeks.Gamma = snap.Greeks.Gamma
+		if snap, ok := chain[c.Symbol]; ok {
+			if snap.Greeks != nil && snap.Greeks.Gamma != 0 {
+				opt.Greeks.Gamma = snap.Greeks.Gamma
+				greeksFound++
+			} else if snap.ImpliedVolatility > 0 && spotPrice > 0 {
+				// Estimate gamma if Alpaca didn't provide it but has IV
+				opt.Greeks.Gamma = EstimateGamma(spotPrice, opt.Strike, snap.ImpliedVolatility, daysToExpiry)
+				if opt.Greeks.Gamma > 0 {
+					greeksEstimated++
+				}
+			}
 		}
 		options = append(options, opt)
 	}
+	fmt.Printf("Matched %d options with provided Greeks, estimated %d more, out of %d contracts\n", greeksFound, greeksEstimated, len(contracts))
 
 	// Wrap in Response struct for JSON compatibility
 	resp := Response{}
 	resp.Options.Option = options
 	jsonData, err := json.Marshal(resp)
 	if err != nil {
-		return options, nil, nil
+		return options, nil, fmt.Errorf("error marshalling options to JSON: %v", err)
 	}
 	bodyStr := string(jsonData)
 

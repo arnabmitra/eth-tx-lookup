@@ -42,9 +42,9 @@ func NewGEXHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Poo
 
 // CalculateGEXForAllExpiries calculates GEX across all expiry dates for a symbol
 func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol string) (map[float64]float64, error) {
-	apiKey := os.Getenv("ALPACA_API_KEY")
-	apiSecret := os.Getenv("ALPACA_API_SECRET")
+	apiKey, apiSecret := gex.GetAlpacaConfig()
 	if apiKey == "" || apiSecret == "" {
+		h.logger.Error("ALPACA_API_KEY or ALPACA_API_SECRET not set")
 		return nil, fmt.Errorf("ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set")
 	}
 	expiryDates, err := h.GetExpiryDates(ctx, symbol)
@@ -329,11 +329,8 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var jsonOption *string
 		var price float64
 		expiry, err := h.repo.GetOptionChainBySymbolAndExpiry(r.Context(), repository.GetOptionChainBySymbolAndExpiryParams{Symbol: symbol, ExpiryDate: expirationDatePgType})
-		if err != nil {
-			h.logger.Error("failed to get option chain", "error", err)
-		}
-
-		if &expiry != nil && time.Since(expiry.UpdatedAt) <= 1*time.Minute {
+		
+		if err == nil && time.Since(expiry.UpdatedAt) <= 1*time.Minute {
 			var response gex.Response
 			err = json.Unmarshal(expiry.OptionChain, &response)
 			if err != nil {
@@ -357,11 +354,16 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			options, jsonOption, err = gex.FetchOptionsChain(symbol, expiration, apiKey, apiSecret)
 
 			if err != nil {
+				h.logger.Error("failed to fetch options chain", "error", err, "symbol", symbol, "expiration", expiration)
 				http.Error(w, fmt.Sprintf("Error fetching options chain: %v", err), http.StatusInternalServerError)
 				return
 			}
+			h.logger.Info("Fetched options chain", "count", len(options), "symbol", symbol, "expiration", expiration)
+
 			// Calculate GEX for the nearest expiry
 			gexByStrike := gex.CalculateGEXPerStrike(options, price)
+			h.logger.Info("Calculated GEX per strike", "count", len(gexByStrike), "symbol", symbol)
+
 			// Calculate total GEX (sum of all strikes)
 			totalGEX := 0.0
 			for _, gexValue := range gexByStrike {
@@ -369,6 +371,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			err = h.StoreOptionChain(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
 			if err != nil {
+				h.logger.Error("failed to store option chain", "error", err)
 				return
 			}
 		}
@@ -460,12 +463,15 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		h.logger.Info("GEX calculation complete for single expiry",
 			"symbol", symbol,
+			"expiration", expiration,
 			"totalGEX", totalGEX,
 			"totalGEXFormatted", totalGEXFormatted,
-			"gammaFlipLevel", gammaFlipLevel)
+			"gammaFlipLevel", gammaFlipLevel,
+			"chartDataCount", len(chartData))
 
 		err = h.tmpl.ExecuteTemplate(w, "gex_chart.html", map[string]interface{}{
 			"Symbol":            symbol,
+			"Expiration":        expiration,
 			"SpotPrice":         price,
 			"GEXData":           gexData,
 			"ChartData":         chartData,
@@ -611,8 +617,7 @@ func (h *GEXHandler) GetExpiryDatesHandler(w http.ResponseWriter, r *http.Reques
 	expiryDates, err := h.GetExpiryDates(r.Context(), symbol)
 
 	if err != nil || expiryDates == nil || len(expiryDates) == 0 {
-		apiKey := os.Getenv("ALPACA_API_KEY")
-		apiSecret := os.Getenv("ALPACA_API_SECRET")
+		apiKey, apiSecret := gex.GetAlpacaConfig()
 		if apiKey == "" || apiSecret == "" {
 			h.logger.Error("ALPACA_API_KEY or ALPACA_API_SECRET not set")
 			http.Error(w, "ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set", http.StatusInternalServerError)

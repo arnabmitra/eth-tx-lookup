@@ -20,6 +20,8 @@ services:
     secrets:
       - db-password
       - eth-password
+      - alpaca-key
+      - alpaca-secret
     volumes:
       - ${HOME}/static/images:/static/images
     environment:
@@ -30,8 +32,8 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_SSLMODE=disable
       - ETH_API_KEY_FILE=/run/secrets/eth-password
-      - ALPACA_API_KEY=dummykey
-      - ALPACA_API_SECRET=dummykey
+      - ALPACA_API_KEY=/run/secrets/alpaca-key
+      - ALPACA_API_SECRET=/run/secrets/alpaca-secret
     depends_on:
       db:
         condition: service_healthy
@@ -86,4 +88,7 @@ secrets:
     file: db/password.txt
   eth-password:
     file: db/eth.txt
-
+  alpaca-key:
+    file: db/alpaca_key.txt
+  alpaca-secret:
+    file: db/alpaca_secret.txt

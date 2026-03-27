@@ -1,389 +1,393 @@
 
-<div class="bg-gray-950">
-        <div class="mx-auto max-w-7xl">
-            <div class="bg-gray-950 py-10">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="">
-                        {{ if not .ChartData }}
-                        <p class="mt-2 text-lg leading-8 text-gray-300">This tool tracks current dealers' notional
-                            gamma exposure (GEX). </p>
-                        <p class="mt-2 text-lg leading-6 text-gray-400">Enter a symbol and an expiration date to
-                            generate a GEX chart.</p>
-                        <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
-                            <div class="flex flex-col space-y-6 max-w-md mx-auto">
-                                <label for="symbol">Symbol:</label>
-                                <input type="text" name="symbol" id="symbol" required
-                                       oninput="debouncedFetchExpiryDates()"
-                                       class="block w-64 rounded-md border-0 py-2 text-gray-900
-              shadow-sm ring-1 ring-inset ring-gray-300
-              placeholder:text-gray-400 focus:ring-2 focus:ring-inset
-              focus:ring-indigo-600 sm:text-md sm:leading-6"
-                                       placeholder="Enter Symbol">
-                                <label for="expiration">Options Expiration Date:</label>
+<div>
+    <div class="">
+        {{ if not .Symbol }}
+        <p class="mt-2 text-lg leading-8 text-gray-300">This tool tracks current dealers' notional
+            gamma exposure (GEX). </p>
+        <p class="mt-2 text-lg leading-6 text-gray-400">Enter a symbol and an expiration date to
+            generate a GEX chart.</p>
+        <form hx-post="/gex" hx-target="#gex-chart" hx-swap="innerHTML">
+            <div class="flex flex-col space-y-6 max-w-md mx-auto">
+                <label for="symbol">Symbol:</label>
+                <input type="text" name="symbol" id="symbol" required
+                        oninput="debouncedFetchExpiryDates()"
+                        class="block w-64 rounded-md border-0 py-2 text-gray-900
+shadow-sm ring-1 ring-inset ring-gray-300
+placeholder:text-gray-400 focus:ring-2 focus:ring-inset
+focus:ring-indigo-600 sm:text-md sm:leading-6"
+                        placeholder="Enter Symbol">
+                <label for="expiration">Options Expiration Date:</label>
 
-                                <select id="expiration" name="expiration" required class="block w-64 rounded-md border-0 py-2 text-gray-900
-              shadow-sm ring-1 ring-inset ring-gray-300
-              placeholder:text-gray-400 focus:ring-2 focus:ring-inset
-              focus:ring-indigo-600 sm:text-md sm:leading-6">
-                                    <!-- Options will be populated dynamically -->
-                                </select>
-                            </div>
-                            <br/>
-                            <button type="submit"
-                                    class="block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                                Generate Chart
-                            </button>
-                        </form>
-                        {{ end }}
-                    </div>
-                    <div id="gex-chart" class="mt-10">
-                        {{ if .ChartData }}
-                        <div class="bg-white rounded-lg shadow-lg p-6">
-                            <div class="border-b border-gray-200 pb-4 mb-6">
-                                <h3 class="text-2xl font-bold text-gray-900">{{ .Symbol }} Gamma Exposure</h3>
-                                <p class="text-sm text-gray-500 mt-1">Options Expiration: {{ .Expiration }}</p>
-                            </div>
-                            
-                            {{ if gt .GammaFlipLevel 0.0 }}
-                            <div class="grid grid-cols-3 gap-4 mb-6">
-                                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
-                                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Current Price</p>
-                                    <p class="text-3xl font-bold text-gray-900 mt-2">${{ printf "%.2f" .SpotPrice }}</p>
-                                </div>
-                                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
-                                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Gamma Flip Level</p>
-                                    <p class="text-3xl font-bold text-gray-900 mt-2">${{ printf "%.2f" .GammaFlipLevel }}</p>
-                                </div>
-                                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
-                                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Total GEX</p>
-                                    <p class="text-2xl font-bold {{ if gt .TotalGEX 0.0 }}text-green-600{{ else }}text-red-600{{ end }} mt-2">{{ .TotalGEXFormatted }}</p>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-{{ if gt .SpotPrice .GammaFlipLevel }}green{{ else }}red{{ end }}-50 border border-{{ if gt .SpotPrice .GammaFlipLevel }}green{{ else }}red{{ end }}-200 rounded-lg p-3 mb-6">
-                                <p class="text-sm {{ if gt .SpotPrice .GammaFlipLevel }}text-green-800{{ else }}text-red-800{{ end }}">
-                                    {{ if gt .SpotPrice .GammaFlipLevel }}
-                                    <strong>Market Status:</strong> Above gamma flip level - positive GEX zone. Dealer hedging acts as a stabilizer.
-                                    {{ else }}
-                                    <strong>Market Status:</strong> Below gamma flip level - negative GEX zone. Dealer hedging amplifies price moves.
+                <select id="expiration" name="expiration" required class="block w-64 rounded-md border-0 py-2 text-gray-900
+shadow-sm ring-1 ring-inset ring-gray-300
+placeholder:text-gray-400 focus:ring-2 focus:ring-inset
+focus:ring-indigo-600 sm:text-md sm:leading-6">
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <br/>
+            <button type="submit"
+                    class="block rounded-md bg-teal-500 w-auto px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                Generate Chart
+            </button>
+        </form>
+        {{ end }}
+    </div>
+    <div class="mt-10">
+        {{ if .Symbol }}
+            {{ if .ChartData }}
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                                    <div class="border-b border-gray-200 pb-4 mb-6">
+                                        <h3 class="text-2xl font-bold text-gray-900">{{ .Symbol }} Gamma Exposure</h3>
+                                        <p class="text-sm text-gray-500 mt-1">Options Expiration: {{ .Expiration }}</p>
+                                    </div>
+                                    
+                                    {{ if gt .GammaFlipLevel 0.0 }}
+                                    <div class="grid grid-cols-3 gap-4 mb-6">
+                                        <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                                            <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Current Price</p>
+                                            <p class="text-3xl font-bold text-gray-900 mt-2">${{ printf "%.2f" .SpotPrice }}</p>
+                                        </div>
+                                        <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                                            <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Gamma Flip Level</p>
+                                            <p class="text-3xl font-bold text-gray-900 mt-2">${{ printf "%.2f" .GammaFlipLevel }}</p>
+                                        </div>
+                                        <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                                            <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Total GEX</p>
+                                            <p class="text-2xl font-bold {{ if gt .TotalGEX 0.0 }}text-green-600{{ else }}text-red-600{{ end }} mt-2">{{ .TotalGEXFormatted }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-{{ if gt .SpotPrice .GammaFlipLevel }}green{{ else }}red{{ end }}-50 border border-{{ if gt .SpotPrice .GammaFlipLevel }}green{{ else }}red{{ end }}-200 rounded-lg p-3 mb-6">
+                                        <p class="text-sm {{ if gt .SpotPrice .GammaFlipLevel }}text-green-800{{ else }}text-red-800{{ end }}">
+                                            {{ if gt .SpotPrice .GammaFlipLevel }}
+                                            <strong>Market Status:</strong> Above gamma flip level - positive GEX zone. Dealer hedging acts as a stabilizer.
+                                            {{ else }}
+                                            <strong>Market Status:</strong> Below gamma flip level - negative GEX zone. Dealer hedging amplifies price moves.
+                                            {{ end }}
+                                        </p>
+                                    </div>
                                     {{ end }}
-                                </p>
-                            </div>
+                                    
+                                    <div id="d3-chart-partial" class="w-full"></div>
+                                </div>
+                                <script>
+                                (function() {
+                                    // Wait for D3 to be available
+                                    if (typeof d3 === 'undefined') {
+                                        console.error('D3.js is not loaded');
+                                        return;
+                                    }
+                                    // Chart data from Go
+                                    const chartData = {{ .ChartData }};
+                                    const spotPrice = {{ .SpotPrice }};
+                                    const gammaFlipLevel = {{ .GammaFlipLevel }};
+                                    
+                                    // Clear any existing chart
+                                    d3.select("#d3-chart-partial").selectAll("*").remove();
+                                    
+                                    // Set up dimensions - responsive
+                                    const containerWidth = document.getElementById('d3-chart-partial').offsetWidth;
+                                    const margin = {top: 50, right: 60, bottom: 100, left: 120};
+                                    const width = containerWidth - margin.left - margin.right;
+                                    const height = 600 - margin.top - margin.bottom;
+
+                                    // Create SVG
+                                    const svg = d3.select("#d3-chart-partial")
+                                        .append("svg")
+                                        .attr("width", width + margin.left + margin.right)
+                                        .attr("height", height + margin.top + margin.bottom)
+                                        .style("background", "#ffffff")
+                                        .style("border", "1px solid #e5e7eb")
+                                        .style("border-radius", "0.5rem")
+                                        .append("g")
+                                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                                    // X Scale (Strike Prices)
+                                    const x = d3.scaleBand()
+                                        .domain(chartData.map(d => d.strike))
+                                        .range([0, width])
+                                        .padding(0.3);
+
+                                    // Y Scale (GEX Values)
+                                    const yExtent = d3.extent(chartData, d => d.gex);
+                                    const yPadding = (yExtent[1] - yExtent[0]) * 0.1;
+                                    const y = d3.scaleLinear()
+                                        .domain([Math.min(yExtent[0] - yPadding, 0), Math.max(yExtent[1] + yPadding, 0)])
+                                        .range([height, 0])
+                                        .nice();
+
+                                    // Add gridlines
+                                    svg.append("g")
+                                        .attr("class", "grid")
+                                        .call(d3.axisLeft(y)
+                                            .tickSize(-width)
+                                            .tickFormat("")
+                                        )
+                                        .selectAll("line")
+                                        .style("stroke", "#e5e7eb")
+                                        .style("stroke-opacity", 0.7)
+                                        .style("stroke-dasharray", "2,2");
+                                    
+                                    svg.selectAll(".grid .domain").remove();
+
+                                    // Add X Axis
+                                    const xAxis = svg.append("g")
+                                        .attr("transform", `translate(0,${y(0)})`)
+                                        .call(d3.axisBottom(x).tickValues(
+                                            x.domain().filter((d, i) => i % Math.ceil(chartData.length / 25) === 0)
+                                        ));
+                                    
+                                    xAxis.selectAll("text")
+                                        .attr("transform", "rotate(-45)")
+                                        .style("text-anchor", "end")
+                                        .style("fill", "#374151")
+                                        .style("font-size", "11px")
+                                        .style("font-weight", "500");
+                                    
+                                    xAxis.select(".domain")
+                                        .style("stroke", "#9ca3af")
+                                        .style("stroke-width", "1.5px");
+
+                                    // Add Y Axis
+                                    const yAxis = svg.append("g")
+                                        .call(d3.axisLeft(y)
+                                            .ticks(8)
+                                            .tickFormat(d => {
+                                                const absVal = Math.abs(d);
+                                                if (absVal >= 1e9) return `$${d3.format(".2f")(d/1e9)}B`;
+                                                if (absVal >= 1e6) return `$${d3.format(".1f")(d/1e6)}M`;
+                                                if (absVal >= 1e3) return `$${d3.format(".1f")(d/1e3)}K`;
+                                                return `$${d3.format(",.0f")(d)}`;
+                                            })
+                                        );
+                                    
+                                    yAxis.selectAll("text")
+                                        .style("fill", "#374151")
+                                        .style("font-size", "12px")
+                                        .style("font-weight", "500");
+                                    
+                                    yAxis.select(".domain")
+                                        .style("stroke", "#9ca3af")
+                                        .style("stroke-width", "1.5px");
+                                    
+                                    yAxis.selectAll(".tick line")
+                                        .style("stroke", "#9ca3af");
+
+                                    // Add X Axis Label
+                                    svg.append("text")
+                                        .attr("x", width / 2)
+                                        .attr("y", height + margin.bottom - 20)
+                                        .style("text-anchor", "middle")
+                                        .style("fill", "#1f2937")
+                                        .style("font-size", "14px")
+                                        .style("font-weight", "600")
+                                        .text("Strike Price ($)");
+
+                                    // Add Y Axis Label
+                                    svg.append("text")
+                                        .attr("transform", "rotate(-90)")
+                                        .attr("x", -height / 2)
+                                        .attr("y", -margin.left + 20)
+                                        .style("text-anchor", "middle")
+                                        .style("fill", "#1f2937")
+                                        .style("font-size", "14px")
+                                        .style("font-weight", "600")
+                                        .text("Gamma Exposure ($)");
+
+                                    // Create tooltip
+                                    const tooltip = d3.select("body")
+                                        .append("div")
+                                        .style("position", "absolute")
+                                        .style("background", "white")
+                                        .style("padding", "12px 16px")
+                                        .style("border", "1px solid #d1d5db")
+                                        .style("border-radius", "6px")
+                                        .style("pointer-events", "none")
+                                        .style("opacity", 0)
+                                        .style("color", "#1f2937")
+                                        .style("font-size", "13px")
+                                        .style("box-shadow", "0 4px 12px rgba(0, 0, 0, 0.15)")
+                                        .style("z-index", "1000");
+
+                                    // Add bars
+                                    svg.selectAll(".bar")
+                                        .data(chartData)
+                                        .enter()
+                                        .append("rect")
+                                        .attr("class", "bar")
+                                        .attr("x", d => x(d.strike))
+                                        .attr("width", x.bandwidth())
+                                        .attr("y", d => d.gex >= 0 ? y(d.gex) : y(0))
+                                        .attr("height", d => Math.abs(y(d.gex) - y(0)))
+                                        .attr("fill", d => d.gex >= 0 ? "#10b981" : "#ef4444")
+                                        .attr("stroke", d => d.gex >= 0 ? "#059669" : "#dc2626")
+                                        .attr("stroke-width", 0.5)
+                                        .style("cursor", "pointer")
+                                        .style("transition", "all 0.2s")
+                                        .on("mouseover", function(event, d) {
+                                            d3.select(this)
+                                                .attr("opacity", 0.7)
+                                                .attr("stroke-width", 2);
+                                            
+                                            const formatGex = (val) => {
+                                                const absVal = Math.abs(val);
+                                                if (absVal >= 1e9) return `$${d3.format(".2f")(val/1e9)}B`;
+                                                if (absVal >= 1e6) return `$${d3.format(".2f")(val/1e6)}M`;
+                                                if (absVal >= 1e3) return `$${d3.format(".2f")(val/1e3)}K`;
+                                                return `$${d3.format(",.2f")(val)}`;
+                                            };
+                                            
+                                            tooltip
+                                                .style("opacity", 1)
+                                                .html(`
+                                                    <div style="font-weight: 600; margin-bottom: 8px; color: ${d.gex >= 0 ? '#059669' : '#dc2626'}; font-size: 14px;">
+                                                        ${d.gex >= 0 ? 'Positive GEX' : 'Negative GEX'}
+                                                    </div>
+                                                    <div style="margin-bottom: 4px;"><strong>Strike:</strong> $${d.strike.toFixed(2)}</div>
+                                                    <div style="margin-bottom: 4px;"><strong>GEX:</strong> ${formatGex(d.gex)}</div>
+                                                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280;">
+                                                        ${d.gex >= 0 ? 'Acts as support/resistance' : 'Amplifies price movement'}
+                                                    </div>
+                                                `)
+                                                .style("left", (event.pageX + 15) + "px")
+                                                .style("top", (event.pageY - 28) + "px");
+                                        })
+                                        .on("mousemove", function(event) {
+                                            tooltip
+                                                .style("left", (event.pageX + 15) + "px")
+                                                .style("top", (event.pageY - 28) + "px");
+                                        })
+                                        .on("mouseout", function() {
+                                            d3.select(this)
+                                                .attr("opacity", 1)
+                                                .attr("stroke-width", 0.5);
+                                            
+                                            tooltip.style("opacity", 0);
+                                        });
+
+                                    // Add zero line with label
+                                    svg.append("line")
+                                        .attr("x1", 0)
+                                        .attr("x2", width)
+                                        .attr("y1", y(0))
+                                        .attr("y2", y(0))
+                                        .style("stroke", "#6b7280")
+                                        .style("stroke-width", 2);
+
+                                    svg.append("text")
+                                        .attr("x", width - 5)
+                                        .attr("y", y(0) - 8)
+                                        .style("text-anchor", "end")
+                                        .style("fill", "#6b7280")
+                                        .style("font-size", "11px")
+                                        .style("font-weight", "600")
+                                        .text("Zero Level");
+
+                                    // Add spot price vertical line
+                                    if (spotPrice > 0) {
+                                        // Find the x position for spot price
+                                        const strikes = chartData.map(d => d.strike);
+                                        const closestStrike = strikes.reduce((prev, curr) => 
+                                            Math.abs(curr - spotPrice) < Math.abs(prev - spotPrice) ? curr : prev
+                                        );
+                                        const spotX = x(closestStrike) + x.bandwidth() / 2;
+                                        
+                                        svg.append("line")
+                                            .attr("x1", spotX)
+                                            .attr("x2", spotX)
+                                            .attr("y1", -10)
+                                            .attr("y2", height)
+                                            .style("stroke", "#3b82f6")
+                                            .style("stroke-width", 2.5)
+                                            .style("stroke-dasharray", "6,3");
+
+                                        // Add label background
+                                        const spotLabel = svg.append("g");
+                                        const spotText = spotLabel.append("text")
+                                            .attr("x", spotX)
+                                            .attr("y", -15)
+                                            .style("text-anchor", "middle")
+                                            .style("fill", "#3b82f6")
+                                            .style("font-size", "12px")
+                                            .style("font-weight", "700")
+                                            .text(`Current: $${spotPrice.toFixed(2)}`);
+                                    }
+
+                                    // Add gamma flip level vertical line
+                                    if (gammaFlipLevel > 0) {
+                                        // Find the x position for gamma flip level
+                                        const strikes = chartData.map(d => d.strike);
+                                        const closestStrike = strikes.reduce((prev, curr) => 
+                                            Math.abs(curr - gammaFlipLevel) < Math.abs(prev - gammaFlipLevel) ? curr : prev
+                                        );
+                                        const flipX = x(closestStrike) + x.bandwidth() / 2;
+                                        
+                                        svg.append("line")
+                                            .attr("x1", flipX)
+                                            .attr("x2", flipX)
+                                            .attr("y1", -10)
+                                            .attr("y2", height)
+                                            .style("stroke", "#f59e0b")
+                                            .style("stroke-width", 2.5)
+                                            .style("stroke-dasharray", "6,3");
+
+                                        const flipLabel = svg.append("g");
+                                        const flipText = flipLabel.append("text")
+                                            .attr("x", flipX)
+                                            .attr("y", height + 20)
+                                            .style("text-anchor", "middle")
+                                            .style("fill", "#f59e0b")
+                                            .style("font-size", "12px")
+                                            .style("font-weight", "700")
+                                            .text(`Flip: $${gammaFlipLevel.toFixed(2)}`);
+                                    }
+                                    
+                                    // Add legend
+                                    const legend = svg.append("g")
+                                        .attr("transform", `translate(${width - 180}, -30)`);
+                                    
+                                    // Positive GEX
+                                    legend.append("rect")
+                                        .attr("x", 0)
+                                        .attr("y", 0)
+                                        .attr("width", 16)
+                                        .attr("height", 16)
+                                        .attr("fill", "#10b981")
+                                        .attr("stroke", "#059669")
+                                        .attr("stroke-width", 1);
+                                    
+                                    legend.append("text")
+                                        .attr("x", 22)
+                                        .attr("y", 12)
+                                        .style("font-size", "12px")
+                                        .style("fill", "#374151")
+                                        .text("Positive GEX");
+                                    
+                                    // Negative GEX
+                                    legend.append("rect")
+                                        .attr("x", 110)
+                                        .attr("y", 0)
+                                        .attr("width", 16)
+                                        .attr("height", 16)
+                                        .attr("fill", "#ef4444")
+                                        .attr("stroke", "#dc2626")
+                                        .attr("stroke-width", 1);
+                                    
+                                    legend.append("text")
+                                        .attr("x", 132)
+                                        .attr("y", 12)
+                                        .style("font-size", "12px")
+                                        .style("fill", "#374151")
+                                        .text("Negative GEX");
+                                })();
+                                </script>
+                            {{ else }}
+                                <div class="bg-gray-800 rounded-lg p-8 text-center">
+                                    <p class="text-xl text-gray-300">No GEX data available for {{ .Symbol }} on {{ .Expiration }}.</p>
+                                    <p class="text-gray-400 mt-2">This may happen if the market is closed or if the data provider doesn't have Greeks for this chain yet.</p>
+                                </div>
                             {{ end }}
-                            
-                            <div id="d3-chart-partial" class="w-full"></div>
-                        </div>
-                        <script>
-                        (function() {
-                            // Wait for D3 to be available
-                            if (typeof d3 === 'undefined') {
-                                console.error('D3.js is not loaded');
-                                return;
-                            }
-                            // Chart data from Go
-                            const chartData = {{ .ChartData }};
-                            const spotPrice = {{ .SpotPrice }};
-                            const gammaFlipLevel = {{ .GammaFlipLevel }};
-                            
-                            // Clear any existing chart
-                            d3.select("#d3-chart-partial").selectAll("*").remove();
-                            
-                            // Set up dimensions - responsive
-                            const containerWidth = document.getElementById('d3-chart-partial').offsetWidth;
-                            const margin = {top: 50, right: 60, bottom: 100, left: 120};
-                            const width = containerWidth - margin.left - margin.right;
-                            const height = 600 - margin.top - margin.bottom;
-
-                            // Create SVG
-                            const svg = d3.select("#d3-chart-partial")
-                                .append("svg")
-                                .attr("width", width + margin.left + margin.right)
-                                .attr("height", height + margin.top + margin.bottom)
-                                .style("background", "#ffffff")
-                                .style("border", "1px solid #e5e7eb")
-                                .style("border-radius", "0.5rem")
-                                .append("g")
-                                .attr("transform", `translate(${margin.left},${margin.top})`);
-
-                            // X Scale (Strike Prices)
-                            const x = d3.scaleBand()
-                                .domain(chartData.map(d => d.strike))
-                                .range([0, width])
-                                .padding(0.3);
-
-                            // Y Scale (GEX Values)
-                            const yExtent = d3.extent(chartData, d => d.gex);
-                            const yPadding = (yExtent[1] - yExtent[0]) * 0.1;
-                            const y = d3.scaleLinear()
-                                .domain([Math.min(yExtent[0] - yPadding, 0), Math.max(yExtent[1] + yPadding, 0)])
-                                .range([height, 0])
-                                .nice();
-
-                            // Add gridlines
-                            svg.append("g")
-                                .attr("class", "grid")
-                                .call(d3.axisLeft(y)
-                                    .tickSize(-width)
-                                    .tickFormat("")
-                                )
-                                .selectAll("line")
-                                .style("stroke", "#e5e7eb")
-                                .style("stroke-opacity", 0.7)
-                                .style("stroke-dasharray", "2,2");
-                            
-                            svg.selectAll(".grid .domain").remove();
-
-                            // Add X Axis
-                            const xAxis = svg.append("g")
-                                .attr("transform", `translate(0,${y(0)})`)
-                                .call(d3.axisBottom(x).tickValues(
-                                    x.domain().filter((d, i) => i % Math.ceil(chartData.length / 25) === 0)
-                                ));
-                            
-                            xAxis.selectAll("text")
-                                .attr("transform", "rotate(-45)")
-                                .style("text-anchor", "end")
-                                .style("fill", "#374151")
-                                .style("font-size", "11px")
-                                .style("font-weight", "500");
-                            
-                            xAxis.select(".domain")
-                                .style("stroke", "#9ca3af")
-                                .style("stroke-width", "1.5px");
-
-                            // Add Y Axis
-                            const yAxis = svg.append("g")
-                                .call(d3.axisLeft(y)
-                                    .ticks(8)
-                                    .tickFormat(d => {
-                                        const absVal = Math.abs(d);
-                                        if (absVal >= 1e9) return `$${d3.format(".2f")(d/1e9)}B`;
-                                        if (absVal >= 1e6) return `$${d3.format(".1f")(d/1e6)}M`;
-                                        if (absVal >= 1e3) return `$${d3.format(".1f")(d/1e3)}K`;
-                                        return `$${d3.format(",.0f")(d)}`;
-                                    })
-                                );
-                            
-                            yAxis.selectAll("text")
-                                .style("fill", "#374151")
-                                .style("font-size", "12px")
-                                .style("font-weight", "500");
-                            
-                            yAxis.select(".domain")
-                                .style("stroke", "#9ca3af")
-                                .style("stroke-width", "1.5px");
-                            
-                            yAxis.selectAll(".tick line")
-                                .style("stroke", "#9ca3af");
-
-                            // Add X Axis Label
-                            svg.append("text")
-                                .attr("x", width / 2)
-                                .attr("y", height + margin.bottom - 20)
-                                .style("text-anchor", "middle")
-                                .style("fill", "#1f2937")
-                                .style("font-size", "14px")
-                                .style("font-weight", "600")
-                                .text("Strike Price ($)");
-
-                            // Add Y Axis Label
-                            svg.append("text")
-                                .attr("transform", "rotate(-90)")
-                                .attr("x", -height / 2)
-                                .attr("y", -margin.left + 20)
-                                .style("text-anchor", "middle")
-                                .style("fill", "#1f2937")
-                                .style("font-size", "14px")
-                                .style("font-weight", "600")
-                                .text("Gamma Exposure ($)");
-
-                            // Create tooltip
-                            const tooltip = d3.select("body")
-                                .append("div")
-                                .style("position", "absolute")
-                                .style("background", "white")
-                                .style("padding", "12px 16px")
-                                .style("border", "1px solid #d1d5db")
-                                .style("border-radius", "6px")
-                                .style("pointer-events", "none")
-                                .style("opacity", 0)
-                                .style("color", "#1f2937")
-                                .style("font-size", "13px")
-                                .style("box-shadow", "0 4px 12px rgba(0, 0, 0, 0.15)")
-                                .style("z-index", "1000");
-
-                            // Add bars
-                            svg.selectAll(".bar")
-                                .data(chartData)
-                                .enter()
-                                .append("rect")
-                                .attr("class", "bar")
-                                .attr("x", d => x(d.strike))
-                                .attr("width", x.bandwidth())
-                                .attr("y", d => d.gex >= 0 ? y(d.gex) : y(0))
-                                .attr("height", d => Math.abs(y(d.gex) - y(0)))
-                                .attr("fill", d => d.gex >= 0 ? "#10b981" : "#ef4444")
-                                .attr("stroke", d => d.gex >= 0 ? "#059669" : "#dc2626")
-                                .attr("stroke-width", 0.5)
-                                .style("cursor", "pointer")
-                                .style("transition", "all 0.2s")
-                                .on("mouseover", function(event, d) {
-                                    d3.select(this)
-                                        .attr("opacity", 0.7)
-                                        .attr("stroke-width", 2);
-                                    
-                                    const formatGex = (val) => {
-                                        const absVal = Math.abs(val);
-                                        if (absVal >= 1e9) return `$${d3.format(".2f")(val/1e9)}B`;
-                                        if (absVal >= 1e6) return `$${d3.format(".2f")(val/1e6)}M`;
-                                        if (absVal >= 1e3) return `$${d3.format(".2f")(val/1e3)}K`;
-                                        return `$${d3.format(",.2f")(val)}`;
-                                    };
-                                    
-                                    tooltip
-                                        .style("opacity", 1)
-                                        .html(`
-                                            <div style="font-weight: 600; margin-bottom: 8px; color: ${d.gex >= 0 ? '#059669' : '#dc2626'}; font-size: 14px;">
-                                                ${d.gex >= 0 ? 'Positive GEX' : 'Negative GEX'}
-                                            </div>
-                                            <div style="margin-bottom: 4px;"><strong>Strike:</strong> $${d.strike.toFixed(2)}</div>
-                                            <div style="margin-bottom: 4px;"><strong>GEX:</strong> ${formatGex(d.gex)}</div>
-                                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280;">
-                                                ${d.gex >= 0 ? 'Acts as support/resistance' : 'Amplifies price movement'}
-                                            </div>
-                                        `)
-                                        .style("left", (event.pageX + 15) + "px")
-                                        .style("top", (event.pageY - 28) + "px");
-                                })
-                                .on("mousemove", function(event) {
-                                    tooltip
-                                        .style("left", (event.pageX + 15) + "px")
-                                        .style("top", (event.pageY - 28) + "px");
-                                })
-                                .on("mouseout", function() {
-                                    d3.select(this)
-                                        .attr("opacity", 1)
-                                        .attr("stroke-width", 0.5);
-                                    
-                                    tooltip.style("opacity", 0);
-                                });
-
-                            // Add zero line with label
-                            svg.append("line")
-                                .attr("x1", 0)
-                                .attr("x2", width)
-                                .attr("y1", y(0))
-                                .attr("y2", y(0))
-                                .style("stroke", "#6b7280")
-                                .style("stroke-width", 2);
-
-                            svg.append("text")
-                                .attr("x", width - 5)
-                                .attr("y", y(0) - 8)
-                                .style("text-anchor", "end")
-                                .style("fill", "#6b7280")
-                                .style("font-size", "11px")
-                                .style("font-weight", "600")
-                                .text("Zero Level");
-
-                            // Add spot price vertical line
-                            if (spotPrice > 0) {
-                                // Find the x position for spot price
-                                const strikes = chartData.map(d => d.strike);
-                                const closestStrike = strikes.reduce((prev, curr) => 
-                                    Math.abs(curr - spotPrice) < Math.abs(prev - spotPrice) ? curr : prev
-                                );
-                                const spotX = x(closestStrike) + x.bandwidth() / 2;
-                                
-                                svg.append("line")
-                                    .attr("x1", spotX)
-                                    .attr("x2", spotX)
-                                    .attr("y1", -10)
-                                    .attr("y2", height)
-                                    .style("stroke", "#3b82f6")
-                                    .style("stroke-width", 2.5)
-                                    .style("stroke-dasharray", "6,3");
-
-                                // Add label background
-                                const spotLabel = svg.append("g");
-                                const spotText = spotLabel.append("text")
-                                    .attr("x", spotX)
-                                    .attr("y", -15)
-                                    .style("text-anchor", "middle")
-                                    .style("fill", "#3b82f6")
-                                    .style("font-size", "12px")
-                                    .style("font-weight", "700")
-                                    .text(`Current: $${spotPrice.toFixed(2)}`);
-                            }
-
-                            // Add gamma flip level vertical line
-                            if (gammaFlipLevel > 0) {
-                                // Find the x position for gamma flip level
-                                const strikes = chartData.map(d => d.strike);
-                                const closestStrike = strikes.reduce((prev, curr) => 
-                                    Math.abs(curr - gammaFlipLevel) < Math.abs(prev - gammaFlipLevel) ? curr : prev
-                                );
-                                const flipX = x(closestStrike) + x.bandwidth() / 2;
-                                
-                                svg.append("line")
-                                    .attr("x1", flipX)
-                                    .attr("x2", flipX)
-                                    .attr("y1", -10)
-                                    .attr("y2", height)
-                                    .style("stroke", "#f59e0b")
-                                    .style("stroke-width", 2.5)
-                                    .style("stroke-dasharray", "6,3");
-
-                                const flipLabel = svg.append("g");
-                                const flipText = flipLabel.append("text")
-                                    .attr("x", flipX)
-                                    .attr("y", height + 20)
-                                    .style("text-anchor", "middle")
-                                    .style("fill", "#f59e0b")
-                                    .style("font-size", "12px")
-                                    .style("font-weight", "700")
-                                    .text(`Flip: $${gammaFlipLevel.toFixed(2)}`);
-                            }
-                            
-                            // Add legend
-                            const legend = svg.append("g")
-                                .attr("transform", `translate(${width - 180}, -30)`);
-                            
-                            // Positive GEX
-                            legend.append("rect")
-                                .attr("x", 0)
-                                .attr("y", 0)
-                                .attr("width", 16)
-                                .attr("height", 16)
-                                .attr("fill", "#10b981")
-                                .attr("stroke", "#059669")
-                                .attr("stroke-width", 1);
-                            
-                            legend.append("text")
-                                .attr("x", 22)
-                                .attr("y", 12)
-                                .style("font-size", "12px")
-                                .style("fill", "#374151")
-                                .text("Positive GEX");
-                            
-                            // Negative GEX
-                            legend.append("rect")
-                                .attr("x", 110)
-                                .attr("y", 0)
-                                .attr("width", 16)
-                                .attr("height", 16)
-                                .attr("fill", "#ef4444")
-                                .attr("stroke", "#dc2626")
-                                .attr("stroke-width", 1);
-                            
-                            legend.append("text")
-                                .attr("x", 132)
-                                .attr("y", 12)
-                                .style("font-size", "12px")
-                                .style("fill", "#374151")
-                                .text("Negative GEX");
-                        })();
-                        </script>
                         {{ end }}
                     </div>
                     {{ if .GEXData }}
@@ -419,5 +423,4 @@
                     {{ end }}
                 </div>
             </div>
-        </div>
-    </div>
+</div>
