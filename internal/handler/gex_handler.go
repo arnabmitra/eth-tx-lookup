@@ -213,7 +213,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 		// Prepare chart data for D3.js
 		chartData := make([]map[string]interface{}, 0)
 		for strike, gexValue := range gexByStrike {
-			if gexValue < -100 || gexValue > 100 {
+			if gexValue != 0 {
 				chartData = append(chartData, map[string]interface{}{
 					"strike": strike,
 					"gex":    gexValue,
@@ -436,7 +436,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Prepare chart data for D3.js
 		chartData := make([]map[string]interface{}, 0)
 		for strike, gexValue := range gexByStrike {
-			if gexValue < -100 || gexValue > 100 {
+			if gexValue != 0 {
 				chartData = append(chartData, map[string]interface{}{
 					"strike": strike,
 					"gex":    gexValue,

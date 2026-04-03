@@ -18,6 +18,64 @@ import (
 	"math"
 )
 
+// N calculates the cumulative distribution function for a standard normal distribution
+func N(x float64) float64 {
+	return 0.5 * (1 + math.Erf(x/math.Sqrt(2)))
+}
+
+// n_pdf calculates the probability density function for a standard normal distribution
+func n_pdf(x float64) float64 {
+	return math.Exp(-0.5*x*x) / math.Sqrt(2*math.Pi)
+}
+
+// BlackScholesPrice calculates the theoretical price of an option
+func BlackScholesPrice(spot, strike, iv, t, r float64, isCall bool) float64 {
+	if t <= 0 {
+		if isCall {
+			return math.Max(0, spot-strike)
+		}
+		return math.Max(0, strike-spot)
+	}
+	d1 := (math.Log(spot/strike) + (r+0.5*iv*iv)*t) / (iv * math.Sqrt(t))
+	d2 := d1 - iv*math.Sqrt(t)
+
+	if isCall {
+		return spot*N(d1) - strike*math.Exp(-r*t)*N(d2)
+	}
+	return strike*math.Exp(-r*t)*N(-d2) - spot*N(-d1)
+}
+
+// CalculateIV finds the implied volatility using Newton-Raphson
+func CalculateIV(marketPrice, spot, strike, t, r float64, isCall bool) float64 {
+	if marketPrice <= 0 || t <= 0 {
+		return 0
+	}
+
+	// Initial guess
+	iv := 0.5
+	for i := 0; i < 20; i++ {
+		price := BlackScholesPrice(spot, strike, iv, t, r, isCall)
+		diff := price - marketPrice
+		if math.Abs(diff) < 1e-6 {
+			return iv
+		}
+
+		// Calculate Vega
+		d1 := (math.Log(spot/strike) + (r+0.5*iv*iv)*t) / (iv * math.Sqrt(t))
+		vega := spot * math.Sqrt(t) * n_pdf(d1)
+		
+		if vega < 1e-6 {
+			break
+		}
+		
+		iv = iv - diff/vega
+		if iv <= 0 {
+			iv = 0.0001 // prevent negative/zero IV
+		}
+	}
+	return iv
+}
+
 // BlackScholesGamma calculates an approximate gamma if the provider doesn't supply it
 func EstimateGamma(spot, strike, iv, daysToExpiration float64) float64 {
 	if iv <= 0 || daysToExpiration <= 0 || spot <= 0 {
@@ -28,7 +86,7 @@ func EstimateGamma(spot, strike, iv, daysToExpiration float64) float64 {
 	r := 0.05 // assume 5% risk free rate
 	
 	d1 := (math.Log(spot/strike) + (r+0.5*iv*iv)*t) / (iv * math.Sqrt(t))
-	pdfD1 := math.Exp(-0.5*d1*d1) / math.Sqrt(2*math.Pi)
+	pdfD1 := n_pdf(d1)
 	
 	gamma := pdfD1 / (spot * iv * math.Sqrt(t))
 	return gamma
@@ -161,14 +219,20 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		fmt.Printf("Warning: failed to get spot price for gamma estimation: %v\n", err)
 	}
 	
-	now := time.Now()
-	expTime := time.Date(expDate.Year, expDate.Month, expDate.Day, 16, 0, 0, 0, time.UTC)
+	loc, _ := time.LoadLocation("America/New_York")
+	now := time.Now().In(loc)
+	// Market close is 4 PM ET
+	expTime := time.Date(expDate.Year, expDate.Month, expDate.Day, 16, 0, 0, 0, loc)
 	daysToExpiry := expTime.Sub(now).Hours() / 24.0
-	if daysToExpiry < 0.01 {
-		daysToExpiry = 0.01 // handle 0DTE as small positive for math
+	
+	if daysToExpiry < 0 && daysToExpiry > -16.0/24.0 {
+		// If it's the same day but after 4 PM ET, still treat as 0DTE for a few hours
+		daysToExpiry = 0.001
+	} else if daysToExpiry <= 0 {
+		daysToExpiry = 0.001
 	}
 
-	fmt.Printf("Fetched %d snapshots from Alpaca market data for %s\n", len(chain), symbol)
+	fmt.Printf("Fetched %d snapshots from Alpaca market data for %s (Days to Expiry: %.4f)\n", len(chain), symbol, daysToExpiry)
 
 	// 3. Combine contract data with snapshots
 	var options []Option
@@ -191,11 +255,23 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 			if snap.Greeks != nil && snap.Greeks.Gamma != 0 {
 				opt.Greeks.Gamma = snap.Greeks.Gamma
 				greeksFound++
-			} else if snap.ImpliedVolatility > 0 && spotPrice > 0 {
-				// Estimate gamma if Alpaca didn't provide it but has IV
-				opt.Greeks.Gamma = EstimateGamma(spotPrice, opt.Strike, snap.ImpliedVolatility, daysToExpiry)
-				if opt.Greeks.Gamma > 0 {
-					greeksEstimated++
+			} else if spotPrice > 0 {
+				// Fallback: Estimate gamma from market price if Greeks are missing
+				iv := snap.ImpliedVolatility
+				
+				// If IV is also missing (common in indicative feed), calculate it from price
+				if iv <= 0 && snap.LatestQuote != nil && snap.LatestQuote.BidPrice > 0 {
+					marketPrice := (snap.LatestQuote.BidPrice + snap.LatestQuote.AskPrice) / 2.0
+					isCall := strings.ToLower(opt.OptionType) == "call"
+					t := daysToExpiry / 365.0
+					iv = CalculateIV(marketPrice, spotPrice, opt.Strike, t, 0.05, isCall)
+				}
+
+				if iv > 0 {
+					opt.Greeks.Gamma = EstimateGamma(spotPrice, opt.Strike, iv, daysToExpiry)
+					if opt.Greeks.Gamma > 0 {
+						greeksEstimated++
+					}
 				}
 			}
 		}
@@ -222,15 +298,22 @@ func GetExpirationDates(apiKey, apiSecret, symbol string) ([]string, error) {
 		BaseURL:   "https://paper-api.alpaca.markets",
 	})
 
-	now := civil.DateOf(time.Now())
+	loc, _ := time.LoadLocation("America/New_York")
+	nowNY := time.Now().In(loc)
+	today := civil.DateOf(nowNY)
+	
+	fmt.Printf("Fetching expirations for %s starting from %s (NY Time: %s)\n", symbol, today, nowNY.Format(time.RFC3339))
+
 	contracts, err := tradeClient.GetOptionContracts(alpaca.GetOptionContractsRequest{
 		UnderlyingSymbols: symbol,
-		ExpirationDateGTE: now,
+		ExpirationDateGTE: today,
 		Status:            alpaca.OptionStatusActive,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error getting options contracts: %v", err)
 	}
+
+	fmt.Printf("Alpaca returned %d active contracts for %s\n", len(contracts), symbol)
 
 	expMap := make(map[string]bool)
 	var dates []string
@@ -255,9 +338,10 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 			gex := float64(option.OpenInterest) * option.Greeks.Gamma * (spotPrice * spotPrice)
 
 			// Add or subtract based on option type
-			if option.OptionType == "call" {
+			optionType := strings.ToLower(option.OptionType)
+			if optionType == "call" {
 				gexByStrike[option.Strike] += gex
-			} else if option.OptionType == "put" {
+			} else if optionType == "put" {
 				gexByStrike[option.Strike] -= gex
 			}
 		}
