@@ -26,6 +26,14 @@ import (
 	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 )
 
+func formatCurrency(val float64) string {
+	formatted := humanize.FormatFloat("#,###.00", math.Abs(val))
+	if val < 0 {
+		return "-$" + formatted
+	}
+	return "$" + formatted
+}
+
 type GEXHandler struct {
 	logger *slog.Logger
 	tmpl   *template.Template
@@ -206,7 +214,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 		for i, entry := range gexEntries {
 			gexData[i] = map[string]string{
 				"Strike": fmt.Sprintf("%.2f", entry.Strike),
-				"GEX":    humanize.Commaf(entry.GEX),
+				"GEX":    humanize.FormatFloat("#,###.##", entry.GEX),
 			}
 		}
 
@@ -236,7 +244,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Format total GEX properly
-		totalGEXFormatted := fmt.Sprintf("$%s", humanize.Commaf(totalGEX))
+		totalGEXFormatted := formatCurrency(totalGEX)
 
 		h.logger.Info("GEX calculation complete",
 			"symbol", symbol,
@@ -430,7 +438,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for i, entry := range gexEntries {
 			gexData[i] = map[string]string{
 				"Strike": fmt.Sprintf("%.2f", entry.Strike),
-				"GEX":    humanize.Commaf(entry.GEX),
+				"GEX":    humanize.FormatFloat("#,###.##", entry.GEX),
 			}
 		}
 		// Prepare chart data for D3.js
@@ -459,7 +467,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Format total GEX properly
-		totalGEXFormatted := fmt.Sprintf("$%s", humanize.Commaf(totalGEX))
+		totalGEXFormatted := formatCurrency(totalGEX)
 
 		h.logger.Info("GEX calculation complete for single expiry",
 			"symbol", symbol,
@@ -798,9 +806,10 @@ type GexHistoryRecord struct {
 func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 	mag7 := []string{"AAPL", "MSFT", "GOOG", "AMZN", "NVDA", "TSLA", "META"}
 	type Mag7Chart struct {
-		Symbol    string
-		SpotPrice float64
-		ChartData []map[string]interface{}
+		Symbol            string
+		SpotPrice         float64
+		ChartData         []map[string]interface{}
+		TotalGEXFormatted string
 	}
 
 	apiKey := os.Getenv("ALPACA_API_KEY")
@@ -864,10 +873,16 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			// Calculate total GEX
+			totalGEX := 0.0
+			for _, gexValue := range gexByStrike {
+				totalGEX += gexValue
+			}
+
 			// Prepare chart data
 			chartData := make([]map[string]interface{}, 0)
 			for strike, gexValue := range gexByStrike {
-				if gexValue < -100 || gexValue > 100 {
+				if gexValue != 0 {
 					chartData = append(chartData, map[string]interface{}{
 						"strike": strike,
 						"gex":    gexValue,
@@ -882,9 +897,10 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 
 			results <- result{
 				chart: Mag7Chart{
-					Symbol:    sym,
-					SpotPrice: price,
-					ChartData: chartData,
+					Symbol:            sym,
+					SpotPrice:         price,
+					ChartData:         chartData,
+					TotalGEXFormatted: formatCurrency(totalGEX),
 				},
 				index: position,
 			}

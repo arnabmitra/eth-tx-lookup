@@ -24,87 +24,59 @@
         <style>
             body {
                 font-family: "Inter", sans-serif;
-                background-color: #111827; /* Dark Gray */
-                color: #d1d5db; /* Light Gray */
+                background-color: #000000; /* Artemis absolute black */
+                color: #ffffff;
             }
             .gradient-text {
-                background: linear-gradient(to right, #34d399, #60a5fa);
+                background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
+                font-weight: 800;
             }
             .card {
-                background-color: #1f2937; /* Darker Gray */
-                border: 1px solid #374151; /* Gray border */
-                border-radius: 0.75rem;
-                transition:
-                    transform 0.3s ease,
-                    box-shadow 0.3s ease;
+                background-color: rgba(10, 10, 10, 0.8);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 1rem;
+                backdrop-filter: blur(12px);
+                transition: border-color 0.3s ease;
             }
             .card:hover {
-                transform: translateY(-5px);
-                box-shadow:
-                    0 10px 15px -3px rgba(0, 0, 0, 0.2),
-                    0 4px 6px -2px rgba(0, 0, 0, 0.1);
-            }
-            .modal-overlay {
-                background-color: rgba(0, 0, 0, 0.75);
+                border-color: rgba(0, 242, 254, 0.3);
             }
             .cta-button {
-                position: relative;
-                background: linear-gradient(135deg, #34d399 0%, #60a5fa 100%);
-                color: white;
+                background: #00f2fe;
+                color: #000;
                 padding: 0.75rem 1.5rem;
-                border-radius: 0.25rem;
-                font-weight: 500;
-                text-transform: uppercase;
-                letter-spacing: 0.0625rem;
+                border-radius: 0.5rem;
+                font-weight: 600;
                 font-size: 0.875rem;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: all 0.3s ease;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 gap: 0.5rem;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                overflow: hidden;
+                box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
             }
             .cta-button:hover {
+                background: #ffffff;
+                box-shadow: 0 0 25px rgba(0, 242, 254, 0.5);
                 transform: translateY(-1px);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             }
-            .cta-button:active {
-                transform: translateY(0);
-                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            .input-dark {
+                background-color: #0a0a0a !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                color: white !important;
+                border-radius: 0.5rem !important;
             }
-            .cta-button::before {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 0;
-                height: 0;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.5);
-                transform: translate(-50%, -50%);
-                transition: width 0.6s, height 0.6s;
-            }
-            .cta-button:active::before {
-                width: 300px;
-                height: 300px;
-            }
-            .modal-overlay {
-                background-color: rgba(0, 0, 0, 0.75);
-            }
-            .htmx-indicator {
-                display: none;
-            }
-            form.htmx-request .htmx-indicator {
-                display: inline-block;
+            .input-dark:focus {
+                border-color: #00f2fe !important;
+                ring: 1px #00f2fe !important;
             }
             .spinner {
-                border: 4px solid #374151;
-                border-top: 4px solid #34d399;
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-top: 2px solid #00f2fe;
                 border-radius: 50%;
-                width: 40px;
+                width: 30px;
                 height: 40px;
                 animation: spin 1s linear infinite;
                 margin: 2rem auto;
@@ -346,7 +318,7 @@
                                 id="symbol"
                                 required
                                 oninput="debouncedFetchExpiryDates()"
-                                class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                                class="mt-1 block w-full input-dark py-2 px-3 text-white focus:outline-none sm:text-sm"
                                 placeholder="e.g., TSLA, NVDA, DIS"
                                 value="SPY"
                             />
@@ -354,14 +326,14 @@
                         <div>
                             <label
                                 for="expiration"
-                                class="block text-sm font-medium text-gray-300"
+                                class="block text-sm font-medium text-gray-400"
                                 >Options Expiration Date</label
                             >
                             <select
                                 id="expiration"
                                 name="expiration"
                                 required
-                                class="mt-1 block w-full bg-gray-800 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                                class="mt-1 block w-full input-dark py-2 px-3 text-white focus:outline-none sm:text-sm"
                             >
                                 <!-- Options will be populated dynamically -->
                             </select>

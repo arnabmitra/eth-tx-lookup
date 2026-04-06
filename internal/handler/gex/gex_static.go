@@ -335,6 +335,7 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 	for _, option := range options {
 		if option.OpenInterest > 0 && option.Greeks.Gamma != 0 {
 			// Calculate GEX using the correct formula
+			// GEX = OpenInterest * Gamma * SpotPrice^2 (Dollar Gamma Exposure)
 			gex := float64(option.OpenInterest) * option.Greeks.Gamma * (spotPrice * spotPrice)
 
 			// Add or subtract based on option type

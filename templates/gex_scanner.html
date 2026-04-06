@@ -87,7 +87,19 @@
             <p class="text-sm text-gray-500">Last updated: {{ .LastUpdated }}</p>
         </div>
 
-        <div class="card overflow-hidden">
+        <div class="card overflow-hidden" x-data="pagination({{ len .Items }}, 20)" @htmx:after-swap.window="if($event.detail.target.id === 'sortable-table') { totalItems = $event.detail.target.querySelectorAll('tbody tr').length; page = 1; }">
+            <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-white">Scanner Results</h2>
+                <div class="flex items-center space-x-2">
+                    <button @click="prev()" :disabled="page === 1" class="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                        <span class="material-icons text-sm">chevron_left</span>
+                    </button>
+                    <span class="text-sm text-gray-400">Page <span x-text="page" class="text-white"></span> of <span x-text="totalPages" class="text-white"></span></span>
+                    <button @click="next()" :disabled="page === totalPages" class="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                        <span class="material-icons text-sm">chevron_right</span>
+                    </button>
+                </div>
+            </div>
             <div class="overflow-x-auto">
                 <table id="sortable-table" class="min-w-full divide-y divide-gray-700">
                     <thead class="bg-gray-800">
@@ -105,8 +117,8 @@
                         </tr>
                     </thead>
                     <tbody class="bg-gray-900 divide-y divide-gray-700">
-                        {{ range .Items }}
-                        <tr class="gex-row transition-colors">
+                        {{ range $index, $item := .Items }}
+                        <tr class="gex-row transition-colors" x-show="isVisible({{ $index }})">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <form action="/gex" method="POST" class="inline">
                                     <input type="hidden" name="symbol" value="{{ .Symbol }}">

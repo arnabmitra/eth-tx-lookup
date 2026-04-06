@@ -61,96 +61,109 @@
         height: 300px;
     }
 </style>
+<script>
+    function pagination(totalItems, pageSize = 10) {
+        return {
+            page: 1,
+            pageSize: pageSize,
+            totalItems: totalItems,
+            get totalPages() {
+                return Math.ceil(this.totalItems / this.pageSize);
+            },
+            get start() {
+                return (this.page - 1) * this.pageSize;
+            },
+            get end() {
+                return this.page * this.pageSize;
+            },
+            isVisible(index) {
+                return index >= this.start && index < this.end;
+            },
+            next() {
+                if (this.page < this.totalPages) this.page++;
+            },
+            prev() {
+                if (this.page > 1) this.page--;
+            }
+        }
+    }
+</script>
 <!-- Header -->
 <header
-    class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50"
+    class="bg-black/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50"
 >
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex-shrink-0">
-                <a href="/" class="text-2xl gradient-text">
-                    <span class="hero-fancy">GEX</span> Tracker
+                <a href="/" class="text-xl font-bold tracking-tighter text-white">
+                    GEX<span class="text-[#00f2fe]">TRACKER</span>
                 </a>
             </div>
             <nav class="hidden md:block">
-                <div class="ml-10 flex items-baseline space-x-4">
+                <div class="ml-10 flex items-center space-x-1">
                     <a
                         href="/gex"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         >Tracker</a
                     >
                     <a
                         href="/all-gex"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         >All Expiries</a
                     >
                     <a
                         href="/mag7-gex"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         >MAG7</a
                     >
                     <a
                         href="/gex-scanner"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         >Scanner</a
                     >
                     <a
                         href="/blog"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         >Blog</a
-                    >
-                    <a
-                        href="/strategies"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                        >Strategies</a
-                    >
-                    <a
-                        href="/faq"
-                        class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                        >FAQ</a
                     >
                     <div x-data="{ open: false }" class="relative">
                         <button
                             @click="open = !open"
-                            class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                            class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors"
                         >
-                            <span>More</span>
-                            <span class="material-icons" style="font-size: 18px;">expand_more</span>
+                            <span>Resources</span>
+                            <span class="material-icons" style="font-size: 18px; margin-left: 2px;">expand_more</span>
                         </button>
                         <div
                             x-show="open"
                             @click.away="open = false"
-                            class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20"
+                            class="absolute right-0 mt-2 w-48 bg-[#0a0a0a] border border-white/10 rounded-lg shadow-2xl py-2 z-20 backdrop-blur-xl"
                         >
                             <a
                                 href="/economic-calendar"
-                                class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                class="block px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5"
                                 >Economic Calendar</a
                             >
                             <a
                                 href="/gex-history?symbol=SPY&limit=5"
-                                class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                class="block px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5"
                                 >GEX History</a
                             >
                             <a
                                 href="/btc-etf"
-                                class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                class="block px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5"
                                 >BTC ETF</a
                             >
+                            <hr class="my-1 border-white/5">
                             <a
                                 href="/about"
-                                class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                class="block px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5"
                                 >Learn Center</a
                             >
                             <a
                                 href="/about-us"
-                                class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                class="block px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5"
                                 >About Us</a
-                            >
-                            <a
-                                href="/glossary"
-                                class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                                >Glossary</a
                             >
                         </div>
                     </div>

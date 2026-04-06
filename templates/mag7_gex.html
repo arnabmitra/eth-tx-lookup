@@ -14,25 +14,25 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827;
-            color: #d1d5db;
+            background-color: #000000;
+            color: #ffffff;
         }
         .gradient-text {
-            background: linear-gradient(to right, #34d399, #60a5fa);
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 800;
         }
         .chart-card {
-            background-color: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 0.75rem;
+            background-color: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
             padding: 1.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.3s ease;
         }
         .chart-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(52, 211, 153, 0.2);
-            border-color: #34d399;
+            border-color: rgba(0, 242, 254, 0.3);
         }
     </style>
 </head>
@@ -50,7 +50,16 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {{range $index, $chart := .Charts}}
             <div class="chart-card">
-                <h3 class="text-xl font-bold text-center mb-4 text-white">{{.Symbol}} (Spot: ${{ printf "%.2f" .SpotPrice }})</h3>
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">{{.Symbol}}</h3>
+                        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Spot: ${{ printf "%.2f" .SpotPrice }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold {{ if gt (index .TotalGEXFormatted 0) 45 }}text-[#10b981]{{ else if eq (index .TotalGEXFormatted 0) 45 }}text-[#ef4444]{{ else }}text-[#10b981]{{ end }}">{{.TotalGEXFormatted}}</p>
+                        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Exposure</p>
+                    </div>
+                </div>
                 <div id="chart-{{.Symbol}}" class="w-full"></div>
             </div>
             {{end}}
@@ -118,59 +127,89 @@
                     .append("svg")
                     .attr("width", width + margin.left + margin.right)
                     .attr("height", height + margin.top + margin.bottom)
-                    .style("background", "#1f2937")
+                    .style("background", "radial-gradient(circle at center, #0a0a0a 0%, #000000 100%)")
                     .style("border-radius", "0.5rem")
                     .append("g")
                     .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                // Add Dot Grid
+                svg.append("g")
+                    .attr("class", "dot-grid")
+                    .selectAll("circle")
+                    .data(d3.range(0, width, 30).flatMap(x => d3.range(0, height, 30).map(y => ({x, y}))))
+                    .enter()
+                    .append("circle")
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y)
+                    .attr("r", 0.5)
+                    .attr("fill", "rgba(255, 255, 255, 0.05)");
+
+                // Define Glow Filter
+                const defs = svg.append("defs");
+                const filter = defs.append("filter")
+                    .attr("id", "glow");
+                filter.append("feGaussianBlur")
+                    .attr("stdDeviation", "1.5")
+                    .attr("result", "coloredBlur");
+                const feMerge = filter.append("feMerge");
+                feMerge.append("feMergeNode").attr("in", "coloredBlur");
+                feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
                 // X Scale
                 const x = d3.scaleBand()
                     .domain(chartInfo.data.map(d => d.strike))
                     .range([0, width])
-                    .padding(0.7);
+                    .padding(0.5);
 
                 // Y Scale
                 const yExtent = d3.extent(chartInfo.data, d => d.gex);
                 const y = d3.scaleLinear()
                     .domain([Math.min(yExtent[0], 0), Math.max(yExtent[1], 0)])
+                    .nice()
                     .range([height, 0]);
 
-                // Add X Axis
+                // Add X Axis (Minimal)
                 svg.append("g")
                     .attr("transform", `translate(0,${y(0)})`)
                     .call(d3.axisBottom(x).tickValues(
-                        x.domain().filter((d, i) => i % Math.ceil(chartInfo.data.length / 10) === 0)
+                        x.domain().filter((d, i) => i % Math.ceil(chartInfo.data.length / 8) === 0)
                     ))
                     .selectAll("text")
                     .attr("transform", "rotate(-45)")
                     .style("text-anchor", "end")
-                    .style("fill", "#f9fafb")
-                    .style("font-size", "10px");
+                    .style("fill", "#666666")
+                    .style("font-size", "9px");
 
-                // Add Y Axis
+                // Add Y Axis (Minimal)
                 svg.append("g")
-                    .call(d3.axisLeft(y).ticks(5).tickFormat(d => `$${d3.format(",.0f")(d)}`))
+                    .call(d3.axisLeft(y).ticks(5).tickFormat(d => {
+                        const absVal = Math.abs(d);
+                        if (absVal >= 1e9) return `$${d3.format(".1f")(d/1e9)}B`;
+                        if (absVal >= 1e6) return `$${d3.format(".0f")(d/1e6)}M`;
+                        return `$${d3.format(",.0f")(d)}`;
+                    }))
                     .selectAll("text")
-                    .style("fill", "#f9fafb")
-                    .style("font-size", "10px");
+                    .style("fill", "#666666")
+                    .style("font-size", "9px");
 
                 // Style axis lines
-                svg.selectAll(".domain, .tick line")
-                    .style("stroke", "#9ca3af");
+                svg.selectAll(".domain").style("stroke", "#333333");
+                svg.selectAll(".tick line").style("stroke", "#333333");
 
                 // Create tooltip
                 const tooltip = d3.select("body")
                     .append("div")
                     .style("position", "absolute")
-                    .style("background", "#1f2937")
-                    .style("padding", "8px")
-                    .style("border", "2px solid #34d399")
+                    .style("background", "rgba(10, 10, 10, 0.95)")
+                    .style("padding", "8px 12px")
+                    .style("border", "1px solid rgba(255, 255, 255, 0.1)")
                     .style("border-radius", "6px")
+                    .style("backdrop-filter", "blur(10px)")
                     .style("pointer-events", "none")
                     .style("opacity", 0)
-                    .style("color", "#f3f4f6")
-                    .style("font-size", "12px")
-                    .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.3)")
+                    .style("color", "#ffffff")
+                    .style("font-size", "11px")
+                    .style("box-shadow", "0 10px 25px rgba(0, 0, 0, 0.5)")
                     .style("z-index", "1000");
 
                 // Add bars
@@ -183,14 +222,27 @@
                     .attr("width", x.bandwidth())
                     .attr("y", d => d.gex >= 0 ? y(d.gex) : y(0))
                     .attr("height", d => Math.abs(y(d.gex) - y(0)))
-                    .attr("fill", d => d.gex >= 0 ? "#34d399" : "#ef4444")
+                    .attr("fill", d => d.gex >= 0 ? "#00f2fe" : "#ff0055")
+                    .style("filter", "url(#glow)")
+                    .style("opacity", 0.8)
                     .style("cursor", "pointer")
                     .on("mouseover", function(event, d) {
-                        d3.select(this).style("opacity", 0.7);
+                        d3.select(this).style("opacity", 1).style("filter", "none");
+                        
+                        const formatGex = (val) => {
+                            return new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'USD',
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(val);
+                        };
+
                         tooltip.style("opacity", 1)
                             .html(`
-                                <strong>Strike:</strong> $${d.strike.toFixed(2)}<br>
-                                <strong>GEX:</strong> $${d3.format(",.2f")(d.gex)}
+                                <div style="font-weight: 700; color: ${d.gex >= 0 ? '#00f2fe' : '#ff0055'}; margin-bottom: 4px;">${d.gex >= 0 ? 'POSITIVE GEX' : 'NEGATIVE GEX'}</div>
+                                <div>Strike: $${d.strike.toFixed(2)}</div>
+                                <div>Exposure: ${formatGex(d.gex)}</div>
                             `)
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 20) + "px");
@@ -200,7 +252,7 @@
                             .style("top", (event.pageY - 20) + "px");
                     })
                     .on("mouseout", function() {
-                        d3.select(this).style("opacity", 1);
+                        d3.select(this).style("opacity", 0.8).style("filter", "url(#glow)");
                         tooltip.style("opacity", 0);
                     });
 
@@ -210,9 +262,9 @@
                     .attr("x2", width)
                     .attr("y1", y(0))
                     .attr("y2", y(0))
-                    .style("stroke", "#9ca3af")
-                    .style("stroke-width", 2)
-                    .style("stroke-dasharray", "5,5");
+                    .style("stroke", "#ffffff")
+                    .style("stroke-opacity", 0.1)
+                    .style("stroke-width", 1);
             });
         });
     </script>

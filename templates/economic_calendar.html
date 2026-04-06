@@ -67,11 +67,29 @@
             </div>
 
             <!-- Events Table -->
-            <div class="card overflow-hidden mb-8">
-                <div class="px-6 py-4 border-b border-gray-700">
-                    <div class="flex justify-between items-center">
+            <div class="card overflow-hidden mb-8" x-data="{ 
+                releases: [], 
+                page: 1, 
+                pageSize: 10,
+                get totalPages() { return Math.ceil(this.releases.length / this.pageSize); },
+                get paginatedReleases() {
+                    const start = (this.page - 1) * this.pageSize;
+                    return this.releases.slice(start, start + this.pageSize);
+                }
+            }" @events-loaded.window="releases = $event.detail.releases; page = 1">
+                <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                    <div class="flex items-center">
                         <h2 class="text-2xl font-bold text-white">Past 7 Days & Next 7 Days</h2>
-                        <div id="lastUpdated" class="text-sm text-gray-400"></div>
+                        <div id="lastUpdated" class="ml-4 text-sm text-gray-400"></div>
+                    </div>
+                    <div class="flex items-center space-x-2" x-show="releases.length > 0">
+                        <button @click="if(page > 1) page--" :disabled="page === 1" class="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                            <span class="material-icons text-sm">chevron_left</span>
+                        </button>
+                        <span class="text-sm text-gray-400">Page <span x-text="page" class="text-white"></span> of <span x-text="totalPages" class="text-white"></span></span>
+                        <button @click="if(page < totalPages) page++" :disabled="page === totalPages" class="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                            <span class="material-icons text-sm">chevron_right</span>
+                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -84,7 +102,14 @@
                             </tr>
                         </thead>
                         <tbody id="eventsTable" class="divide-y divide-gray-700">
-                            <tr>
+                            <template x-for="r in paginatedReleases" :key="r.release_id">
+                                <tr class="hover:bg-gray-800/50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white" x-text="formatDate(r.release_date)"></td>
+                                    <td class="px-6 py-4 text-sm text-gray-300" x-text="r.release_name"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap" x-html="getImpactBadge(r.impact)"></td>
+                                </tr>
+                            </template>
+                            <tr x-show="releases.length === 0">
                                 <td colspan="3" class="px-6 py-12 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <span class="material-icons text-6xl text-gray-600 mb-4">calendar_today</span>
@@ -174,6 +199,10 @@
                 
                 // Update table
                 const tbody = document.getElementById('eventsTable');
+                
+                // Dispatch event for Alpine.js
+                window.dispatchEvent(new CustomEvent('events-loaded', { detail: { releases } }));
+
                 if (releases.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center">

@@ -1,6 +1,6 @@
 <tbody class="bg-gray-900 divide-y divide-gray-700">
-    {{ range .Items }}
-    <tr class="gex-row transition-colors">
+    {{ range $index, $item := .Items }}
+    <tr class="gex-row transition-colors" x-show="isVisible({{ $index }})">
         <td class="px-6 py-4 whitespace-nowrap">
             <form action="/gex" method="POST" class="inline">
                 <input type="hidden" name="symbol" value="{{ .Symbol }}">
