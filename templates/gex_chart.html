@@ -40,6 +40,15 @@ focus:ring-indigo-600 sm:text-md sm:leading-6">
                                         <h3 class="text-2xl font-bold text-white">{{ .Symbol }} Gamma Exposure</h3>
                                         <p class="text-sm text-gray-500 mt-1">Options Expiration: {{ .Expiration }}</p>
                                     </div>
+
+                                    {{ if .Warning }}
+                                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+                                        <span class="material-icons text-amber-500 text-sm mt-0.5">warning</span>
+                                        <p class="text-sm text-amber-200">
+                                            {{ .Warning }}
+                                        </p>
+                                    </div>
+                                    {{ end }}
                                     
                                     {{ if gt .GammaFlipLevel 0.0 }}
                                     <div class="grid grid-cols-3 gap-4 mb-6">
@@ -65,6 +74,44 @@ focus:ring-indigo-600 sm:text-md sm:leading-6">
                                             <span class="font-bold">BEARISH ZONE:</span> Below gamma flip level. Dealer hedging amplifies price moves.
                                             {{ end }}
                                         </p>
+                                    </div>
+                                    {{ end }}
+
+                                    {{ if .RegimeSummary }}
+                                    <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+                                        <div class="flex items-center gap-2 mb-4">
+                                            <span class="material-icons text-[#00f2fe]">analytics</span>
+                                            <h4 class="text-lg font-bold text-white uppercase tracking-wider">Regime Summary</h4>
+                                        </div>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                            <div>
+                                                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Net GEX</p>
+                                                <p class="text-xl font-bold text-white mt-1">{{ .RegimeSummary.NetGEXFormatted }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Gamma Condition</p>
+                                                <p class="text-xl font-bold {{ if eq .RegimeSummary.Condition "Positive" }}text-emerald-400{{ else }}text-rose-400{{ end }} mt-1">{{ .RegimeSummary.Condition }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total GEX</p>
+                                                <p class="text-xl font-bold text-white mt-1">{{ .RegimeSummary.TotalGEXFormatted }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">P/C GEX Ratio</p>
+                                                <p class="text-xl font-bold text-white mt-1">{{ .RegimeSummary.PCRatio }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-6 pt-6 border-t border-white/5">
+                                            <p class="text-sm text-gray-400 leading-relaxed italic">
+                                                {{ if eq .RegimeSummary.Condition "Positive" }}
+                                                Dealers are net long gamma, acting as a stabilizer to absorb price moves and dampen directional momentum. 
+                                                Hedging activity typically creates friction against sustained trends.
+                                                {{ else }}
+                                                Dealers are net short gamma, which can amplify price volatility as dealers are forced to sell into weakness and buy into strength.
+                                                This regime often precedes more violent directional moves.
+                                                {{ end }}
+                                            </p>
+                                        </div>
                                     </div>
                                     {{ end }}
 

@@ -85,8 +85,8 @@ func EstimateGamma(spot, strike, iv, t float64) float64 {
 }
 
 func main() {
-	apiKey := "PK5QDVG6M44WI2LBZNXKPB4Y4E"
-	apiSecret := "2srHM4WVZSZVEhcBweAVhsvzoRtKnUPMtQYhUEMFJkzq"
+	apiKey := os.Getenv("ALPACA_API_KEY")
+	apiSecret := os.Getenv("ALPACA_API_SECRET")
 	
 	symbol := "SPY"
 	expStr := "2026-04-02"

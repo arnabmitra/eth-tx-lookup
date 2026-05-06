@@ -209,19 +209,23 @@ func (c *GexCollector) collectSymbolGEX(ctx context.Context, symbol string, apiK
 	}
 
 	// Fetch options chain
-	options, jsonOption, err := gex.FetchOptionsChain(symbol, nearestExpiry, apiKey, apiSecret)
+	options, jsonOption, warning, err := gex.FetchOptionsChain(symbol, nearestExpiry, apiKey, apiSecret)
 	if err != nil {
 		// Check if it's a rate limit error
 		if err.Error() == "unexpected status code: 403" {
 			time.Sleep(5 * time.Second)
 			// Retry once
-			options, jsonOption, err = gex.FetchOptionsChain(symbol, nearestExpiry, apiKey, apiSecret)
+			options, jsonOption, warning, err = gex.FetchOptionsChain(symbol, nearestExpiry, apiKey, apiSecret)
 			if err != nil {
 				return fmt.Errorf("failed to fetch options chain after retry: %w", err)
 			}
 		} else {
 			return fmt.Errorf("failed to fetch options chain: %w", err)
 		}
+	}
+
+	if warning != "" {
+		fmt.Printf("Warning during collection for %s: %s\n", symbol, warning)
 	}
 
 	if jsonOption == nil {

@@ -151,6 +151,7 @@ type Response struct {
 	Options struct {
 		Option []Option `json:"option"`
 	} `json:"options"`
+	Warning string `json:"warning,omitempty"`
 }
 
 func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
@@ -165,15 +166,32 @@ func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
 		return 0, fmt.Errorf("error getting snapshot: %v", err)
 	}
 
-	if snapshot == nil || snapshot.LatestQuote == nil {
-		return 0, fmt.Errorf("no quote available for %s", symbol)
+	if snapshot == nil {
+		return 0, fmt.Errorf("no snapshot available for %s", symbol)
 	}
 
-	return snapshot.LatestQuote.BidPrice, nil
+	// Try Latest Trade first as it is more reliable for "last price" than Bid/Ask at market close
+	if snapshot.LatestTrade != nil && snapshot.LatestTrade.Price > 0 {
+		return snapshot.LatestTrade.Price, nil
+	}
+
+	if snapshot.LatestQuote != nil {
+		if snapshot.LatestQuote.BidPrice > 0 && snapshot.LatestQuote.AskPrice > 0 {
+			return (snapshot.LatestQuote.BidPrice + snapshot.LatestQuote.AskPrice) / 2.0, nil
+		}
+		if snapshot.LatestQuote.BidPrice > 0 {
+			return snapshot.LatestQuote.BidPrice, nil
+		}
+	}
+
+	return 0, fmt.Errorf("no valid price data available for %s", symbol)
 }
 
 // FetchOptionsChain fetches the options chain for the given symbol and expiration date using Alpaca
-func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]Option, *string, error) {
+func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]Option, *string, string, error) {
+	// Try Live API first for contracts
+	liveBaseUrl := "https://api.alpaca.markets"
+	
 	mdClient := marketdata.NewClient(marketdata.ClientOpts{
 		APIKey:    apiKey,
 		APISecret: apiSecret,
@@ -183,12 +201,12 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 	tradeClient := alpaca.NewClient(alpaca.ClientOpts{
 		APIKey:    apiKey,
 		APISecret: apiSecret,
-		BaseURL:   "https://paper-api.alpaca.markets",
+		BaseURL:   liveBaseUrl,
 	})
 
 	expDate, err := civil.ParseDate(expiration)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing expiration date: %v", err)
+		return nil, nil, "", fmt.Errorf("error parsing expiration date: %v", err)
 	}
 
 	// 1. Get all contracts for the symbol + expiration to get OpenInterest and Strikes
@@ -197,12 +215,32 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		ExpirationDate:    expDate,
 		Status:            alpaca.OptionStatusActive,
 	})
+
+	isPaperFallback := false
+	if err != nil || len(contracts) == 0 {
+		fmt.Printf("Live API returned 0 contracts for %s on %s, falling back to Paper API\n", symbol, expiration)
+		paperBaseUrl := "https://paper-api.alpaca.markets"
+		tradeClient = alpaca.NewClient(alpaca.ClientOpts{
+			APIKey:    apiKey,
+			APISecret: apiSecret,
+			BaseURL:   paperBaseUrl,
+		})
+		contracts, err = tradeClient.GetOptionContracts(alpaca.GetOptionContractsRequest{
+			UnderlyingSymbols: symbol,
+			ExpirationDate:    expDate,
+			Status:            alpaca.OptionStatusActive,
+		})
+		if err == nil && len(contracts) > 0 {
+			isPaperFallback = true
+		}
+	}
+
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting contracts: %v", err)
+		return nil, nil, "", fmt.Errorf("error getting contracts: %v", err)
 	}
 
 	if len(contracts) == 0 {
-		return nil, nil, fmt.Errorf("no contracts found for %s on %s", symbol, expiration)
+		return nil, nil, "", fmt.Errorf("no contracts found for %s on %s (tried both Live and Paper)", symbol, expiration)
 	}
 
 	// 2. Get Snapshots for the option chain to get Greeks
@@ -210,7 +248,31 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		ExpirationDate: expDate,
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting option chain snapshots: %v", err)
+		return nil, nil, "", fmt.Errorf("error getting option chain snapshots: %v", err)
+	}
+
+	// Check underlying spread for warning
+	warning := ""
+	if isPaperFallback {
+		warning = "Data Quality Warning: Using Paper API for contract data (Live API returned no results). Greeks are re-estimated using live spot price."
+	}
+
+	snapshot, err := mdClient.GetSnapshot(symbol, marketdata.GetSnapshotRequest{})
+	if err == nil && snapshot != nil && snapshot.LatestQuote != nil {
+		bid := snapshot.LatestQuote.BidPrice
+		ask := snapshot.LatestQuote.AskPrice
+		if ask > 0 {
+			mid := (bid + ask) / 2.0
+			spread := (ask - bid) / mid
+			if spread > 0.01 {
+				highSpreadWarning := fmt.Sprintf("High Bid-Ask spread (%.2f%%) for underlying %s. Data may be indicative or low-confidence.", spread*100, symbol)
+				if warning != "" {
+					warning += " " + highSpreadWarning
+				} else {
+					warning = highSpreadWarning
+				}
+			}
+		}
 	}
 
 	// Get spot price for estimation if needed
@@ -232,7 +294,7 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		daysToExpiry = 0.001
 	}
 
-	fmt.Printf("Fetched %d snapshots from Alpaca market data for %s (Days to Expiry: %.4f)\n", len(chain), symbol, daysToExpiry)
+	fmt.Printf("Fetched %d snapshots from Alpaca market data for %s (Days to Expiry: %.4f, Paper Fallback: %v)\n", len(chain), symbol, daysToExpiry, isPaperFallback)
 
 	// 3. Combine contract data with snapshots
 	var options []Option
@@ -252,15 +314,16 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		}
 
 		if snap, ok := chain[c.Symbol]; ok {
-			if snap.Greeks != nil && snap.Greeks.Gamma != 0 {
+			// Re-estimate if Greeks are missing OR if it's from a delayed feed (Paper Fallback)
+			if snap.Greeks != nil && snap.Greeks.Gamma != 0 && !isPaperFallback {
 				opt.Greeks.Gamma = snap.Greeks.Gamma
 				greeksFound++
 			} else if spotPrice > 0 {
-				// Fallback: Estimate gamma from market price if Greeks are missing
+				// Fallback: Estimate gamma from market price if Greeks are missing or suspect
 				iv := snap.ImpliedVolatility
 				
-				// If IV is also missing (common in indicative feed), calculate it from price
-				if iv <= 0 && snap.LatestQuote != nil && snap.LatestQuote.BidPrice > 0 {
+				// If IV is also missing or suspect, calculate it from price
+				if (iv <= 0 || isPaperFallback) && snap.LatestQuote != nil && snap.LatestQuote.BidPrice > 0 {
 					marketPrice := (snap.LatestQuote.BidPrice + snap.LatestQuote.AskPrice) / 2.0
 					isCall := strings.ToLower(opt.OptionType) == "call"
 					t := daysToExpiry / 365.0
@@ -282,20 +345,26 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 	// Wrap in Response struct for JSON compatibility
 	resp := Response{}
 	resp.Options.Option = options
+	resp.Warning = warning
 	jsonData, err := json.Marshal(resp)
 	if err != nil {
-		return options, nil, fmt.Errorf("error marshalling options to JSON: %v", err)
+		return options, nil, warning, fmt.Errorf("error marshalling options to JSON: %v", err)
 	}
 	bodyStr := string(jsonData)
 
-	return options, &bodyStr, nil
+	return options, &bodyStr, warning, nil
 }
 
 func GetExpirationDates(apiKey, apiSecret, symbol string) ([]string, error) {
+	baseUrl := os.Getenv("ALPACA_API_BASE_URL")
+	if baseUrl == "" {
+		baseUrl = "https://api.alpaca.markets"
+	}
+
 	tradeClient := alpaca.NewClient(alpaca.ClientOpts{
 		APIKey:    apiKey,
 		APISecret: apiSecret,
-		BaseURL:   "https://paper-api.alpaca.markets",
+		BaseURL:   baseUrl,
 	})
 
 	loc, _ := time.LoadLocation("America/New_York")
@@ -335,8 +404,9 @@ func CalculateGEXPerStrike(options []Option, spotPrice float64) map[float64]floa
 	for _, option := range options {
 		if option.OpenInterest > 0 && option.Greeks.Gamma != 0 {
 			// Calculate GEX using the correct formula
-			// GEX = OpenInterest * Gamma * SpotPrice^2 (Dollar Gamma Exposure)
-			gex := float64(option.OpenInterest) * option.Greeks.Gamma * (spotPrice * spotPrice)
+			// GEX = OpenInterest * Gamma * 100 * SpotPrice (Dollar Gamma Exposure)
+			// This represents the dollar value change in the delta-hedged position for a 1% move in underlying.
+			gex := float64(option.OpenInterest) * option.Greeks.Gamma * 100 * spotPrice
 
 			// Add or subtract based on option type
 			optionType := strings.ToLower(option.OptionType)

@@ -49,11 +49,11 @@ func NewGEXHandler(logger *slog.Logger, tmpl *template.Template, db *pgxpool.Poo
 }
 
 // CalculateGEXForAllExpiries calculates GEX across all expiry dates for a symbol
-func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol string) (map[float64]float64, error) {
+func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol string) (map[float64]float64, string, error) {
 	apiKey, apiSecret := gex.GetAlpacaConfig()
 	if apiKey == "" || apiSecret == "" {
 		h.logger.Error("ALPACA_API_KEY or ALPACA_API_SECRET not set")
-		return nil, fmt.Errorf("ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set")
+		return nil, "", fmt.Errorf("ALPACA_API_KEY or ALPACA_API_SECRET environment variable is not set")
 	}
 	expiryDates, err := h.GetExpiryDates(ctx, symbol)
 
@@ -61,13 +61,13 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 
 		expiryDates, err = gex.GetExpirationDates(apiKey, apiSecret, symbol)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get expiration dates: %v", err)
+			return nil, "", fmt.Errorf("cannot get expiration dates: %v", err)
 		}
 
 		expirationDatesJSON, err := json.MarshalIndent(expiryDates, "", "  ")
 		if err != nil {
 			fmt.Printf("Error marshalling expiration dates to JSON: %v\n", err)
-			return nil, fmt.Errorf("cannot get expiration dates: %v", err)
+			return nil, "", fmt.Errorf("cannot get expiration dates: %v", err)
 		}
 
 		err = h.StoreExpiryDatesInOptionExpiryDates(ctx, symbol, expirationDatesJSON)
@@ -77,11 +77,12 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	// Get current price
 	price, err := gex.GetSpotPrice(apiKey, apiSecret, symbol)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching price: %v", err)
+		return nil, "", fmt.Errorf("error fetching price: %v", err)
 	}
 
 	// Initialize combined GEX map
 	combinedGEXByStrike := make(map[float64]float64)
+	var combinedWarning string
 
 	// Limit to next 8 expiries (roughly 2 months) for performance
 	maxExpiries := 8
@@ -94,6 +95,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 	// Process each expiry date
 	for _, expiryDate := range expiryDates {
 		var options []gex.Option
+		var warning string
 
 		expirationDatePgType, err := stringToPgDate(expiryDate)
 		if err != nil {
@@ -114,15 +116,17 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			err = json.Unmarshal(expiry.OptionChain, &response)
 			if err == nil {
 				options = response.Options.Option
+				warning = response.Warning
 			}
 		} else {
 			// Fetch fresh data
-			optionsFromApi, jsonOption, errFromApi := gex.FetchOptionsChain(symbol, expiryDate, apiKey, apiSecret)
+			optionsFromApi, jsonOption, warningFromApi, errFromApi := gex.FetchOptionsChain(symbol, expiryDate, apiKey, apiSecret)
 			if errFromApi != nil || jsonOption == nil {
 				continue // Skip this expiry if there's an error
 			}
 			// Use the fresh data we just fetched
 			options = optionsFromApi
+			warning = warningFromApi
 
 			gexByStrike := gex.CalculateGEXPerStrike(options, price)
 
@@ -137,6 +141,13 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 			}
 		}
 
+		if warning != "" && !strings.Contains(combinedWarning, warning) {
+			if combinedWarning != "" {
+				combinedWarning += " "
+			}
+			combinedWarning += warning
+		}
+
 		// Calculate GEX for this expiry and add to combined total
 		gexByStrike := gex.CalculateGEXPerStrike(options, price)
 		for strike, gexValue := range gexByStrike {
@@ -144,7 +155,7 @@ func (h *GEXHandler) CalculateGEXForAllExpiries(ctx context.Context, symbol stri
 		}
 	}
 
-	return combinedGEXByStrike, nil
+	return combinedGEXByStrike, combinedWarning, nil
 }
 
 func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +170,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Calculate GEX for all expiry dates
-		gexByStrike, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
+		gexByStrike, warning, err := h.CalculateGEXForAllExpiries(r.Context(), symbol)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error calculating GEX for all expiries: %v", err), http.StatusInternalServerError)
 			return
@@ -264,6 +275,7 @@ func (h *GEXHandler) AllGEXHandler(w http.ResponseWriter, r *http.Request) {
 			"GammaFlipLevel":    gammaFlipLevel,
 			"TotalGEX":          totalGEX,
 			"TotalGEXFormatted": totalGEXFormatted,
+			"Warning":           warning,
 		})
 		if err != nil {
 			h.renderError(w, fmt.Sprintf("Error rendering template: %v", err))
@@ -336,6 +348,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var options []gex.Option
 		var jsonOption *string
 		var price float64
+		var warning string
 		expiry, err := h.repo.GetOptionChainBySymbolAndExpiry(r.Context(), repository.GetOptionChainBySymbolAndExpiryParams{Symbol: symbol, ExpiryDate: expirationDatePgType})
 		
 		if err == nil && time.Since(expiry.UpdatedAt) <= 1*time.Minute {
@@ -346,6 +359,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			options = response.Options.Option
+			warning = response.Warning
 			priceFloat, err := strconv.ParseFloat(expiry.SpotPrice, 64)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error converting spot price to float64: %v", err), http.StatusInternalServerError)
@@ -359,7 +373,7 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, fmt.Sprintf("Error fetching price: %v", err), http.StatusInternalServerError)
 				return
 			}
-			options, jsonOption, err = gex.FetchOptionsChain(symbol, expiration, apiKey, apiSecret)
+			options, jsonOption, warning, err = gex.FetchOptionsChain(symbol, expiration, apiKey, apiSecret)
 
 			if err != nil {
 				h.logger.Error("failed to fetch options chain", "error", err, "symbol", symbol, "expiration", expiration)
@@ -477,6 +491,39 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"gammaFlipLevel", gammaFlipLevel,
 			"chartDataCount", len(chartData))
 
+		// Calculate regime summary metrics
+		totalCallGEX := 0.0
+		totalPutGEX := 0.0
+		for _, opt := range options {
+			if opt.Greeks.Gamma != 0 {
+				gexVal := float64(opt.OpenInterest) * opt.Greeks.Gamma * 100 * price
+				if strings.ToLower(opt.OptionType) == "call" {
+					totalCallGEX += gexVal
+				} else {
+					totalPutGEX += math.Abs(gexVal)
+				}
+			}
+			// Alpaca options chain data might not have IV directly in the Option struct if it was estimated, 
+			// but we can try to find it from the snapshots in a real scenario.
+			// For this implementation, we'll use a placeholder or check if available.
+		}
+
+		netGEX := totalCallGEX - totalPutGEX
+		totalAbsGEX := totalCallGEX + totalPutGEX
+		putCallRatio := 0.0
+		if totalCallGEX > 0 {
+			putCallRatio = totalPutGEX / totalCallGEX
+		}
+
+		regimeSummary := map[string]interface{}{
+			"NetGEX":          netGEX,
+			"NetGEXFormatted": formatCurrency(netGEX),
+			"TotalGEX":        totalAbsGEX,
+			"TotalGEXFormatted": formatCurrency(totalAbsGEX),
+			"Condition":       func() string { if netGEX > 0 { return "Positive" }; return "Negative" }(),
+			"PCRatio":         fmt.Sprintf("%.2f", putCallRatio),
+		}
+
 		err = h.tmpl.ExecuteTemplate(w, "gex_chart.html", map[string]interface{}{
 			"Symbol":            symbol,
 			"Expiration":        expiration,
@@ -486,6 +533,8 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"GammaFlipLevel":    gammaFlipLevel,
 			"TotalGEX":          totalGEX,
 			"TotalGEXFormatted": totalGEXFormatted,
+			"RegimeSummary":     regimeSummary,
+			"Warning":           warning,
 		})
 		if err != nil {
 			h.renderError(w, fmt.Sprintf("Error fetching options chain: %v", err))
@@ -833,7 +882,7 @@ func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
 
 			maxRetries := 3
 			for attempt := 0; attempt < maxRetries; attempt++ {
-				gexByStrike, err = h.CalculateGEXForAllExpiries(r.Context(), sym)
+				gexByStrike, _, err = h.CalculateGEXForAllExpiries(r.Context(), sym)
 				if err == nil {
 					break
 				}
