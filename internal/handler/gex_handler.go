@@ -386,15 +386,18 @@ func (h *GEXHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			gexByStrike := gex.CalculateGEXPerStrike(options, price)
 			h.logger.Info("Calculated GEX per strike", "count", len(gexByStrike), "symbol", symbol)
 
-			// Calculate total GEX (sum of all strikes)
-			totalGEX := 0.0
-			for _, gexValue := range gexByStrike {
-				totalGEX += gexValue
-			}
-			err = h.StoreOptionChain(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
-			if err != nil {
-				h.logger.Error("failed to store option chain", "error", err)
-				return
+			// Only store if we actually got options
+			if len(options) > 0 {
+				// Calculate total GEX (sum of all strikes)
+				totalGEX := 0.0
+				for _, gexValue := range gexByStrike {
+					totalGEX += gexValue
+				}
+				err = h.StoreOptionChain(r.Context(), options, symbol, *jsonOption, fmt.Sprintf("%.2f", price), fmt.Sprintf("%.2f", totalGEX))
+				if err != nil {
+					h.logger.Error("failed to store option chain", "error", err)
+					return
+				}
 			}
 		}
 		//print the options chain

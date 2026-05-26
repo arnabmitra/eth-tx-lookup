@@ -206,7 +206,10 @@ type OptionContract struct {
 }
 
 type OptionChainResponse struct {
-	Options []OptionContract `json:"options"`
+	Options   []OptionContract `json:"options"`
+	Calls     []OptionContract `json:"calls"`
+	Puts      []OptionContract `json:"puts"`
+	Contracts []OptionContract `json:"contracts"`
 }
 
 func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainResponse, error) {
@@ -222,14 +225,29 @@ func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainR
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("get option chain failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res OptionChainResponse
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
+	}
+
+	// Merge all possible lists into Options
+	if len(res.Calls) > 0 {
+		res.Options = append(res.Options, res.Calls...)
+	}
+	if len(res.Puts) > 0 {
+		res.Options = append(res.Options, res.Puts...)
+	}
+	if len(res.Contracts) > 0 {
+		res.Options = append(res.Options, res.Contracts...)
+	}
+
+	if len(res.Options) == 0 {
+		fmt.Printf("DEBUG: Public.com returned 200 OK but 0 options. Raw body: %s\n", string(body))
 	}
 
 	return &res, nil
