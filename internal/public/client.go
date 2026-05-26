@@ -195,21 +195,19 @@ type OptionChainRequest struct {
 }
 
 type OptionContract struct {
-	Symbol       string  `json:"symbol"`
-	StrikePrice  float64 `json:"strikePrice"`
-	OptionType   string  `json:"optionType"`
-	OpenInterest int     `json:"openInterest"`
+	Instrument   Instrument `json:"instrument"`
+	StrikePrice  string     `json:"strikePrice"`
+	OptionType   string     `json:"optionType"`
+	OpenInterest int        `json:"openInterest"`
 	Greeks       *struct {
-		Gamma float64 `json:"gamma"`
-		Delta float64 `json:"delta"`
+		Gamma string `json:"gamma"`
+		Delta string `json:"delta"`
 	} `json:"greeks"`
 }
 
 type OptionChainResponse struct {
-	Options   []OptionContract `json:"options"`
-	Calls     []OptionContract `json:"calls"`
-	Puts      []OptionContract `json:"puts"`
-	Contracts []OptionContract `json:"contracts"`
+	Calls []OptionContract `json:"calls"`
+	Puts  []OptionContract `json:"puts"`
 }
 
 func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainResponse, error) {
@@ -235,19 +233,8 @@ func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainR
 		return nil, err
 	}
 
-	// Merge all possible lists into Options
-	if len(res.Calls) > 0 {
-		res.Options = append(res.Options, res.Calls...)
-	}
-	if len(res.Puts) > 0 {
-		res.Options = append(res.Options, res.Puts...)
-	}
-	if len(res.Contracts) > 0 {
-		res.Options = append(res.Options, res.Contracts...)
-	}
-
-	if len(res.Options) == 0 {
-		fmt.Printf("DEBUG: Public.com returned 200 OK but 0 options. Raw body: %s\n", string(body))
+	if len(res.Calls) == 0 && len(res.Puts) == 0 {
+		fmt.Printf("DEBUG: Public.com returned 0 calls and 0 puts. Raw body snippet: %s\n", string(body[:200]))
 	}
 
 	return &res, nil

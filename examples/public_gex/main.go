@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/arnabmitra/eth-proxy/internal/public"
@@ -69,25 +70,30 @@ func main() {
 	totalPutGex := 0.0
 	gexByStrike := make(map[float64]float64)
 
-	for _, contract := range chain.Options {
-		gamma := 0.0
-		if contract.Greeks != nil {
-			gamma = contract.Greeks.Gamma
-		}
+	process := func(contracts []public.OptionContract, side string) {
+		for _, contract := range contracts {
+			gamma := 0.0
+			if contract.Greeks != nil {
+				gamma, _ = strconv.ParseFloat(contract.Greeks.Gamma, 64)
+			}
 
-		strike := contract.StrikePrice
-		
-		// GEX = OI * Gamma * 100 * SpotPrice
-		gex := float64(contract.OpenInterest) * gamma * 100 * spotPrice
+			strike, _ := strconv.ParseFloat(contract.StrikePrice, 64)
+			
+			// GEX = OI * Gamma * 100 * SpotPrice
+			gex := float64(contract.OpenInterest) * gamma * 100 * spotPrice
 
-		if strings.ToUpper(contract.OptionType) == "CALL" {
-			totalCallGex += gex
-			gexByStrike[strike] += gex
-		} else {
-			totalPutGex += gex
-			gexByStrike[strike] -= gex
+			if side == "CALL" {
+				totalCallGex += gex
+				gexByStrike[strike] += gex
+			} else {
+				totalPutGex += gex
+				gexByStrike[strike] -= gex
+			}
 		}
 	}
+
+	process(chain.Calls, "CALL")
+	process(chain.Puts, "PUT")
 
 	netGex := totalCallGex - totalPutGex
 	totalGex := totalCallGex + totalPutGex
