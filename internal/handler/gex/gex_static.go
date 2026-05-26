@@ -15,7 +15,6 @@ import (
 	"cloud.google.com/go/civil"
 	"github.com/arnabmitra/eth-proxy/internal/public"
 	"os"
-	"strconv"
 	"strings"
 	"math"
 )

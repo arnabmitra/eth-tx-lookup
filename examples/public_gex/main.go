@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/arnabmitra/eth-proxy/internal/public"
