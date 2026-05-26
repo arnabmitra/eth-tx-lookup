@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/arnabmitra/eth-proxy/internal/public"
@@ -60,7 +59,7 @@ func main() {
 	fmt.Printf("Spot Price: %.2f\n", spotPrice)
 
 	fmt.Printf("Fetching option chain for %s (Exp: %s)...\n", symbol, expiration)
-	chain, err := client.GetOptionChain(symbol, expiration)
+	chain, _, err := client.GetOptionChain(symbol, expiration)
 	if err != nil {
 		log.Fatalf("Failed to fetch option chain: %v", err)
 	}
@@ -74,13 +73,14 @@ func main() {
 		for _, contract := range contracts {
 			gamma := 0.0
 			if contract.Greeks != nil {
-				gamma, _ = strconv.ParseFloat(contract.Greeks.Gamma, 64)
+				gamma, _ = contract.Greeks.Gamma.Float64()
 			}
 
-			strike, _ := strconv.ParseFloat(contract.StrikePrice, 64)
+			strike, _ := contract.StrikePrice.Float64()
+			oi, _ := contract.OpenInterest.Int64()
 			
 			// GEX = OI * Gamma * 100 * SpotPrice
-			gex := float64(contract.OpenInterest) * gamma * 100 * spotPrice
+			gex := float64(oi) * gamma * 100 * spotPrice
 
 			if side == "CALL" {
 				totalCallGex += gex

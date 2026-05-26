@@ -195,13 +195,13 @@ type OptionChainRequest struct {
 }
 
 type OptionContract struct {
-	Instrument   Instrument `json:"instrument"`
-	StrikePrice  string     `json:"strikePrice"`
-	OptionType   string     `json:"optionType"`
-	OpenInterest int        `json:"openInterest"`
+	Instrument   Instrument  `json:"instrument"`
+	StrikePrice  json.Number `json:"strikePrice"`
+	OptionType   string      `json:"optionType"`
+	OpenInterest json.Number `json:"openInterest"`
 	Greeks       *struct {
-		Gamma string `json:"gamma"`
-		Delta string `json:"delta"`
+		Gamma json.Number `json:"gamma"`
+		Delta json.Number `json:"delta"`
 	} `json:"greeks"`
 }
 
@@ -210,7 +210,7 @@ type OptionChainResponse struct {
 	Puts  []OptionContract `json:"puts"`
 }
 
-func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainResponse, error) {
+func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainResponse, []byte, error) {
 	reqBody := OptionChainRequest{
 		Instrument:     Instrument{Symbol: symbol, Type: "EQUITY"},
 		ExpirationDate: expiration,
@@ -219,25 +219,21 @@ func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainR
 	url := fmt.Sprintf("%s/userapigateway/marketdata/%s/option-chain", c.BaseURL, c.AccountID)
 	resp, err := c.do("POST", url, reqBody)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("get option chain failed (HTTP %d): %s", resp.StatusCode, string(body))
+		return nil, nil, fmt.Errorf("get option chain failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res OptionChainResponse
 	if err := json.Unmarshal(body, &res); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	if len(res.Calls) == 0 && len(res.Puts) == 0 {
-		fmt.Printf("DEBUG: Public.com returned 0 calls and 0 puts. Raw body snippet: %s\n", string(body[:200]))
-	}
-
-	return &res, nil
+	return &res, body, nil
 }
 
 type GreeksResponse struct {

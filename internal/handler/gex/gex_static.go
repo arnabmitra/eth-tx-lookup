@@ -15,7 +15,6 @@ import (
 	"cloud.google.com/go/civil"
 	"github.com/arnabmitra/eth-proxy/internal/public"
 	"os"
-	"strconv"
 	"strings"
 	"math"
 )
@@ -228,8 +227,15 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		client := public.NewClient(publicSecret, publicAccountID)
 		if err := client.Authenticate(); err == nil {
 			if err := client.FetchAccountID(); err == nil {
-				chain, err := client.GetOptionChain(symbol, expiration)
+				chain, rawBody, err := client.GetOptionChain(symbol, expiration)
 				if err == nil {
+					// Use first 500 chars for debug
+					snippet := string(rawBody)
+					if len(snippet) > 500 {
+						snippet = snippet[:500]
+					}
+					fmt.Printf("DEBUG: Public.com raw response snippet: %s\n", snippet)
+					
 					fmt.Printf("Successfully fetched option chain from Public.com for %s (%d calls, %d puts)\n", 
 						symbol, len(chain.Calls), len(chain.Puts))
 					
@@ -238,16 +244,17 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 					// Helper to process contracts
 					process := func(contracts []public.OptionContract, side string) {
 						for _, c := range contracts {
-							strike, _ := strconv.ParseFloat(c.StrikePrice, 64)
+							strike, _ := c.StrikePrice.Float64()
+							oi, _ := c.OpenInterest.Int64()
 							opt := Option{
 								Strike:         strike,
 								OptionType:     side,
-								OpenInterest:   c.OpenInterest,
+								OpenInterest:   int(oi),
 								ExpirationDate: expiration,
 								ExpirationType: "AMERICAN",
 							}
 							if c.Greeks != nil {
-								gamma, _ := strconv.ParseFloat(c.Greeks.Gamma, 64)
+								gamma, _ := c.Greeks.Gamma.Float64()
 								opt.Greeks.Gamma = gamma
 							}
 							options = append(options, opt)
