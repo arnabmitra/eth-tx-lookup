@@ -229,12 +229,9 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 			if err := client.FetchAccountID(); err == nil {
 				chain, rawBody, err := client.GetOptionChain(symbol, expiration)
 				if err == nil {
-					// Use first 500 chars for debug
-					snippet := string(rawBody)
-					if len(snippet) > 500 {
-						snippet = snippet[:500]
-					}
-					fmt.Printf("DEBUG: Public.com raw response snippet: %s\n", snippet)
+					// Write full response to file for debugging
+					_ = os.WriteFile("public_debug_response.json", rawBody, 0644)
+					fmt.Printf("DEBUG: Wrote full Public.com response to public_debug_response.json (Size: %d bytes)\n", len(rawBody))
 					
 					fmt.Printf("Successfully fetched option chain from Public.com for %s (%d calls, %d puts)\n", 
 						symbol, len(chain.Calls), len(chain.Puts))
