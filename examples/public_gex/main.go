@@ -72,11 +72,11 @@ func main() {
 	process := func(contracts []public.OptionContract, side string) {
 		for _, contract := range contracts {
 			gamma := 0.0
-			if contract.Greeks != nil {
-				gamma, _ = contract.Greeks.Gamma.Float64()
+			if contract.OptionDetails.Greeks != nil {
+				gamma, _ = contract.OptionDetails.Greeks.Gamma.Float64()
 			}
 
-			strike, _ := contract.StrikePrice.Float64()
+			strike, _ := contract.OptionDetails.StrikePrice.Float64()
 			oi, _ := contract.OpenInterest.Int64()
 			
 			// GEX = OI * Gamma * 100 * SpotPrice

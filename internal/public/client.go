@@ -196,13 +196,14 @@ type OptionChainRequest struct {
 
 type OptionContract struct {
 	Instrument   Instrument  `json:"instrument"`
-	StrikePrice  json.Number `json:"strikePrice"`
-	OptionType   string      `json:"optionType"`
 	OpenInterest json.Number `json:"openInterest"`
-	Greeks       *struct {
-		Gamma json.Number `json:"gamma"`
-		Delta json.Number `json:"delta"`
-	} `json:"greeks"`
+	OptionDetails struct {
+		StrikePrice json.Number `json:"strikePrice"`
+		Greeks      *struct {
+			Gamma json.Number `json:"gamma"`
+			Delta json.Number `json:"delta"`
+		} `json:"greeks"`
+	} `json:"optionDetails"`
 }
 
 type OptionChainResponse struct {

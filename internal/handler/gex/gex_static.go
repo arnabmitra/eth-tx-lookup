@@ -241,7 +241,7 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 					// Helper to process contracts
 					process := func(contracts []public.OptionContract, side string) {
 						for _, c := range contracts {
-							strike, _ := c.StrikePrice.Float64()
+							strike, _ := c.OptionDetails.StrikePrice.Float64()
 							oi, _ := c.OpenInterest.Int64()
 							opt := Option{
 								Strike:         strike,
@@ -250,8 +250,8 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 								ExpirationDate: expiration,
 								ExpirationType: "AMERICAN",
 							}
-							if c.Greeks != nil {
-								gamma, _ := c.Greeks.Gamma.Float64()
+							if c.OptionDetails.Greeks != nil {
+								gamma, _ := c.OptionDetails.Greeks.Gamma.Float64()
 								opt.Greeks.Gamma = gamma
 							}
 							options = append(options, opt)
