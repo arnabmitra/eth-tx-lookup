@@ -36,18 +36,42 @@ type AccessTokenResponse struct {
 	AccessToken string `json:"accessToken"`
 }
 
+func (c *Client) do(method, url string, body interface{}) (*http.Response, error) {
+	var bodyReader io.Reader
+	if body != nil {
+		data, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		bodyReader = bytes.NewBuffer(data)
+	}
+
+	req, err := http.NewRequest(method, url, bodyReader)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.Token)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	
+	// The User-Agent is often required by Public's WAF to prevent 403s
+	req.Header.Set("User-Agent", "public-go-client/1.0")
+
+	return c.HTTPClient.Do(req)
+}
+
 func (c *Client) Authenticate() error {
 	reqBody := AccessTokenRequest{
 		Secret:            c.Secret,
 		ValidityInMinutes: 60,
 	}
-	data, err := json.Marshal(reqBody)
-	if err != nil {
-		return err
-	}
 
 	url := c.BaseURL + "/userapiauthservice/personal/access-tokens"
-	resp, err := c.HTTPClient.Post(url, "application/json", bytes.NewBuffer(data))
+	resp, err := c.do("POST", url, reqBody)
 	if err != nil {
 		return err
 	}
@@ -55,7 +79,7 @@ func (c *Client) Authenticate() error {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("auth failed: %s %s", resp.Status, string(body))
+		return fmt.Errorf("auth failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res AccessTokenResponse
@@ -68,9 +92,12 @@ func (c *Client) Authenticate() error {
 }
 
 type AccountResponse struct {
-	Account struct {
+	Account *struct {
 		AccountID string `json:"accountId"`
 	} `json:"account"`
+	Accounts []struct {
+		AccountID string `json:"accountId"`
+	} `json:"accounts"`
 }
 
 func (c *Client) FetchAccountID() error {
@@ -78,21 +105,27 @@ func (c *Client) FetchAccountID() error {
 		return nil
 	}
 
-	req, err := http.NewRequest("GET", c.BaseURL+"/userapigateway/trading/account", nil)
+	// Try /trading/accounts (plural)
+	url := c.BaseURL + "/userapigateway/trading/accounts"
+	resp, err := c.do("GET", url, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Authorization", "Bearer "+c.Token)
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return err
+	
+	// If plural fails, try singular
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		url = c.BaseURL + "/userapigateway/trading/account"
+		resp, err = c.do("GET", url, nil)
+		if err != nil {
+			return err
+		}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("fetch account failed: %s %s", resp.Status, string(body))
+		return fmt.Errorf("fetch account failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res AccountResponse
@@ -100,7 +133,16 @@ func (c *Client) FetchAccountID() error {
 		return err
 	}
 
-	c.AccountID = res.Account.AccountID
+	if res.Account != nil && res.Account.AccountID != "" {
+		c.AccountID = res.Account.AccountID
+	} else if len(res.Accounts) > 0 {
+		c.AccountID = res.Accounts[0].AccountID
+	}
+
+	if c.AccountID == "" {
+		return fmt.Errorf("no account ID found in response")
+	}
+
 	return nil
 }
 
@@ -123,20 +165,9 @@ func (c *Client) GetSpotPrice(symbol string) (float64, error) {
 	reqBody := QuoteRequest{
 		Instruments: []Instrument{{Symbol: symbol, Type: "EQUITY"}},
 	}
-	data, err := json.Marshal(reqBody)
-	if err != nil {
-		return 0, err
-	}
 
 	url := fmt.Sprintf("%s/userapigateway/marketdata/%s/quotes", c.BaseURL, c.AccountID)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		return 0, err
-	}
-	req.Header.Set("Authorization", "Bearer "+c.Token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.do("POST", url, reqBody)
 	if err != nil {
 		return 0, err
 	}
@@ -144,7 +175,7 @@ func (c *Client) GetSpotPrice(symbol string) (float64, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return 0, fmt.Errorf("get quotes failed: %s %s", resp.Status, string(body))
+		return 0, fmt.Errorf("get quotes failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res QuoteResponse
@@ -162,8 +193,8 @@ func (c *Client) GetSpotPrice(symbol string) (float64, error) {
 }
 
 type OptionChainRequest struct {
-	Instrument     string `json:"instrument"`
-	ExpirationDate string `json:"expirationDate,omitempty"`
+	Instrument     Instrument `json:"instrument"`
+	ExpirationDate string     `json:"expirationDate,omitempty"`
 }
 
 type OptionContract struct {
@@ -180,23 +211,12 @@ type OptionChainResponse struct {
 
 func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainResponse, error) {
 	reqBody := OptionChainRequest{
-		Instrument:     symbol,
+		Instrument:     Instrument{Symbol: symbol, Type: "EQUITY"},
 		ExpirationDate: expiration,
-	}
-	data, err := json.Marshal(reqBody)
-	if err != nil {
-		return nil, err
 	}
 
 	url := fmt.Sprintf("%s/userapigateway/marketdata/%s/option-chain", c.BaseURL, c.AccountID)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+c.Token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.do("POST", url, reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +224,7 @@ func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainR
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("get option chain failed: %s %s", resp.Status, string(body))
+		return nil, fmt.Errorf("get option chain failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res OptionChainResponse
@@ -226,9 +246,9 @@ type GreeksResponse struct {
 }
 
 func (c *Client) GetGreeks(osiSymbols []string) (map[string]float64, error) {
-	// Max 250 symbols per request
 	gammaMap := make(map[string]float64)
 
+	// Max 250 symbols per request
 	for i := 0; i < len(osiSymbols); i += 250 {
 		end := i + 250
 		if end > len(osiSymbols) {
@@ -239,13 +259,7 @@ func (c *Client) GetGreeks(osiSymbols []string) (map[string]float64, error) {
 		url := fmt.Sprintf("%s/userapigateway/option-details/%s/greeks?osiSymbols=%s", 
 			c.BaseURL, c.AccountID, strings.Join(batch, ","))
 		
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			return nil, err
-		}
-		req.Header.Set("Authorization", "Bearer "+c.Token)
-
-		resp, err := c.HTTPClient.Do(req)
+		resp, err := c.do("GET", url, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -253,7 +267,7 @@ func (c *Client) GetGreeks(osiSymbols []string) (map[string]float64, error) {
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
-			return nil, fmt.Errorf("get greeks failed: %s %s", resp.Status, string(body))
+			return nil, fmt.Errorf("get greeks failed (HTTP %d): %s", resp.StatusCode, string(body))
 		}
 
 		var res GreeksResponse
@@ -276,21 +290,14 @@ type ExpirationsResponse struct {
 }
 
 func (c *Client) GetExpirations(symbol string) ([]string, error) {
-	reqBody := map[string]string{"instrument": symbol}
-	data, err := json.Marshal(reqBody)
-	if err != nil {
-		return nil, err
+	reqBody := struct {
+		Instrument Instrument `json:"instrument"`
+	}{
+		Instrument: Instrument{Symbol: symbol, Type: "EQUITY"},
 	}
 
 	url := fmt.Sprintf("%s/userapigateway/marketdata/%s/option-expirations", c.BaseURL, c.AccountID)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+c.Token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.do("POST", url, reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +305,7 @@ func (c *Client) GetExpirations(symbol string) ([]string, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("get expirations failed: %s %s", resp.Status, string(body))
+		return nil, fmt.Errorf("get expirations failed (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
 	var res ExpirationsResponse
