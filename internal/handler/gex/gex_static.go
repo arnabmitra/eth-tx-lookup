@@ -13,7 +13,9 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"cloud.google.com/go/civil"
+	"github.com/arnabmitra/eth-proxy/internal/public"
 	"os"
+	"strconv"
 	"strings"
 	"math"
 )
@@ -134,6 +136,15 @@ func GetAlpacaConfig() (string, string) {
 	return key, secret
 }
 
+func GetPublicConfig() (string, string) {
+	secret := os.Getenv("PUBLIC_PERSONAL_SECRET")
+	if secret == "" {
+		secret = os.Getenv("PUBLIC_SECRET_KEY")
+	}
+	accountID := os.Getenv("PUBLIC_ACCOUNT_ID")
+	return secret, accountID
+}
+
 // Option represents an individual option in the chain
 type Option struct {
 	Strike       float64 `json:"strike"`
@@ -155,6 +166,28 @@ type Response struct {
 }
 
 func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
+	// Try Public.com first if secret is available
+	publicSecret, publicAccountID := GetPublicConfig()
+	if publicSecret != "" {
+		fmt.Printf("Attempting to fetch spot price from Public.com for %s...\n", symbol)
+		client := public.NewClient(publicSecret, publicAccountID)
+		if err := client.Authenticate(); err == nil {
+			if err := client.FetchAccountID(); err == nil {
+				price, err := client.GetSpotPrice(symbol)
+				if err == nil {
+					fmt.Printf("Successfully fetched spot price from Public.com: %.2f\n", price)
+					return price, nil
+				}
+				fmt.Printf("Public.com spot price fetch failed: %v\n", err)
+			} else {
+				fmt.Printf("Public.com account ID fetch failed: %v\n", err)
+			}
+		} else {
+			fmt.Printf("Public.com authentication failed: %v\n", err)
+		}
+		fmt.Println("Falling back to Alpaca for spot price.")
+	}
+
 	mdClient := marketdata.NewClient(marketdata.ClientOpts{
 		APIKey:    apiKey,
 		APISecret: apiSecret,
@@ -189,6 +222,65 @@ func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
 
 // FetchOptionsChain fetches the options chain for the given symbol and expiration date using Alpaca
 func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]Option, *string, string, error) {
+	publicSecret, publicAccountID := GetPublicConfig()
+	if publicSecret != "" {
+		fmt.Printf("Attempting to fetch options chain from Public.com for %s (%s)...\n", symbol, expiration)
+		client := public.NewClient(publicSecret, publicAccountID)
+		if err := client.Authenticate(); err == nil {
+			if err := client.FetchAccountID(); err == nil {
+				chain, err := client.GetOptionChain(symbol, expiration)
+				if err == nil {
+					fmt.Printf("Successfully fetched option chain from Public.com for %s\n", symbol)
+					var osiSymbols []string
+					contracts := make(map[string]public.OptionContract)
+					for _, c := range chain.Calls {
+						osiSymbols = append(osiSymbols, c.OptionSymbol)
+						contracts[c.OptionSymbol] = c
+					}
+					for _, p := range chain.Puts {
+						osiSymbols = append(osiSymbols, p.OptionSymbol)
+						contracts[p.OptionSymbol] = p
+					}
+
+					gammaMap, err := client.GetGreeks(osiSymbols)
+					if err != nil {
+						fmt.Printf("Warning: failed to fetch Greeks from Public: %v\n", err)
+					}
+
+					var options []Option
+					for _, osi := range osiSymbols {
+						c := contracts[osi]
+						strike, _ := strconv.ParseFloat(c.StrikePrice, 64)
+						opt := Option{
+							Strike:         strike,
+							OptionType:     c.OptionType,
+							OpenInterest:   c.OpenInterest,
+							ExpirationDate: expiration,
+							ExpirationType: "AMERICAN", // Assume American for Public equities
+						}
+						if gamma, ok := gammaMap[osi]; ok {
+							opt.Greeks.Gamma = gamma
+						}
+						options = append(options, opt)
+					}
+
+					resp := Response{}
+					resp.Options.Option = options
+					jsonData, _ := json.Marshal(resp)
+					bodyStr := string(jsonData)
+					return options, &bodyStr, "", nil
+				} else {
+					fmt.Printf("Public.com GetOptionChain failed: %v\n", err)
+				}
+			} else {
+				fmt.Printf("Public.com account ID fetch failed: %v\n", err)
+			}
+		} else {
+			fmt.Printf("Public.com authentication failed: %v\n", err)
+		}
+		fmt.Println("Falling back to Alpaca for options chain.")
+	}
+
 	// Try Live API first for contracts
 	liveBaseUrl := "https://api.alpaca.markets"
 	
@@ -356,6 +448,24 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 }
 
 func GetExpirationDates(apiKey, apiSecret, symbol string) ([]string, error) {
+	publicSecret, publicAccountID := GetPublicConfig()
+	if publicSecret != "" {
+		fmt.Printf("Attempting to fetch expiration dates from Public.com for %s...\n", symbol)
+		client := public.NewClient(publicSecret, publicAccountID)
+		if err := client.Authenticate(); err == nil {
+			if err := client.FetchAccountID(); err == nil {
+				dates, err := client.GetExpirations(symbol)
+				if err == nil {
+					fmt.Printf("Successfully fetched %d expiration dates from Public.com\n", len(dates))
+					sort.Strings(dates)
+					return dates, nil
+				}
+				fmt.Printf("Public.com expiration fetch failed: %v\n", err)
+			}
+		}
+		fmt.Println("Falling back to Alpaca for expiration dates.")
+	}
+
 	baseUrl := os.Getenv("ALPACA_API_BASE_URL")
 	if baseUrl == "" {
 		baseUrl = "https://api.alpaca.markets"
