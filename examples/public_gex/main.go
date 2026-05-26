@@ -65,37 +65,18 @@ func main() {
 		log.Fatalf("Failed to fetch option chain: %v", err)
 	}
 
-	var osiSymbols []string
-	contracts := make(map[string]public.OptionContract)
-
-	for _, c := range chain.Calls {
-		osiSymbols = append(osiSymbols, c.OptionSymbol)
-		contracts[c.OptionSymbol] = c
-	}
-	for _, p := range chain.Puts {
-		osiSymbols = append(osiSymbols, p.OptionSymbol)
-		contracts[p.OptionSymbol] = p
-	}
-
-	fmt.Printf("Found %d total contracts. Fetching Greeks...\n", len(osiSymbols))
-	gammaMap, err := client.GetGreeks(osiSymbols)
-	if err != nil {
-		log.Fatalf("Failed to fetch Greeks: %v", err)
-	}
-
 	// Calculate GEX
 	totalCallGex := 0.0
 	totalPutGex := 0.0
 	gexByStrike := make(map[float64]float64)
 
-	for _, osi := range osiSymbols {
-		contract := contracts[osi]
-		gamma, ok := gammaMap[osi]
-		if !ok {
-			continue
+	for _, contract := range chain.Options {
+		gamma := 0.0
+		if contract.Greeks != nil {
+			gamma = contract.Greeks.Gamma
 		}
 
-		strike, _ := strconv.ParseFloat(contract.StrikePrice, 64)
+		strike := contract.StrikePrice
 		
 		// GEX = OI * Gamma * 100 * SpotPrice
 		gex := float64(contract.OpenInterest) * gamma * 100 * spotPrice

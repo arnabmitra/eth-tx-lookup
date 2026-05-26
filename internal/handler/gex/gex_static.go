@@ -231,35 +231,17 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 				chain, err := client.GetOptionChain(symbol, expiration)
 				if err == nil {
 					fmt.Printf("Successfully fetched option chain from Public.com for %s\n", symbol)
-					var osiSymbols []string
-					contracts := make(map[string]public.OptionContract)
-					for _, c := range chain.Calls {
-						osiSymbols = append(osiSymbols, c.OptionSymbol)
-						contracts[c.OptionSymbol] = c
-					}
-					for _, p := range chain.Puts {
-						osiSymbols = append(osiSymbols, p.OptionSymbol)
-						contracts[p.OptionSymbol] = p
-					}
-
-					gammaMap, err := client.GetGreeks(osiSymbols)
-					if err != nil {
-						fmt.Printf("Warning: failed to fetch Greeks from Public: %v\n", err)
-					}
-
 					var options []Option
-					for _, osi := range osiSymbols {
-						c := contracts[osi]
-						strike, _ := strconv.ParseFloat(c.StrikePrice, 64)
+					for _, c := range chain.Options {
 						opt := Option{
-							Strike:         strike,
+							Strike:         c.StrikePrice,
 							OptionType:     c.OptionType,
 							OpenInterest:   c.OpenInterest,
 							ExpirationDate: expiration,
-							ExpirationType: "AMERICAN", // Assume American for Public equities
+							ExpirationType: "AMERICAN",
 						}
-						if gamma, ok := gammaMap[osi]; ok {
-							opt.Greeks.Gamma = gamma
+						if c.Greeks != nil {
+							opt.Greeks.Gamma = c.Greeks.Gamma
 						}
 						options = append(options, opt)
 					}

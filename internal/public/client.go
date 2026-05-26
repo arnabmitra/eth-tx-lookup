@@ -58,7 +58,6 @@ func (c *Client) do(method, url string, body interface{}) (*http.Response, error
 		req.Header.Set("Content-Type", "application/json")
 	}
 	
-	// The User-Agent is often required by Public's WAF to prevent 403s
 	req.Header.Set("User-Agent", "public-go-client/1.0")
 
 	return c.HTTPClient.Do(req)
@@ -105,14 +104,12 @@ func (c *Client) FetchAccountID() error {
 		return nil
 	}
 
-	// Try /trading/accounts (plural)
 	url := c.BaseURL + "/userapigateway/trading/accounts"
 	resp, err := c.do("GET", url, nil)
 	if err != nil {
 		return err
 	}
 	
-	// If plural fails, try singular
 	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
 		url = c.BaseURL + "/userapigateway/trading/account"
@@ -198,15 +195,18 @@ type OptionChainRequest struct {
 }
 
 type OptionContract struct {
-	OptionSymbol string `json:"optionSymbol"`
-	StrikePrice  string `json:"strikePrice"`
-	OptionType   string `json:"optionType"`
-	OpenInterest int    `json:"openInterest"`
+	Symbol       string  `json:"symbol"`
+	StrikePrice  float64 `json:"strikePrice"`
+	OptionType   string  `json:"optionType"`
+	OpenInterest int     `json:"openInterest"`
+	Greeks       *struct {
+		Gamma float64 `json:"gamma"`
+		Delta float64 `json:"delta"`
+	} `json:"greeks"`
 }
 
 type OptionChainResponse struct {
-	Calls []OptionContract `json:"calls"`
-	Puts  []OptionContract `json:"puts"`
+	Options []OptionContract `json:"options"`
 }
 
 func (c *Client) GetOptionChain(symbol string, expiration string) (*OptionChainResponse, error) {
@@ -248,7 +248,6 @@ type GreeksResponse struct {
 func (c *Client) GetGreeks(osiSymbols []string) (map[string]float64, error) {
 	gammaMap := make(map[string]float64)
 
-	// Max 250 symbols per request
 	for i := 0; i < len(osiSymbols); i += 250 {
 		end := i + 250
 		if end > len(osiSymbols) {
