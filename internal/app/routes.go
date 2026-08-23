@@ -50,7 +50,8 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	// Register the GEX handler
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	gexHandler := handler.NewGEXHandler(a.logger, tmpl, a.db)
-	a.router.HandleFunc("/gex", gexHandler.ServeHTTP)
+	a.router.HandleFunc("/gex", gexHandler.ServeHTTPV2)
+	a.router.HandleFunc("/gex-v2", gexHandler.ServeHTTPV2) // Keep as alias for now
 	a.router.HandleFunc("/", gexTradingHandler)
 	// Register the expiry dates handler
 	a.router.HandleFunc("/expiry-dates", gexHandler.GetExpiryDatesHandler)

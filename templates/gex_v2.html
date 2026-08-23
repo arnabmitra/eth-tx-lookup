@@ -1,0 +1,231 @@
+<!DOCTYPE html><html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>GEX Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                  "primary-container": "#00fbfb",
+                  "primary-fixed": "#00fbfb",
+                  "surface-card": "#161B22",
+                  "data-positive": "#00FFFF",
+                  "data-negative": "#FF0055",
+                  background: "#0a0c10",
+                  "surface-input": "#0D1117",
+                  "border-muted": "#30363D",
+                  "on-surface": "#e1e2eb",
+                  "text-dimmed": "#8B949E"
+              },
+              fontFamily: {
+                  "body-sm": ["Inter"],
+                  caption: ["Inter"],
+                  "data-label": ["JetBrains Mono"],
+                  "data-value-lg": ["JetBrains Mono"],
+                  "body-lg": ["Inter"],
+                  "display-lg": ["Hanken Grotesk"],
+                  "headline-md": ["Hanken Grotesk"]
+              },
+              animation: {
+                  "fade-in-up": "fadeInUp 0.5s ease-out forwards",
+                  "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              },
+              keyframes: {
+                  fadeInUp: {
+                      "0%": { opacity: "0", transform: "translateY(20px)" },
+                      "100%": { opacity: "1", transform: "translateY(0)" }
+                  }
+              }
+            }
+          }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,251,251,0.3); }
+        .glow-cyan { filter: drop-shadow(0 0 12px rgba(0, 251, 251, 0.3)); }
+        .glow-red { filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.3)); }
+
+        .bg-dots {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .glass-card {
+            background: rgba(22, 27, 34, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glass-card:hover {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+        }
+        .htmx-request.htmx-indicator {
+            display: block;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let hasAutoSubmitted = false;
+            let debounceTimeout;
+
+            window.debouncedFetchExpiryDates = function() {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    const symbol = document.getElementById("symbol").value;
+                    if (symbol.length === 0) return;
+
+                    fetch(`/expiry-dates?symbol=${symbol}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const expirationSelect = document.getElementById("expiration");
+                            expirationSelect.innerHTML = "";
+
+                            if (data && data.length > 0) {
+                                data.forEach((date, index) => {
+                                    const option = document.createElement("option");
+                                    option.value = date;
+                                    option.textContent = date;
+                                    expirationSelect.appendChild(option);
+                                });
+                            }
+
+                            const symbolInput = document.getElementById('symbol');
+                            if (symbolInput.value === 'SPY' && !hasAutoSubmitted && data.length > 0) {
+                                const form = document.querySelector('form');
+                                if (form) {
+                                    hasAutoSubmitted = true;
+                                    setTimeout(() => {
+                                        htmx.trigger(form, 'submit');
+                                    }, 100);
+                                }
+                            }
+                        })
+                        .catch(error => console.error("Error fetching expiry dates:", error));
+                }, 500);
+            };
+
+            document.body.addEventListener('htmx:beforeRequest', function() {
+                document.getElementById('loading-overlay').style.display = 'flex';
+            });
+
+            document.body.addEventListener('htmx:afterRequest', function() {
+                document.getElementById('loading-overlay').style.display = 'none';
+            });
+
+            // Trigger initial load for SPY
+            const symbolInput = document.getElementById("symbol");
+            if (symbolInput && symbolInput.value === 'SPY') {
+                debouncedFetchExpiryDates();
+            }
+        });
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-sm selection:bg-primary-container selection:text-background relative min-h-screen">
+
+<div class="fixed inset-0 z-[-2] bg-dots"></div>
+<div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary-fixed/10 rounded-full blur-[120px] pointer-events-none z-[-1]"></div>
+
+{{template "navigation"}}
+
+<main class="pt-28 pb-12 px-4 md:px-6 max-w-[1440px] mx-auto animate-fade-in-up">
+    <section class="mb-12 text-center relative">
+        <h1 class="font-display-lg text-5xl md:text-6xl mb-4 tracking-tight font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-fixed to-blue-400 pb-2">
+            GEX Tracker
+        </h1>
+        <p class="text-text-dimmed font-body-lg max-w-2xl mx-auto text-lg">
+            This tool tracks current dealers' notional gamma exposure (GEX). Enter a symbol and an expiration date to generate a GEX chart.
+        </p>
+    </section>
+
+    <!-- Input Form -->
+    <section class="glass-card p-6 rounded-2xl mb-10 shadow-2xl relative overflow-hidden group">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary-fixed/0 via-primary-fixed/5 to-primary-fixed/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+        <form hx-post="/gex-v2" hx-target="#gex-chart" hx-swap="innerHTML" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end relative z-10">
+            <div>
+                <label class="block font-data-label text-xs text-text-dimmed mb-2 uppercase tracking-wider">Symbol</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-primary-fixed font-bold">$</span>
+                    <input name="symbol" id="symbol" oninput="debouncedFetchExpiryDates()" class="w-full bg-surface-input/50 backdrop-blur-sm border border-white/10 text-white font-data-value-lg rounded-xl focus:ring-2 focus:ring-primary-fixed/50 focus:border-primary-fixed uppercase pl-10 pr-4 py-3 transition-all outline-none" type="text" value="SPY" required>
+                </div>
+            </div>
+            <div>
+                <label class="block font-data-label text-xs text-text-dimmed mb-2 uppercase tracking-wider">Options Expiration</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-dimmed text-[18px]">calendar_today</span>
+                    <select name="expiration" id="expiration" class="w-full bg-surface-input/50 backdrop-blur-sm border border-white/10 text-white font-data-value-lg rounded-xl focus:ring-2 focus:ring-primary-fixed/50 focus:border-primary-fixed pl-12 pr-4 py-3 appearance-none transition-all outline-none" required>
+                    </select>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-dimmed pointer-events-none">expand_more</span>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="w-full bg-gradient-to-r from-primary-fixed to-blue-500 text-background font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(0,251,251,0.4)] active:scale-[0.98] transition-all duration-300">
+                    <span class="material-symbols-outlined text-[20px]">magic_button</span>
+                    GENERATE CHART
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <div id="loading-overlay" class="hidden justify-center items-center py-12" style="display: none;">
+        <div class="text-center">
+            <svg class="w-12 h-12 text-primary-fixed animate-spin mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-primary-fixed font-data-label text-sm animate-pulse">Loading Options Data...</p>
+        </div>
+    </div>
+
+    <div id="gex-chart">
+        <!-- Rendered by htmx -->
+    </div>
+
+</main>
+
+<footer class="glass-card border-t border-white/5 py-12 px-6 mt-12 mb-16 md:mb-0">
+    <div class="max-w-[1440px] mx-auto flex flex-col items-center gap-6">
+        <p class="text-xs text-text-dimmed max-w-xl text-center leading-relaxed">
+            Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only. Not financial advice.
+        </p>
+        <div class="flex flex-wrap justify-center gap-6 md:gap-8">
+            <a class="text-xs font-data-label text-text-dimmed hover:text-white transition-colors" href="/privacy">Privacy Policy</a>
+            <a class="text-xs font-data-label text-text-dimmed hover:text-white transition-colors" href="/terms">Terms of Service</a>
+            <a class="text-xs font-data-label text-text-dimmed hover:text-white transition-colors" href="/cookies">Cookie Policy</a>
+        </div>
+        <div class="text-xs text-text-dimmed/50 font-data-label mt-4">
+            © 2026 GEX Tracker. All Rights Reserved.
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

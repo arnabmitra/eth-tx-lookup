@@ -1,0 +1,434 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>GEX Tracker - Terminal Dashboard V2</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#00fbfb",
+                      "primary-fixed": "#00fbfb",
+                      "surface-card": "#161B22",
+                      "data-positive": "#00FFFF",
+                      "data-negative": "#FF0055",
+                      "background": "#0a0c10",
+                      "surface-input": "#0D1117",
+                      "border-muted": "#30363D",
+                      "on-surface": "#e1e2eb",
+                      "text-dimmed": "#8B949E",
+                      "surface-container": "#1d2026",
+                      "surface-container-high": "#272a31",
+                      "surface-container-low": "#191c22",
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "caption": ["Inter"],
+                      "data-label": ["JetBrains Mono"],
+                      "data-value-lg": ["JetBrains Mono"],
+                      "body-lg": ["Inter"],
+                      "display-lg": ["Hanken Grotesk"],
+                      "headline-md": ["Hanken Grotesk"]
+              },
+              "animation": {
+                  "fade-in-up": "fadeInUp 0.5s ease-out forwards",
+                  "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                  "bar-grow": "barGrow 1s ease-out forwards"
+              },
+              "keyframes": {
+                  fadeInUp: {
+                      "0%": { opacity: "0", transform: "translateY(20px)" },
+                      "100%": { opacity: "1", transform: "translateY(0)" }
+                  },
+                  barGrow: {
+                      "0%": { height: "0%" },
+                  }
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,251,251,0.3); }
+        .glass-blur { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .glow-cyan { filter: drop-shadow(0 0 12px rgba(0, 251, 251, 0.3)); }
+        .glow-red { filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.3)); }
+        
+        /* Subtle dot background */
+        .bg-dots {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Glass card styling */
+        .glass-card {
+            background: rgba(22, 27, 34, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glass-card:hover {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-sm selection:bg-primary-container selection:text-background relative min-h-screen">
+    
+<!-- Background Effects -->
+<div class="fixed inset-0 z-[-2] bg-dots"></div>
+<div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary-fixed/10 rounded-full blur-[120px] pointer-events-none z-[-1]"></div>
+
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 glass-card border-b-0 h-16 flex items-center justify-between px-4 md:px-6 max-w-[1440px] mx-auto mt-0 md:mt-4 md:rounded-2xl md:border transition-all duration-300">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-fixed to-blue-600 flex items-center justify-center glow-cyan">
+    <span class="material-symbols-outlined text-background text-[20px]" data-icon="analytics">analytics</span>
+</div>
+<span class="font-display-lg text-xl tracking-tight text-white font-bold">GEX<span class="text-primary-fixed">TRACKER</span></span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-primary-fixed font-data-label text-xs uppercase tracking-wider border-b-2 border-primary-fixed pb-1" href="#">Tracker</a>
+<a class="text-text-dimmed hover:text-white font-data-label text-xs uppercase tracking-wider transition-colors" href="#">All Expiries</a>
+<a class="text-text-dimmed hover:text-white font-data-label text-xs uppercase tracking-wider transition-colors" href="#">MAG7</a>
+<a class="text-text-dimmed hover:text-white font-data-label text-xs uppercase tracking-wider transition-colors" href="#">Scanner</a>
+<a class="text-text-dimmed hover:text-white font-data-label text-xs uppercase tracking-wider transition-colors" href="#">Blog</a>
+<button class="flex items-center gap-1 text-text-dimmed hover:text-white font-data-label text-xs uppercase tracking-wider transition-colors">
+    Resources <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<button class="md:hidden text-text-dimmed hover:text-white">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<button class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-text-dimmed hover:bg-white/10 hover:text-white transition-all">
+<span class="material-symbols-outlined text-[18px]">search</span>
+<span class="text-xs">Search symbols...</span>
+<span class="ml-2 px-1.5 py-0.5 bg-white/10 rounded text-[10px] font-data-label">⌘K</span>
+</button>
+</div>
+</header>
+
+<main class="pt-28 pb-12 px-4 md:px-6 max-w-[1440px] mx-auto animate-fade-in-up">
+<!-- Hero Section -->
+<section class="mb-12 text-center relative">
+<h1 class="font-display-lg text-5xl md:text-6xl mb-4 tracking-tight font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-fixed to-blue-400 pb-2">
+    GEX Tracker
+</h1>
+<p class="text-text-dimmed font-body-lg max-w-2xl mx-auto text-lg">
+    This tool tracks current dealers' notional gamma exposure (GEX). Enter a symbol and an expiration date to generate a GEX chart.
+</p>
+</section>
+
+<!-- Input Form -->
+<section class="glass-card p-6 rounded-2xl mb-10 shadow-2xl relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-fixed/0 via-primary-fixed/5 to-primary-fixed/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end relative z-10">
+<div>
+<label class="block font-data-label text-xs text-text-dimmed mb-2 uppercase tracking-wider">Symbol</label>
+<div class="relative">
+    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-primary-fixed font-bold">$</span>
+    <input class="w-full bg-surface-input/50 backdrop-blur-sm border border-white/10 text-white font-data-value-lg rounded-xl focus:ring-2 focus:ring-primary-fixed/50 focus:border-primary-fixed uppercase pl-10 pr-4 py-3 transition-all outline-none" type="text" value="SPY">
+</div>
+</div>
+<div>
+<label class="block font-data-label text-xs text-text-dimmed mb-2 uppercase tracking-wider">Options Expiration</label>
+<div class="relative">
+    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-dimmed text-[18px]">calendar_today</span>
+    <select class="w-full bg-surface-input/50 backdrop-blur-sm border border-white/10 text-white font-data-value-lg rounded-xl focus:ring-2 focus:ring-primary-fixed/50 focus:border-primary-fixed pl-12 pr-4 py-3 appearance-none transition-all outline-none">
+    <option>2026-07-28</option>
+    <option>2025-12-19</option>
+    <option>Next Weekly</option>
+    </select>
+    <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-dimmed pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<button class="w-full bg-gradient-to-r from-primary-fixed to-blue-500 text-background font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(0,251,251,0.4)] active:scale-[0.98] transition-all duration-300">
+<span class="material-symbols-outlined text-[20px]">magic_button</span>
+    GENERATE CHART
+</button>
+</div>
+</div>
+</section>
+
+<!-- Dash Header -->
+<div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+<div>
+<h2 class="font-headline-md text-3xl text-white font-bold tracking-tight">SPY Gamma Exposure</h2>
+<div class="flex items-center gap-3 mt-1">
+    <span class="px-2.5 py-1 bg-white/5 border border-white/10 rounded-md font-data-label text-xs text-text-dimmed">EXP: 2026-07-28</span>
+    <span class="px-2.5 py-1 bg-white/5 border border-white/10 rounded-md font-data-label text-xs text-text-dimmed">DTE: 14</span>
+</div>
+</div>
+<div class="flex items-center gap-3 bg-surface-input/80 backdrop-blur border border-white/10 px-4 py-2.5 rounded-full shadow-lg">
+<div class="relative flex h-3 w-3">
+  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-data-positive opacity-75"></span>
+  <span class="relative inline-flex rounded-full h-3 w-3 bg-data-positive"></span>
+</div>
+<span class="font-data-label text-xs text-white">MARKET LIVE:</span>
+<span class="font-data-value-lg text-sm text-data-positive font-bold glow-cyan">$541.22 (+0.14%)</span>
+</div>
+</div>
+
+<!-- Key Metrics Bento -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+<div class="glass-card p-6 rounded-2xl group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+    <div class="absolute right-0 top-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+    <div class="flex justify-between items-start mb-4">
+        <span class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">sell</span> Current Price
+        </span>
+    </div>
+    <div class="font-data-value-lg text-3xl text-white font-bold">$737.30</div>
+</div>
+<div class="glass-card p-6 rounded-2xl border-l-4 border-l-primary-fixed group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+    <div class="absolute right-0 top-0 w-24 h-24 bg-primary-fixed/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+    <div class="flex justify-between items-start mb-4">
+        <span class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">swap_vert</span> Gamma Flip
+        </span>
+    </div>
+    <div class="font-data-value-lg text-3xl text-primary-fixed font-bold glow-cyan">$715.00</div>
+</div>
+<div class="glass-card p-6 rounded-2xl group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+    <div class="absolute right-0 top-0 w-24 h-24 bg-data-negative/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+    <div class="flex justify-between items-start mb-4">
+        <span class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">functions</span> Total GEX
+        </span>
+    </div>
+    <div class="font-data-value-lg text-3xl text-data-negative font-bold glow-red">-$100,526,630.27</div>
+</div>
+</div>
+
+<!-- Regime Summary -->
+<section class="glass-card rounded-2xl overflow-hidden mb-10 animate-fade-in-up" style="animation-delay: 0.3s;">
+<div class="bg-gradient-to-r from-data-negative/10 to-transparent border-b border-white/5 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-data-negative/20 flex items-center justify-center">
+    <span class="material-symbols-outlined text-data-negative text-[18px]">warning</span>
+</div>
+<span class="font-headline-md text-lg text-white font-bold tracking-wide">REGIME SUMMARY</span>
+</div>
+<div class="flex items-center gap-3">
+    <span class="text-xs font-data-label text-text-dimmed uppercase tracking-wider">Sentiment:</span>
+    <span class="bg-data-negative/20 text-data-negative px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase border border-data-negative/30 glow-red animate-pulse-slow">High Volatility Risk</span>
+</div>
+</div>
+<div class="p-6 md:p-8">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+<div class="space-y-1">
+<div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">NET GEX<span class="material-symbols-outlined text-[14px] cursor-help opacity-50 hover:opacity-100 transition-opacity">info</span></div>
+<div class="font-data-value-lg text-xl text-white">-$100,526,630.27</div>
+</div>
+<div class="space-y-1">
+<div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">GAMMA CONDITION<span class="material-symbols-outlined text-[14px] cursor-help opacity-50 hover:opacity-100 transition-opacity">info</span></div>
+<div class="font-data-value-lg text-xl text-data-negative font-bold flex items-center gap-2">
+    <span class="material-symbols-outlined text-[18px]">trending_down</span> Negative
+</div>
+</div>
+<div class="space-y-1">
+<div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">TOTAL CALL GEX<span class="material-symbols-outlined text-[14px] cursor-help opacity-50 hover:opacity-100 transition-opacity">info</span></div>
+<div class="font-data-value-lg text-xl text-data-positive">$358,574,095.06</div>
+</div>
+<div class="space-y-1">
+<div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">P/C GEX RATIO<span class="material-symbols-outlined text-[14px] cursor-help opacity-50 hover:opacity-100 transition-opacity">info</span></div>
+<div class="font-data-value-lg text-xl text-white">1.78</div>
+</div>
+</div>
+<div class="bg-data-negative/5 border border-data-negative/20 rounded-xl p-4 flex gap-4 items-start">
+    <span class="material-symbols-outlined text-data-negative mt-0.5">insights</span>
+    <p class="text-white/80 font-body-lg text-sm leading-relaxed">
+        <strong class="text-white">Dealers are net short gamma.</strong> Expect amplified volatility as hedging flows accelerate price moves in both directions. Market makers will likely sell as the market drops and buy as the market rises.
+    </p>
+</div>
+</div>
+</section>
+
+<!-- Gamma Exposure Chart -->
+<section class="glass-card rounded-2xl p-6 md:p-8 mb-10 h-[550px] relative flex flex-col animate-fade-in-up" style="animation-delay: 0.4s;">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div>
+    <h3 class="font-headline-md text-xl font-bold text-white">Gamma Profile by Strike</h3>
+    <p class="text-xs text-text-dimmed mt-1 font-data-label">Notional exposure across current strikes</p>
+</div>
+<div class="flex bg-surface-input/80 p-1 rounded-lg border border-white/5">
+<button class="text-xs font-bold px-4 py-1.5 rounded-md hover:text-white text-text-dimmed transition-all">1D</button>
+<button class="text-xs font-bold px-4 py-1.5 rounded-md bg-white/10 text-white shadow transition-all">5D</button>
+<button class="text-xs font-bold px-4 py-1.5 rounded-md hover:text-white text-text-dimmed transition-all">1M</button>
+</div>
+</div>
+
+<div class="flex-grow w-full relative overflow-hidden flex items-end justify-around pb-12 pt-10 px-4">
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
+<div class="border-b border-white w-full h-px"></div>
+<div class="border-b border-white w-full h-px"></div>
+<div class="border-b border-white w-full h-px"></div>
+<div class="border-b-2 border-white w-full h-px border-dashed opacity-50"></div>
+<div class="border-b border-white w-full h-px"></div>
+<div class="border-b border-white w-full h-px"></div>
+<div class="border-b border-white w-full h-px"></div>
+</div>
+<!-- Vertical Center Line (Flip) -->
+<div class="absolute left-1/2 top-0 bottom-8 border-l-2 border-dashed border-primary-fixed/50 z-0">
+    <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-primary-fixed/20 text-primary-fixed text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur">FLIP: $715</div>
+</div>
+
+<!-- Bars Simulation (Negative) -->
+<div class="bg-gradient-to-t from-data-negative to-rose-400 w-4 md:w-6 h-[40%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(255,0,85,0.3)] animate-bar-grow z-10"><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[11px] font-data-label text-text-dimmed">710</div>
+    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-card border border-white/10 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none text-data-negative">-2.4B</div>
+</div>
+<div class="bg-gradient-to-t from-data-negative to-rose-400 w-4 md:w-6 h-[60%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(255,0,85,0.3)] animate-bar-grow z-10" style="animation-delay: 0.1s;"></div>
+<div class="bg-gradient-to-t from-data-negative to-rose-400 w-4 md:w-6 h-[30%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(255,0,85,0.3)] animate-bar-grow z-10" style="animation-delay: 0.15s;"></div>
+<div class="bg-gradient-to-t from-data-negative to-rose-400 w-4 md:w-6 h-[85%] rounded-t-md opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_20px_rgba(255,0,85,0.5)] animate-bar-grow z-10 border border-white/20" style="animation-delay: 0.2s;"><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[11px] font-data-label text-white font-bold bg-white/10 px-2 py-0.5 rounded">715</div>
+    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-card border border-white/10 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none font-bold text-data-negative">-14.1B</div>
+</div>
+<div class="bg-gradient-to-t from-data-negative to-rose-400 w-4 md:w-6 h-[50%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(255,0,85,0.3)] animate-bar-grow z-10" style="animation-delay: 0.25s;"></div>
+
+<!-- Bars Simulation (Positive) -->
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[25%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(0,251,251,0.3)] animate-bar-grow z-10" style="animation-delay: 0.3s;"></div>
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[45%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(0,251,251,0.3)] animate-bar-grow z-10" style="animation-delay: 0.35s;"></div>
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[70%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(0,251,251,0.3)] animate-bar-grow z-10" style="animation-delay: 0.4s;"><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[11px] font-data-label text-text-dimmed">740</div>
+    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-card border border-white/10 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none text-data-positive">+6.1B</div>
+</div>
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[35%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(0,251,251,0.3)] animate-bar-grow z-10" style="animation-delay: 0.45s;"></div>
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[55%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(0,251,251,0.3)] animate-bar-grow z-10" style="animation-delay: 0.5s;"></div>
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[90%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_20px_rgba(0,251,251,0.4)] animate-bar-grow z-10" style="animation-delay: 0.55s;"><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[11px] font-data-label text-text-dimmed">750</div>
+    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-card border border-white/10 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none font-bold text-data-positive">+12.4B</div>
+</div>
+<div class="bg-gradient-to-t from-data-positive to-blue-400 w-4 md:w-6 h-[40%] rounded-t-md opacity-80 hover:opacity-100 hover:scale-x-110 transition-all relative group shadow-[0_0_15px_rgba(0,251,251,0.3)] animate-bar-grow z-10" style="animation-delay: 0.6s;"></div>
+</div>
+
+<div class="flex flex-wrap items-center justify-center gap-6 mt-10 font-data-label text-xs uppercase tracking-wider">
+<div class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+<span class="w-3 h-3 bg-data-positive rounded-full shadow-[0_0_8px_rgba(0,251,251,0.6)]"></span>
+<span class="text-white/90">Positive Exposure (Bulls)</span>
+</div>
+<div class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+<span class="w-3 h-3 bg-data-negative rounded-full shadow-[0_0_8px_rgba(255,0,85,0.6)]"></span>
+<span class="text-white/90">Negative Exposure (Bears)</span>
+</div>
+</div>
+</section>
+
+<!-- Strike Price Data Table -->
+<section class="glass-card rounded-2xl overflow-hidden animate-fade-in-up" style="animation-delay: 0.5s;">
+<div class="p-6 md:p-8 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<h3 class="font-headline-md text-xl font-bold text-white flex items-center gap-2">
+    GEX per Strike Price <span class="text-text-dimmed text-sm font-normal font-data-label">(Sorted by Volume)</span>
+</h3>
+<div class="flex flex-col sm:flex-row items-center gap-4">
+<div class="flex items-center border border-white/10 rounded-lg bg-surface-input/50 px-3 py-2 focus-within:border-primary-fixed focus-within:ring-1 focus-within:ring-primary-fixed transition-all">
+<span class="material-symbols-outlined text-[18px] text-text-dimmed mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-white w-full sm:w-32 placeholder:text-text-dimmed/70 outline-none" placeholder="Filter..." type="text">
+</div>
+<div class="flex items-center gap-3 text-sm text-text-dimmed bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+<button class="p-1 hover:text-white hover:bg-white/10 rounded transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></button>
+<span class="font-data-label text-xs uppercase">Page 1 of 2</span>
+<button class="p-1 hover:text-white hover:bg-white/10 rounded transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-white/[0.02] border-b border-white/10">
+<tr>
+<th class="px-6 md:px-8 py-5 font-data-label text-xs text-text-dimmed uppercase tracking-wider">Strike Price</th>
+<th class="px-6 md:px-8 py-5 font-data-label text-xs text-text-dimmed uppercase tracking-wider text-right">GEX Exposure</th>
+<th class="px-6 md:px-8 py-5 font-data-label text-xs text-text-dimmed uppercase tracking-wider w-1/3 min-w-[200px]">Heat Indicator</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5 font-data-label text-sm">
+<tr class="hover:bg-white/[0.03] transition-colors group">
+<td class="px-6 md:px-8 py-5 text-white font-bold group-hover:text-primary-fixed transition-colors">$740.00</td>
+<td class="px-6 md:px-8 py-5 text-data-negative text-right">-21,774,607.17</td>
+<td class="px-6 md:px-8 py-5"><div class="w-full bg-white/5 h-2 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-data-negative/50 to-data-negative h-full rounded-full w-[85%] shadow-[0_0_10px_rgba(255,0,85,0.5)]"></div></div></td>
+</tr>
+<tr class="hover:bg-white/[0.03] transition-colors group">
+<td class="px-6 md:px-8 py-5 text-white font-bold group-hover:text-primary-fixed transition-colors">$735.00</td>
+<td class="px-6 md:px-8 py-5 text-data-negative text-right">-14,064,587.34</td>
+<td class="px-6 md:px-8 py-5"><div class="w-full bg-white/5 h-2 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-data-negative/50 to-data-negative h-full rounded-full w-[60%] shadow-[0_0_10px_rgba(255,0,85,0.5)]"></div></div></td>
+</tr>
+<tr class="hover:bg-white/[0.03] transition-colors group">
+<td class="px-6 md:px-8 py-5 text-white font-bold group-hover:text-primary-fixed transition-colors">$720.00</td>
+<td class="px-6 md:px-8 py-5 text-data-negative text-right">-11,954,877.12</td>
+<td class="px-6 md:px-8 py-5"><div class="w-full bg-white/5 h-2 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-data-negative/50 to-data-negative h-full rounded-full w-[50%] shadow-[0_0_10px_rgba(255,0,85,0.5)]"></div></div></td>
+</tr>
+<tr class="hover:bg-white/[0.03] transition-colors group">
+<td class="px-6 md:px-8 py-5 text-white font-bold group-hover:text-primary-fixed transition-colors">$750.00</td>
+<td class="px-6 md:px-8 py-5 text-data-positive text-right">+6,089,862.06</td>
+<td class="px-6 md:px-8 py-5"><div class="w-full bg-white/5 h-2 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-data-positive/50 to-data-positive h-full rounded-full w-[30%] shadow-[0_0_10px_rgba(0,251,251,0.5)]"></div></div></td>
+</tr>
+<tr class="hover:bg-white/[0.03] transition-colors group">
+<td class="px-6 md:px-8 py-5 text-white font-bold group-hover:text-primary-fixed transition-colors">$742.00</td>
+<td class="px-6 md:px-8 py-5 text-data-positive text-right">+4,435,441.97</td>
+<td class="px-6 md:px-8 py-5"><div class="w-full bg-white/5 h-2 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-data-positive/50 to-data-positive h-full rounded-full w-[20%] shadow-[0_0_10px_rgba(0,251,251,0.5)]"></div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-5 text-center border-t border-white/10 bg-white/[0.01]">
+<button class="text-primary-fixed hover:text-white text-xs font-data-label uppercase tracking-wider font-bold transition-colors flex items-center justify-center gap-2 mx-auto">
+    VIEW FULL DATASET <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</section>
+</main>
+
+<!-- Navigation Shell Placeholder (Bottom Bar on Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-card border-t-0 h-16 flex items-center justify-around z-50 rounded-t-2xl">
+<button class="flex flex-col items-center gap-1 text-primary-fixed">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="text-[10px] font-data-label">TRACKER</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-dimmed hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="search_insights">search_insights</span>
+<span class="text-[10px] font-data-label">SCANNER</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-dimmed hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="text-[10px] font-data-label">MAG7</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-dimmed hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="article">article</span>
+<span class="text-[10px] font-data-label">BLOG</span>
+</button>
+</nav>
+
+<!-- Footer -->
+<footer class="glass-card border-t border-white/5 py-12 px-6 mt-12 mb-16 md:mb-0">
+<div class="max-w-[1440px] mx-auto flex flex-col items-center gap-6">
+<div class="flex items-center gap-2 mb-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+<div class="w-6 h-6 rounded-md bg-gradient-to-br from-primary-fixed to-blue-600 flex items-center justify-center">
+    <span class="material-symbols-outlined text-background text-[14px]" data-icon="analytics">analytics</span>
+</div>
+<span class="font-headline-md text-white tracking-tight">GEX<span class="text-primary-fixed">TRACKER</span></span>
+</div>
+<p class="text-xs text-text-dimmed max-w-xl text-center leading-relaxed">
+    Disclaimer: Trading options involves significant risk and is not suitable for all investors. The information provided on this site is for educational purposes only. Not financial advice.
+</p>
+<div class="flex flex-wrap justify-center gap-6 md:gap-8">
+<a class="text-xs font-data-label text-text-dimmed hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="text-xs font-data-label text-text-dimmed hover:text-white transition-colors" href="#">Terms of Service</a>
+<a class="text-xs font-data-label text-text-dimmed hover:text-white transition-colors" href="#">Cookie Policy</a>
+</div>
+<div class="text-xs text-text-dimmed/50 font-data-label mt-4">
+    © 2026 GEX Tracker. All Rights Reserved.
+</div>
+</div>
+</footer>
+
+</body></html>

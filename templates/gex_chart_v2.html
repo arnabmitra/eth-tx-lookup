@@ -1,0 +1,402 @@
+{{ if .Symbol }}
+{{ if .ChartData }}
+<div class="animate-fade-in-up">
+    <!-- Dash Header -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h2 class="font-headline-md text-3xl text-white font-bold tracking-tight">{{ .Symbol }} Gamma Exposure</h2>
+            <div class="flex items-center gap-3 mt-1">
+                <span class="px-2.5 py-1 bg-white/5 border border-white/10 rounded-md font-data-label text-xs text-text-dimmed">EXP: {{ .Expiration }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 bg-surface-input/80 backdrop-blur border border-white/10 px-4 py-2.5 rounded-full shadow-lg">
+            <div class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-data-positive opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-data-positive"></span>
+            </div>
+            <span class="font-data-label text-xs text-white">SPOT PRICE:</span>
+            <span class="font-data-value-lg text-sm text-data-positive font-bold glow-cyan">${{ printf "%.2f" .SpotPrice }}</span>
+        </div>
+    </div>
+    
+    {{ if .Warning }}
+    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <span class="material-icons text-amber-500 text-sm mt-0.5">warning</span>
+        <p class="text-sm text-amber-200">
+            {{ .Warning }}
+        </p>
+    </div>
+    {{ end }}
+
+    <!-- Key Metrics Bento -->
+    {{ if gt .GammaFlipLevel 0.0 }}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="glass-card p-6 rounded-2xl group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">sell</span> Current Price
+                </span>
+            </div>
+            <div class="font-data-value-lg text-3xl text-white font-bold">${{ printf "%.2f" .SpotPrice }}</div>
+        </div>
+        <div class="glass-card p-6 rounded-2xl border-l-4 border-l-primary-fixed group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-primary-fixed/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">swap_vert</span> Gamma Flip
+                </span>
+            </div>
+            <div class="font-data-value-lg text-3xl text-primary-fixed font-bold glow-cyan">${{ printf "%.2f" .GammaFlipLevel }}</div>
+        </div>
+        <div class="glass-card p-6 rounded-2xl group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-24 h-24 {{ if gt .TotalGEX 0.0 }}bg-data-positive/10{{ else }}bg-data-negative/10{{ end }} rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">functions</span> Total GEX
+                </span>
+            </div>
+            <div class="font-data-value-lg text-3xl {{ if gt .TotalGEX 0.0 }}text-data-positive glow-cyan{{ else }}text-data-negative glow-red{{ end }} font-bold">{{ .TotalGEXFormatted }}</div>
+        </div>
+    </div>
+    
+    <div class="bg-{{ if gt .SpotPrice .GammaFlipLevel }}data-positive{{ else }}data-negative{{ end }}/10 border border-{{ if gt .SpotPrice .GammaFlipLevel }}data-positive{{ else }}data-negative{{ end }}/20 rounded-xl p-4 mb-6">
+        <p class="text-sm {{ if gt .SpotPrice .GammaFlipLevel }}text-data-positive{{ else }}text-data-negative{{ end }} tracking-tight flex items-center gap-2">
+            <span class="material-symbols-outlined">{{ if gt .SpotPrice .GammaFlipLevel }}trending_up{{ else }}trending_down{{ end }}</span>
+            {{ if gt .SpotPrice .GammaFlipLevel }}
+            <span class="font-bold">BULLISH ZONE:</span> Above gamma flip level. Dealer hedging acts as a stabilizer.
+            {{ else }}
+            <span class="font-bold">BEARISH ZONE:</span> Below gamma flip level. Dealer hedging amplifies price moves.
+            {{ end }}
+        </p>
+    </div>
+    {{ end }}
+
+    <!-- Regime Summary -->
+    {{ if .RegimeSummary }}
+    <section class="glass-card rounded-2xl overflow-hidden mb-10">
+        <div class="bg-gradient-to-r {{ if eq .RegimeSummary.Condition "Positive" }}from-data-positive/10{{ else }}from-data-negative/10{{ end }} to-transparent border-b border-white/5 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full {{ if eq .RegimeSummary.Condition "Positive" }}bg-data-positive/20{{ else }}bg-data-negative/20{{ end }} flex items-center justify-center">
+                    <span class="material-symbols-outlined {{ if eq .RegimeSummary.Condition "Positive" }}text-data-positive{{ else }}text-data-negative{{ end }} text-[18px]">analytics</span>
+                </div>
+                <span class="font-headline-md text-lg text-white font-bold tracking-wide">REGIME SUMMARY</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-data-label text-text-dimmed uppercase tracking-wider">Condition:</span>
+                <span class="{{ if eq .RegimeSummary.Condition "Positive" }}bg-data-positive/20 text-data-positive border-data-positive/30 glow-cyan{{ else }}bg-data-negative/20 text-data-negative border-data-negative/30 glow-red{{ end }} px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase border">
+                    {{ .RegimeSummary.Condition }}
+                </span>
+            </div>
+        </div>
+        <div class="p-6 md:p-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                <div class="space-y-1">
+                    <div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">NET GEX</div>
+                    <div class="font-data-value-lg text-xl text-white">{{ .RegimeSummary.NetGEXFormatted }}</div>
+                </div>
+                <div class="space-y-1">
+                    <div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">GAMMA CONDITION</div>
+                    <div class="font-data-value-lg text-xl {{ if eq .RegimeSummary.Condition "Positive" }}text-data-positive{{ else }}text-data-negative{{ end }} font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">{{ if eq .RegimeSummary.Condition "Positive" }}trending_up{{ else }}trending_down{{ end }}</span> {{ .RegimeSummary.Condition }}
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">TOTAL ABS GEX</div>
+                    <div class="font-data-value-lg text-xl text-white">{{ .RegimeSummary.TotalGEXFormatted }}</div>
+                </div>
+                <div class="space-y-1">
+                    <div class="font-data-label text-xs text-text-dimmed uppercase tracking-wider flex items-center gap-1">P/C GEX RATIO</div>
+                    <div class="font-data-value-lg text-xl text-white">{{ .RegimeSummary.PCRatio }}</div>
+                </div>
+            </div>
+            <div class="{{ if eq .RegimeSummary.Condition "Positive" }}bg-data-positive/5 border-data-positive/20{{ else }}bg-data-negative/5 border-data-negative/20{{ end }} border rounded-xl p-4 flex gap-4 items-start">
+                <span class="material-symbols-outlined {{ if eq .RegimeSummary.Condition "Positive" }}text-data-positive{{ else }}text-data-negative{{ end }} mt-0.5">insights</span>
+                <p class="text-white/80 font-body-lg text-sm leading-relaxed">
+                    {{ if eq .RegimeSummary.Condition "Positive" }}
+                    <strong class="text-white">Dealers are net long gamma.</strong> Acting as a stabilizer to absorb price moves and dampen directional momentum. Hedging activity typically creates friction against sustained trends.
+                    {{ else }}
+                    <strong class="text-white">Dealers are net short gamma.</strong> Expect amplified volatility as hedging flows accelerate price moves in both directions. Dealers sell as the market drops and buy as the market rises.
+                    {{ end }}
+                </p>
+            </div>
+        </div>
+    </section>
+    {{ end }}
+
+    <!-- Gamma Exposure Chart -->
+    <section class="glass-card rounded-2xl p-6 md:p-8 mb-10 relative flex flex-col">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h3 class="font-headline-md text-xl font-bold text-white">Gamma Profile by Strike</h3>
+                <p class="text-xs text-text-dimmed mt-1 font-data-label">Notional exposure across current strikes</p>
+            </div>
+        </div>
+
+        <div id="d3-chart-partial" class="w-full h-[550px]"></div>
+
+        <div class="flex flex-wrap items-center justify-center gap-6 mt-10 font-data-label text-xs uppercase tracking-wider">
+            <div class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                <span class="w-3 h-3 bg-data-positive rounded-full shadow-[0_0_8px_rgba(0,251,251,0.6)]"></span>
+                <span class="text-white/90">Positive Exposure (Bulls)</span>
+            </div>
+            <div class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                <span class="w-3 h-3 bg-data-negative rounded-full shadow-[0_0_8px_rgba(255,0,85,0.6)]"></span>
+                <span class="text-white/90">Negative Exposure (Bears)</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Strike Price Data Table -->
+    {{ if .GEXData }}
+    <section class="glass-card rounded-2xl overflow-hidden" x-data="{ page: 1, limit: 15, items: {{ len .GEXData }} }">
+        <div class="p-6 md:p-8 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h3 class="font-headline-md text-xl font-bold text-white flex items-center gap-2">
+                GEX per Strike Price <span class="text-text-dimmed text-sm font-normal font-data-label">(Sorted by Volume)</span>
+            </h3>
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <div class="flex items-center gap-3 text-sm text-text-dimmed bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                    <button @click="if(page > 1) page--" :class="{'opacity-30': page === 1}" class="p-1 hover:text-white hover:bg-white/10 rounded transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></button>
+                    <span class="font-data-label text-xs uppercase">Page <span x-text="page"></span></span>
+                    <button @click="if(page < Math.ceil(items/limit)) page++" :class="{'opacity-30': page === Math.ceil(items/limit)}" class="p-1 hover:text-white hover:bg-white/10 rounded transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+                </div>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-white/[0.02] border-b border-white/10">
+                    <tr>
+                        <th class="px-6 md:px-8 py-5 font-data-label text-xs text-text-dimmed uppercase tracking-wider">Strike Price</th>
+                        <th class="px-6 md:px-8 py-5 font-data-label text-xs text-text-dimmed uppercase tracking-wider text-right">GEX Exposure</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 font-data-label text-sm">
+                    {{ range $index, $entry := .GEXData }}
+                    <tr class="hover:bg-white/[0.03] transition-colors group" x-show="Math.ceil(({{ $index }} + 1)/limit) === page">
+                        <td class="px-6 md:px-8 py-4 text-white font-bold group-hover:text-primary-fixed transition-colors">${{ $entry.Strike }}</td>
+                        <td class="px-6 md:px-8 py-4 text-right {{ if $entry.IsPositive }}text-data-positive{{ else }}text-data-negative{{ end }}">{{ $entry.GEX }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- TradingView Chart Accordion -->
+    <section x-data="{ showTV: false, loaded: false }" class="glass-card rounded-2xl overflow-hidden mt-10">
+        <button @click="showTV = !showTV; if(showTV && !loaded) { window.initTradingView('{{ .Symbol }}'); loaded = true; }" class="w-full p-6 flex justify-between items-center text-white bg-white/[0.02] hover:bg-white/[0.05] transition-colors">
+            <span class="font-headline-md font-bold flex items-center gap-2"><span class="material-symbols-outlined text-primary-fixed">monitoring</span> TradingView Chart</span>
+            <span class="material-symbols-outlined text-text-dimmed" x-text="showTV ? 'expand_less' : 'expand_more'">expand_more</span>
+        </button>
+        <div x-show="showTV" style="display: none;" class="p-6 border-t border-white/5">
+            <div :id="'tradingview_chart_' + '{{ .Symbol }}'" class="w-full h-[600px]"></div>
+        </div>
+    </section>
+
+    <script>
+    if (typeof window.initTradingView === 'undefined') {
+        window.initTradingView = function(symbol) {
+            if (typeof TradingView !== 'undefined') {
+                new TradingView.widget({
+                    container_id: "tradingview_chart_" + symbol,
+                    symbol: symbol,
+                    interval: "D",
+                    theme: "dark",
+                    style: "1",
+                    locale: "en",
+                    toolbar_bg: "#0a0c10",
+                    enable_publishing: false,
+                    hide_top_toolbar: false,
+                    hide_side_toolbar: false,
+                    allow_symbol_change: true,
+                    studies: ["MASimple@tv-basicstudies", "MACD@tv-basicstudies"],
+                    height: 600,
+                    width: "100%",
+                });
+            } else {
+                console.error("TradingView is not loaded.");
+            }
+        };
+    }
+    </script>
+    {{ end }}
+    
+    <script>
+    (function() {
+        if (typeof d3 === 'undefined') {
+            console.error('D3.js is not loaded');
+            return;
+        }
+        const chartData = {{ .ChartData }};
+        const spotPrice = {{ .SpotPrice }};
+        const gammaFlipLevel = {{ .GammaFlipLevel }};
+
+        d3.select("#d3-chart-partial").selectAll("*").remove();
+
+        const containerWidth = document.getElementById('d3-chart-partial').offsetWidth;
+        const margin = {top: 40, right: 40, bottom: 80, left: 100};
+        const width = containerWidth - margin.left - margin.right;
+        const height = 550 - margin.top - margin.bottom;
+
+        const svg = d3.select("#d3-chart-partial")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .style("background", "transparent")
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Define Glow Filter
+        const defs = svg.append("defs");
+        const filter = defs.append("filter").attr("id", "glow");
+        filter.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "coloredBlur");
+        const feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode").attr("in", "coloredBlur");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+        const x = d3.scaleBand()
+            .domain(chartData.map(d => d.strike))
+            .range([0, width])
+            .padding(0.4);
+
+        const yExtent = d3.extent(chartData, d => d.gex);
+        const yPadding = (yExtent[1] - yExtent[0]) * 0.1;
+        const y = d3.scaleLinear()
+            .domain([Math.min(yExtent[0] - yPadding, 0), Math.max(yExtent[1] + yPadding, 0)])
+            .range([height, 0])
+            .nice();
+
+        svg.append("g")
+            .attr("class", "grid")
+            .call(d3.axisLeft(y).tickSize(-width).tickFormat(""))
+            .selectAll("line")
+            .style("stroke", "#ffffff")
+            .style("stroke-opacity", 0.05);
+
+        svg.selectAll(".grid .domain").remove();
+
+        const xAxis = svg.append("g")
+            .attr("transform", `translate(0,${y(0)})`)
+            .call(d3.axisBottom(x).tickValues(
+                x.domain().filter((d, i) => i % Math.ceil(chartData.length / 25) === 0)
+            ));
+
+        xAxis.selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end")
+            .style("fill", "#8B949E")
+            .style("font-size", "10px")
+            .style("font-family", "'JetBrains Mono', monospace");
+
+        xAxis.select(".domain").style("stroke", "rgba(255,255,255,0.1)");
+
+        const yAxis = svg.append("g")
+            .call(d3.axisLeft(y).ticks(8).tickFormat(d => {
+                const absVal = Math.abs(d);
+                if (absVal >= 1e9) return `$${d3.format(".1f")(d/1e9)}B`;
+                if (absVal >= 1e6) return `$${d3.format(".0f")(d/1e6)}M`;
+                return `$${d3.format(",.0f")(d)}`;
+            }));
+
+        yAxis.selectAll("text")
+            .style("fill", "#8B949E")
+            .style("font-size", "11px")
+            .style("font-family", "'JetBrains Mono', monospace");
+
+        yAxis.select(".domain").remove();
+        yAxis.selectAll(".tick line").style("stroke", "rgba(255,255,255,0.1)");
+
+        const tooltip = d3.select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("background", "rgba(22, 27, 34, 0.95)")
+            .style("padding", "12px 16px")
+            .style("border", "1px solid rgba(255, 255, 255, 0.1)")
+            .style("border-radius", "8px")
+            .style("backdrop-filter", "blur(12px)")
+            .style("pointer-events", "none")
+            .style("opacity", 0)
+            .style("color", "#e1e2eb")
+            .style("font-size", "13px")
+            .style("font-family", "'Inter', sans-serif")
+            .style("box-shadow", "0 10px 25px rgba(0, 0, 0, 0.5)")
+            .style("z-index", "1000");
+
+        svg.selectAll(".bar")
+            .data(chartData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.strike))
+            .attr("width", x.bandwidth())
+            .attr("y", d => d.gex >= 0 ? y(d.gex) : y(0))
+            .attr("height", d => Math.abs(y(d.gex) - y(0)))
+            .attr("fill", d => d.gex >= 0 ? "#00FFFF" : "#FF0055")
+            .style("filter", "url(#glow)")
+            .style("opacity", 0.8)
+            .style("cursor", "pointer")
+            .style("transition", "opacity 0.2s, transform 0.2s")
+            .on("mouseover", function(event, d) {
+                d3.select(this).style("opacity", 1).style("filter", "none");
+                
+                const formatGex = (val) => {
+                    return new Intl.NumberFormat('en-US', {
+                        style: 'currency', currency: 'USD',
+                        minimumFractionDigits: 2, maximumFractionDigits: 2
+                    }).format(val);
+                };
+
+                tooltip.style("opacity", 1)
+                    .html(`
+                        <div style="font-weight: 700; margin-bottom: 8px; color: ${d.gex >= 0 ? '#00FFFF' : '#FF0055'}; font-size: 14px; letter-spacing: 0.05em;">
+                            ${d.gex >= 0 ? 'POSITIVE GEX' : 'NEGATIVE GEX'}
+                        </div>
+                        <div style="margin-bottom: 4px; color: #8B949E; font-family: 'JetBrains Mono', monospace;">Strike: <span style="color: #fff; font-weight: 600;">$${d.strike.toFixed(2)}</span></div>
+                        <div style="color: #8B949E; font-family: 'JetBrains Mono', monospace;">Exposure: <span style="color: #fff; font-weight: 600;">${formatGex(d.gex)}</span></div>
+                    `)
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mousemove", function(event) {
+                tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select(this).style("opacity", 0.8).style("filter", "url(#glow)");
+                tooltip.style("opacity", 0);
+            });
+
+        if (spotPrice > 0) {
+            const strikes = chartData.map(d => d.strike);
+            const closestStrike = strikes.reduce((prev, curr) => 
+                Math.abs(curr - spotPrice) < Math.abs(prev - spotPrice) ? curr : prev
+            );
+            const spotX = x(closestStrike) + x.bandwidth() / 2;
+
+            svg.append("line")
+                .attr("x1", spotX)
+                .attr("x2", spotX)
+                .attr("y1", 0)
+                .attr("y2", height)
+                .style("stroke", "rgba(255,255,255,0.4)")
+                .style("stroke-width", 1)
+                .style("stroke-dasharray", "4,4");
+                
+            svg.append("text")
+                .attr("x", spotX + 10)
+                .attr("y", 20)
+                .style("fill", "rgba(255,255,255,0.6)")
+                .style("font-size", "10px")
+                .style("font-family", "'JetBrains Mono', monospace")
+                .text(`SPOT: $${spotPrice.toFixed(2)}`);
+        }
+    })();
+    </script>
+</div>
+{{ else }}
+<div class="glass-card rounded-xl p-8 text-center animate-fade-in-up">
+    <span class="material-symbols-outlined text-text-dimmed text-[48px] mb-4">search_off</span>
+    <p class="text-xl text-white font-bold">No GEX data available for {{ .Symbol }} on {{ .Expiration }}.</p>
+    <p class="text-text-dimmed mt-2">This may happen if the market is closed or if the data provider doesn't have Greeks for this chain yet.</p>
+</div>
+{{ end }}
+{{ end }}
