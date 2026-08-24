@@ -772,9 +772,13 @@ func (h *GEXHandler) GetRecentGEXHistory(ctx context.Context, symbol string, lim
 
 	for i, row := range history {
 		var gexValue float64
-		err = row.GexValue.Scan(&gexValue)
+		f8, err := row.GexValue.Float64Value()
 		if err != nil {
 			h.logger.Error("failed to extract GEX value", "error", err)
+			gexValue = 0
+		} else if f8.Valid {
+			gexValue = f8.Float64
+		} else {
 			gexValue = 0
 		}
 
@@ -826,13 +830,15 @@ func (h *GEXHandler) GetRecentGEXHistory(ctx context.Context, symbol string, lim
 		}
 
 		records[i] = GexHistoryRecord{
-			ID:             row.ID,
-			Symbol:         row.Symbol,
-			ExpiryDate:     expiryDate,
-			CollectedAt:    row.RecordedAt,
-			TotalGex:       gexValue,
-			SpotPrice:      spotPrice,
-			TopGexByStrike: topGexByStrike,
+			ID:                row.ID,
+			Symbol:            row.Symbol,
+			ExpiryDate:        expiryDate,
+			CollectedAt:       row.RecordedAt,
+			TotalGex:          gexValue,
+			TotalGexFormatted: formatCurrency(gexValue),
+			DateFormatted:     row.RecordedAt.Format("Jan 02, 2006"),
+			SpotPrice:         spotPrice,
+			TopGexByStrike:    topGexByStrike,
 		}
 	}
 
@@ -845,14 +851,16 @@ type GexStrikeValue struct {
 }
 
 type GexHistoryRecord struct {
-	ID             uuid.UUID        `json:"id"`
-	Symbol         string           `json:"symbol"`
-	CollectedAt    time.Time        `json:"collected_at"`
-	ExpiryDate     string           `json:"expiry_date"`
-	TotalGex       float64          `json:"total_gex"`
-	MaxGex         float64          `json:"max_gex"`
-	SpotPrice      float64          `json:"spot_price"`
-	TopGexByStrike []GexStrikeValue `json:"top_gex_by_strike"`
+	ID                uuid.UUID        `json:"id"`
+	Symbol            string           `json:"symbol"`
+	CollectedAt       time.Time        `json:"collected_at"`
+	ExpiryDate        string           `json:"expiry_date"`
+	TotalGex          float64          `json:"total_gex"`
+	TotalGexFormatted string           `json:"total_gex_formatted"`
+	DateFormatted     string           `json:"date_formatted"`
+	MaxGex            float64          `json:"max_gex"`
+	SpotPrice         float64          `json:"spot_price"`
+	TopGexByStrike    []GexStrikeValue `json:"top_gex_by_strike"`
 }
 
 func (h *GEXHandler) MAG7GEXHandler(w http.ResponseWriter, r *http.Request) {
