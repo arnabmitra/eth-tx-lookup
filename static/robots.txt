@@ -6,4 +6,4 @@ Allow: /eth-tx
 Disallow: /static/
 Disallow: /static/images/
 
-Sitemap: https://gextracker.site/sitemap.xml
+Sitemap: https://gextracker.cloud/sitemap.xml
