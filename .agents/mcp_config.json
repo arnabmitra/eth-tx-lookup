@@ -1,19 +1,10 @@
 {
   "mcpServers": {
-    "gex-mcp": {
-      "command": "go",
-      "args": [
-        "run",
-        "/Users/arnab/eth-tx-lookup/cmd/mcp-server/main.go"
-      ],
+    "gex-local": {
+      "type": "sse",
+      "url": "http://localhost:8081/sse",
       "env": {
-        "DATABASE_URL": "postgres://postgres:indy%401329@127.0.0.1:5433/guestbook?sslmode=disable",
-        "ETH_API_KEY_FILE": "./eth.txt",
-        "TRADIER_API_KEY": "imeXkz6OEBuQTLehSuyeHksgdvXl",
-        "ALPACA_API_KEY": "AKNQG6A2YE2DMNI4QNMFP4WH7Y",
-        "ALPACA_API_SECRET": "35P9HaUWdSiaJTJKkWeBo6PtEeAagjenDaF58qsWFgJv",
-        "FRED_API_KEY": "f5991f935f3de996990f99823bdd172b",
-        "PUBLIC_SECRET_KEY": "oc8eFy1dKBOJJ84Z12yc8izo0HvcmvPV"
+        "Authorization": "Bearer local_dev_token"
       }
     }
   }

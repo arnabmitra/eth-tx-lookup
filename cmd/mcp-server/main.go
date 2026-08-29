@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
-
-	"net/http"
 
 	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 	"github.com/arnabmitra/eth-proxy/internal/repository"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	mcp "github.com/metoro-io/mcp-golang"
-	"github.com/metoro-io/mcp-golang/transport/sse"
+
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 )
 
 type GEXMcpServer struct {
@@ -21,30 +21,31 @@ type GEXMcpServer struct {
 	repo *repository.Queries
 }
 
-type RegimeArgs struct {
-	Symbol string `json:"symbol" jsonschema:"required,description=The stock ticker symbol (e.g., SPY, ARM, NET)"`
-}
-
-func (s *GEXMcpServer) GetRegime(ctx context.Context, args RegimeArgs) (*mcp.ToolResponse, error) {
-	apiKey, apiSecret := gex.GetAlpacaConfig()
-	if apiKey == "" {
-		return nil, fmt.Errorf("ALPACA_API_KEY not set")
+func (s *GEXMcpServer) GetRegimeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	symbol, err := request.RequireString("symbol")
+	if err != nil {
+		return mcp.NewToolResultError("symbol argument is required"), nil
 	}
 
-	symbol := strings.ToUpper(args.Symbol)
+	apiKey, apiSecret := gex.GetAlpacaConfig()
+	if apiKey == "" {
+		return mcp.NewToolResultError("ALPACA_API_KEY not set"), nil
+	}
+
+	symbol = strings.ToUpper(symbol)
 	price, err := gex.GetSpotPrice(apiKey, apiSecret, symbol)
 	if err != nil {
-		return nil, fmt.Errorf("error getting spot price: %v", err)
+		return mcp.NewToolResultError(fmt.Sprintf("error getting spot price: %v", err)), nil
 	}
 
 	expirations, err := gex.GetExpirationDates(apiKey, apiSecret, symbol)
 	if err != nil || len(expirations) == 0 {
-		return nil, fmt.Errorf("error getting expirations: %v", err)
+		return mcp.NewToolResultError(fmt.Sprintf("error getting expirations: %v", err)), nil
 	}
 
 	options, _, warning, err := gex.FetchOptionsChain(symbol, expirations[0], apiKey, apiSecret)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching options: %v", err)
+		return mcp.NewToolResultError(fmt.Sprintf("error fetching options: %v", err)), nil
 	}
 
 	gexByStrike := gex.CalculateGEXPerStrike(options, price)
@@ -71,37 +72,31 @@ func (s *GEXMcpServer) GetRegime(ctx context.Context, args RegimeArgs) (*mcp.Too
 
 	report := fmt.Sprintf("Regime for %s:\n- Spot Price: %.2f\n- Net GEX: $%.2fM\n- Gamma Condition: %s\n- Gamma Flip: %.2f\n",
 		symbol, price, netGEX/1000000.0, condition, flip)
-	
+
 	if warning != "" {
 		report += fmt.Sprintf("\nWarning: %s", warning)
 	}
 
-	return mcp.NewToolResponse(mcp.NewTextContent(report)), nil
+	return mcp.NewToolResultText(report), nil
 }
 
-type AnomaliesArgs struct {
-	Limit int `json:"limit" jsonschema:"description=Number of anomalies to return,default=5"`
-}
-
-func (s *GEXMcpServer) GetAnomalies(ctx context.Context, args AnomaliesArgs) (*mcp.ToolResponse, error) {
-	if args.Limit == 0 {
-		args.Limit = 5
-	}
+func (s *GEXMcpServer) GetAnomaliesHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	limit := int(request.GetFloat("limit", 5.0))
 
 	anomalies, err := s.repo.GetGEXAnomalies(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching anomalies: %v", err)
+		return mcp.NewToolResultError(fmt.Sprintf("error fetching anomalies: %v", err)), nil
 	}
 
 	var sb strings.Builder
 	sb.WriteString("Current GEX Anomalies (Z-Score):\n\n")
-	
+
 	count := 0
 	for _, a := range anomalies {
-		if count >= args.Limit {
+		if count >= limit {
 			break
 		}
-		
+
 		var zScoreVal float64
 		if a.ZScore.Valid {
 			f, _ := a.ZScore.Float64Value()
@@ -113,28 +108,26 @@ func (s *GEXMcpServer) GetAnomalies(ctx context.Context, args AnomaliesArgs) (*m
 			f, _ := a.GexValue.Float64Value()
 			gexValueM = f.Float64 / 1000000.0
 		}
-		
-		// Handle pgtype.Text for SpotPrice
+
 		spotPriceStr := "N/A"
 		if a.SpotPrice.Valid {
 			spotPriceStr = a.SpotPrice.String
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("- %s: GEX $%.2fM (Z-Score: %.2f) @ Price %s\n",
 			a.Symbol, gexValueM, zScoreVal, spotPriceStr))
 		count++
 	}
 
-	return mcp.NewToolResponse(mcp.NewTextContent(sb.String())), nil
+	return mcp.NewToolResultText(sb.String()), nil
 }
 
 func main() {
-	// Automatically load .env file from the root directory just like the main app does
 	godotenv.Load()
 
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
-		fmt.Fprintf(os.Stderr, "Error: DATABASE_URL environment variable is missing (check your .env file)\n")
+		fmt.Fprintf(os.Stderr, "Error: DATABASE_URL environment variable is missing\n")
 		os.Exit(1)
 	}
 
@@ -145,36 +138,33 @@ func main() {
 	}
 	defer pool.Close()
 
-	server := &GEXMcpServer{
+	gexSrv := &GEXMcpServer{
 		db:   pool,
 		repo: repository.New(pool),
 	}
 
-	transport := sse.NewSSEServerTransport("/message")
-	mcpServer := mcp.NewServer(transport)
+	mcpServer := server.NewMCPServer("gex-server", "1.0.0")
 
-	// Register Tools
-	err = mcpServer.RegisterTool("get_gex_regime", "Get the current Gamma Exposure regime, spot price, and flip level for a symbol.", server.GetRegime)
-	if err != nil {
-		panic(err)
-	}
+	// Register tools
+	regimeTool := mcp.NewTool("get_gex_regime",
+		mcp.WithDescription("Get the current Gamma Exposure regime, spot price, and flip level for a symbol."),
+		mcp.WithString("symbol", mcp.Required(), mcp.Description("The stock ticker symbol (e.g., SPY, ARM, NET)")),
+	)
+	mcpServer.AddTool(regimeTool, gexSrv.GetRegimeHandler)
 
-	err = mcpServer.RegisterTool("get_gex_anomalies", "Identify stocks with the highest statistical GEX deviations (Z-scores) from our database.", server.GetAnomalies)
-	if err != nil {
-		panic(err)
-	}
+	anomaliesTool := mcp.NewTool("get_gex_anomalies",
+		mcp.WithDescription("Identify stocks with the highest statistical GEX deviations (Z-scores) from our database."),
+		mcp.WithNumber("limit", mcp.Description("Number of anomalies to return, default=5")),
+	)
+	mcpServer.AddTool(anomaliesTool, gexSrv.GetAnomaliesHandler)
 
-	// Serve the MCP server
-	go func() {
-		if err := mcpServer.Serve(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error serving MCP: %v\n", err)
-			os.Exit(1)
-		}
-	}()
+	// Create SSE server wrapper
+	sseServer := server.NewSSEServer(mcpServer)
 
 	mux := http.NewServeMux()
-	mux.Handle("/sse", transport.HandleSSE())
-	mux.Handle("/message", transport.HandleMessage())
+	// Depending on library version, might use Handle or HandleFunc, but SSEHandler() returns http.Handler
+	mux.Handle("/sse", sseServer.SSEHandler())
+	mux.Handle("/message", sseServer.MessageHandler())
 
 	// Auth Middleware
 	authMiddleware := func(next http.Handler) http.Handler {
