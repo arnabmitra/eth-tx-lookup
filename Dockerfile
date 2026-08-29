@@ -32,7 +32,8 @@ ARG TARGETARCH
 # source code into the container.
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server .
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server . && \
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/mcp-server ./cmd/mcp-server
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal
@@ -77,6 +78,7 @@ RUN mkdir -p /static/images && \
 
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/server /bin/
+COPY --from=build /bin/mcp-server /bin/
 COPY ./migrations ./migrations
 COPY ./templates ./templates
 COPY ./static ./static

@@ -37,6 +37,32 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  mcp-server:
+    image: ghcr.io/arnabmitra/eth-proxy:latest
+    pull_policy: always
+    container_name: mcp-server
+    entrypoint: [ "/bin/mcp-server" ]
+    ports:
+      - "8081:8081"
+    secrets:
+      - db-password
+      - eth-password
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=guestbook
+      - POSTGRES_PORT=5432
+      - POSTGRES_SSLMODE=disable
+      - ETH_API_KEY_FILE=/run/secrets/eth-password
+      - TRADIER_API_KEY=imeXkz6OEBuQTLehSuyeHksgdvXl
+      - FRED_API_KEY=f5991f935f3de996990f99823bdd172b
+      - ALPACA_API_KEY=AKNQG6A2YE2DMNI4QNMFP4WH7Y
+      - ALPACA_API_SECRET=35P9HaUWdSiaJTJKkWeBo6PtEeAagjenDaF58qsWFgJv
+      - PUBLIC_SECRET_KEY=oc8eFy1dKBOJJ84Z12yc8izo0HvcmvPV
+    depends_on:
+      db:
+        condition: service_healthy
   reverse-proxy:
     image: traefik:v3.1
     command:
@@ -88,7 +114,3 @@ secrets:
     file: db/password.txt
   eth-password:
     file: db/eth.txt
-  alpaca-key:
-    file: db/alpaca_key.txt
-  alpaca-secret:
-    file: db/alpaca_secret.txt

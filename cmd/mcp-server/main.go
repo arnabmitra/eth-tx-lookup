@@ -6,11 +6,14 @@ import (
 	"os"
 	"strings"
 
+	"net/http"
+
 	"github.com/arnabmitra/eth-proxy/internal/handler/gex"
 	"github.com/arnabmitra/eth-proxy/internal/repository"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	mcp "github.com/metoro-io/mcp-golang"
-	"github.com/metoro-io/mcp-golang/transport/stdio"
+	"github.com/metoro-io/mcp-golang/transport/sse"
 )
 
 type GEXMcpServer struct {
@@ -126,9 +129,13 @@ func (s *GEXMcpServer) GetAnomalies(ctx context.Context, args AnomaliesArgs) (*m
 }
 
 func main() {
+	// Automatically load .env file from the root directory just like the main app does
+	godotenv.Load()
+
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
-		dbUrl = "postgres://guestbook:guestbook@localhost:5432/guestbook"
+		fmt.Fprintf(os.Stderr, "Error: DATABASE_URL environment variable is missing (check your .env file)\n")
+		os.Exit(1)
 	}
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
@@ -143,7 +150,8 @@ func main() {
 		repo: repository.New(pool),
 	}
 
-	mcpServer := mcp.NewServer(stdio.NewStdioServerTransport())
+	transport := sse.NewSSEServerTransport("/message")
+	mcpServer := mcp.NewServer(transport)
 
 	// Register Tools
 	err = mcpServer.RegisterTool("get_gex_regime", "Get the current Gamma Exposure regime, spot price, and flip level for a symbol.", server.GetRegime)
@@ -156,9 +164,42 @@ func main() {
 		panic(err)
 	}
 
-	// Serve the MCP server over stdio
-	if err := mcpServer.Serve(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error serving MCP: %v\n", err)
+	// Serve the MCP server
+	go func() {
+		if err := mcpServer.Serve(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error serving MCP: %v\n", err)
+			os.Exit(1)
+		}
+	}()
+
+	mux := http.NewServeMux()
+	mux.Handle("/sse", transport.HandleSSE())
+	mux.Handle("/message", transport.HandleMessage())
+
+	// Auth Middleware
+	authMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			token := strings.TrimPrefix(authHeader, "Bearer ")
+
+			var exists bool
+			err := pool.QueryRow(r.Context(), "SELECT EXISTS(SELECT 1 FROM mcp_api_keys WHERE token = $1)", token).Scan(&exists)
+			if err != nil || !exists {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	fmt.Println("Starting authenticated MCP SSE server on :8081...")
+	if err := http.ListenAndServe(":8081", authMiddleware(mux)); err != nil {
+		fmt.Fprintf(os.Stderr, "Error starting HTTP server: %v\n", err)
 		os.Exit(1)
 	}
 }
