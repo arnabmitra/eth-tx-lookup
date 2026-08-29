@@ -19,3 +19,7 @@ __**
 
 debug-bin
 debug-bin/*
+
+.agents/*
+
+scratch/

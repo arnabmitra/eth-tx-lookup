@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "gex-local": {
+    "gex-remote": {
       "type": "sse",
-      "url": "http://localhost:8081/sse",
+      "url": "http://217.196.49.84:8081/sse",
       "env": {
-        "Authorization": "Bearer local_dev_token"
+        "Authorization": "Bearer 1f0fad40ac467b0d"
       }
     }
   }
