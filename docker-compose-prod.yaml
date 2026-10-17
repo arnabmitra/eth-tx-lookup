@@ -41,7 +41,7 @@ services:
     image: ghcr.io/arnabmitra/eth-proxy:latest
     pull_policy: always
     container_name: mcp-server
-    entrypoint: [ "/bin/mcp-server" ]
+    entrypoint: [ "sh", "-c", "export DATABASE_URL=postgres://$${POSTGRES_USER}:$$(cat $${POSTGRES_PASSWORD_FILE})@$${POSTGRES_HOST}:$${POSTGRES_PORT}/$${POSTGRES_DB}?sslmode=$${POSTGRES_SSLMODE} && exec /bin/mcp-server" ]
     ports:
       - "8081:8081"
     secrets:

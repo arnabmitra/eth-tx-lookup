@@ -14,8 +14,10 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"cloud.google.com/go/civil"
 	"github.com/arnabmitra/eth-proxy/internal/public"
+	"github.com/arnabmitra/eth-proxy/internal/tastytrade"
 	"os"
 	"strings"
+	"sync"
 	"math"
 )
 
@@ -132,6 +134,77 @@ func GetAlpacaConfig() (string, string) {
 		}
 	}
 
+	if key == "" && HasValidConfig() {
+		return "tastytrade", "tastytrade"
+	}
+
+	return key, secret
+}
+
+var (
+	tastyClient   *tastytrade.Client
+	tastyClientMu sync.Mutex
+)
+
+func GetTastytradeConfig() (string, string, string) {
+	clientID := os.Getenv("TASTYTRADE_CLIENT_ID")
+	clientSecret := os.Getenv("TASTYTRADE_CLIENT_SECRET")
+	refreshToken := os.Getenv("TASTYTRADE_REFRESH_TOKEN")
+
+	if clientID == "" {
+		if f := os.Getenv("TASTYTRADE_CLIENT_ID_FILE"); f != "" {
+			if d, err := os.ReadFile(f); err == nil {
+				clientID = strings.TrimSpace(string(d))
+			}
+		}
+	}
+	if clientSecret == "" {
+		if f := os.Getenv("TASTYTRADE_CLIENT_SECRET_FILE"); f != "" {
+			if d, err := os.ReadFile(f); err == nil {
+				clientSecret = strings.TrimSpace(string(d))
+			}
+		}
+	}
+	if refreshToken == "" {
+		if f := os.Getenv("TASTYTRADE_REFRESH_TOKEN_FILE"); f != "" {
+			if d, err := os.ReadFile(f); err == nil {
+				refreshToken = strings.TrimSpace(string(d))
+			}
+		}
+	}
+
+	return clientID, clientSecret, refreshToken
+}
+
+func getTastytradeClient() *tastytrade.Client {
+	clientID, clientSecret, refreshToken := GetTastytradeConfig()
+	if clientID == "" || clientSecret == "" || refreshToken == "" {
+		return nil
+	}
+	tastyClientMu.Lock()
+	defer tastyClientMu.Unlock()
+	if tastyClient == nil || tastyClient.ClientID != clientID || tastyClient.RefreshToken != refreshToken {
+		tastyClient = tastytrade.NewClient(clientID, clientSecret, refreshToken)
+	}
+	return tastyClient
+}
+
+func HasValidConfig() bool {
+	tID, tSec, tRef := GetTastytradeConfig()
+	if tID != "" && tSec != "" && tRef != "" {
+		return true
+	}
+	pSec, _ := GetPublicConfig()
+	if pSec != "" {
+		return true
+	}
+	aKey, aSec := GetAlpacaConfigDirect()
+	return aKey != "" && aSec != ""
+}
+
+func GetAlpacaConfigDirect() (string, string) {
+	key := os.Getenv("ALPACA_API_KEY")
+	secret := os.Getenv("ALPACA_API_SECRET")
 	return key, secret
 }
 
@@ -165,6 +238,16 @@ type Response struct {
 }
 
 func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
+	// Try Tastytrade first if configured
+	if tc := getTastytradeClient(); tc != nil {
+		price, err := tc.GetSpotPrice(symbol)
+		if err == nil && price > 0 {
+			fmt.Printf("Successfully fetched spot price from Tastytrade for %s: %.2f\n", symbol, price)
+			return price, nil
+		}
+		fmt.Printf("Tastytrade spot price fetch failed: %v\n", err)
+	}
+
 	// Try Public.com first if secret is available
 	publicSecret, publicAccountID := GetPublicConfig()
 	if publicSecret != "" {
@@ -221,6 +304,36 @@ func GetSpotPrice(apiKey, apiSecret, symbol string) (float64, error) {
 
 // FetchOptionsChain fetches the options chain for the given symbol and expiration date using Alpaca
 func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]Option, *string, string, error) {
+	// Try Tastytrade first if configured
+	if tc := getTastytradeClient(); tc != nil {
+		fmt.Printf("Attempting to fetch options chain from Tastytrade for %s (%s)...\n", symbol, expiration)
+		contracts, err := tc.FetchOptionChain(symbol, expiration)
+		if err == nil && len(contracts) > 0 {
+			var options []Option
+			for _, c := range contracts {
+				opt := Option{
+					Strike:         c.Strike,
+					OptionType:     c.OptionType,
+					OpenInterest:   c.OpenInterest,
+					ExpirationDate: c.ExpirationDate,
+					ExpirationType: c.ExpirationType,
+				}
+				opt.Greeks.Gamma = c.Gamma
+				options = append(options, opt)
+			}
+			resp := Response{}
+			resp.Options.Option = options
+			jsonData, err := json.Marshal(resp)
+			if err != nil {
+				return options, nil, "", fmt.Errorf("error marshalling options to JSON: %v", err)
+			}
+			bodyStr := string(jsonData)
+			fmt.Printf("Successfully fetched %d options from Tastytrade for %s (%s)\n", len(options), symbol, expiration)
+			return options, &bodyStr, "", nil
+		}
+		fmt.Printf("Tastytrade FetchOptionChain failed: %v\n", err)
+	}
+
 	publicSecret, publicAccountID := GetPublicConfig()
 	if publicSecret != "" {
 		fmt.Printf("Attempting to fetch options chain from Public.com for %s (%s)...\n", symbol, expiration)
@@ -445,6 +558,16 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 }
 
 func GetExpirationDates(apiKey, apiSecret, symbol string) ([]string, error) {
+	// Try Tastytrade first if configured
+	if tc := getTastytradeClient(); tc != nil {
+		dates, err := tc.GetExpirations(symbol)
+		if err == nil && len(dates) > 0 {
+			fmt.Printf("Successfully fetched %d expiration dates from Tastytrade for %s\n", len(dates), symbol)
+			return dates, nil
+		}
+		fmt.Printf("Tastytrade expiration fetch failed: %v\n", err)
+	}
+
 	publicSecret, publicAccountID := GetPublicConfig()
 	if publicSecret != "" {
 		fmt.Printf("Attempting to fetch expiration dates from Public.com for %s...\n", symbol)
