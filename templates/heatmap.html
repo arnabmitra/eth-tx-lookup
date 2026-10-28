@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>{{ .Symbol }} Options Heatmap - Daily Premium & Delta Risk Matrix</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                  "primary-container": "#00fbfb",
+                  "primary-fixed": "#00fbfb",
+                  "surface-card": "#161B22",
+                  "data-positive": "#00FFFF",
+                  "data-negative": "#FF0055",
+                  background: "#0a0c10",
+                  "surface-input": "#0D1117",
+                  "border-muted": "#30363D",
+                  "on-surface": "#e1e2eb",
+                  "text-dimmed": "#8B949E"
+              },
+              fontFamily: {
+                  "body-sm": ["Inter"],
+                  caption: ["Inter"],
+                  "data-label": ["JetBrains Mono"],
+                  "data-value-lg": ["JetBrains Mono"],
+                  "body-lg": ["Inter"],
+                  "display-lg": ["Hanken Grotesk"],
+                  "headline-md": ["Hanken Grotesk"]
+              }
+            }
+          }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,251,251,0.4); }
+
+        .bg-dots {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .glass-card {
+            background: rgba(18, 22, 30, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Delta Risk Tiers */
+        .tier-safe {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.28);
+            color: #34d399;
+        }
+        .tier-safe:hover, .tier-safe.active-cell {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: #34d399;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+        }
+
+        .tier-low {
+            background: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.22);
+            color: #6ee7b7;
+        }
+        .tier-low:hover, .tier-low.active-cell {
+            background: rgba(52, 211, 153, 0.20);
+            border-color: #6ee7b7;
+            box-shadow: 0 0 14px rgba(52, 211, 153, 0.3);
+        }
+
+        .tier-moderate {
+            background: rgba(234, 179, 8, 0.12);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            color: #fde047;
+        }
+        .tier-moderate:hover, .tier-moderate.active-cell {
+            background: rgba(234, 179, 8, 0.25);
+            border-color: #facc15;
+            box-shadow: 0 0 14px rgba(234, 179, 8, 0.35);
+        }
+
+        .tier-risky {
+            background: rgba(249, 115, 22, 0.14);
+            border: 1px solid rgba(249, 115, 22, 0.32);
+            color: #fb923c;
+        }
+        .tier-risky:hover, .tier-risky.active-cell {
+            background: rgba(249, 115, 22, 0.26);
+            border-color: #fb923c;
+            box-shadow: 0 0 14px rgba(249, 115, 22, 0.4);
+        }
+
+        .tier-aggressive {
+            background: rgba(239, 68, 68, 0.16);
+            border: 1px solid rgba(239, 68, 68, 0.38);
+            color: #f87171;
+        }
+        .tier-aggressive:hover, .tier-aggressive.active-cell {
+            background: rgba(239, 68, 68, 0.28);
+            border-color: #ef4444;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+        }
+
+        .spot-divider {
+            position: relative;
+        }
+        .spot-divider::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, #fbbf24 0%, #00fbfb 50%, #fbbf24 100%);
+            box-shadow: 0 0 8px #00fbfb;
+            z-index: 10;
+        }
+
+        /* Tooltip style */
+        .tooltip-card {
+            pointer-events: none;
+            transition: opacity 0.15s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-sm selection:bg-primary-container selection:text-background relative min-h-screen">
+
+<div class="fixed inset-0 z-[-2] bg-dots"></div>
+<div class="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-primary-fixed/10 rounded-full blur-[140px] pointer-events-none z-[-1]"></div>
+
+{{template "navigation"}}
+
+<main class="pt-24 pb-16 px-4 md:px-6 max-w-[1720px] mx-auto">
+    <!-- Hero / Title -->
+    <section class="mb-6 text-center relative">
+        <h1 class="font-display-lg text-4xl md:text-5xl mb-2 tracking-tight font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-fixed to-emerald-400">
+            Options Heatmap
+        </h1>
+        <p class="text-text-dimmed font-body-lg max-w-2xl mx-auto text-sm md:text-base">
+            Multi-expiration option chain matrix showing <span class="text-white font-medium">Delta risk</span>, <span class="text-white font-medium">total premium</span>, and <span class="text-primary-fixed font-semibold">amount earned per day</span>.
+        </p>
+    </section>
+
+    <!-- Sub-tab View Switcher (GEX vs Heatmap) -->
+    <div class="flex items-center justify-center gap-3 mb-6">
+        <a id="gex-tab-link" href="/gex?symbol={{ .Symbol }}" class="bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all">
+            <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+            GEX Chart
+        </a>
+        <a href="/heatmap?symbol={{ .Symbol }}" class="bg-primary-fixed/20 text-primary-fixed border border-primary-fixed/40 px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-[0_0_15px_rgba(0,251,251,0.2)]">
+            <span class="material-symbols-outlined text-[18px]">grid_view</span>
+            Options Heatmap
+        </a>
+        <a href="/all-gex?symbol={{ .Symbol }}" class="bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all">
+            <span class="material-symbols-outlined text-[18px]">stacked_line_chart</span>
+            All Expiries
+        </a>
+    </div>
+
+    <!-- Main Controller Card -->
+    <section class="glass-card p-4 md:p-6 rounded-2xl mb-6 shadow-2xl relative overflow-hidden">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <!-- Symbol Search + Quick Pills -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <form id="search-form" onsubmit="event.preventDefault(); loadHeatmap();" class="flex items-center gap-2">
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-fixed font-bold text-sm">$</span>
+                        <input id="symbol-input" class="w-32 md:w-36 bg-surface-input/80 border border-white/15 text-white font-data-value-lg rounded-xl focus:ring-2 focus:ring-primary-fixed/50 focus:border-primary-fixed uppercase pl-8 pr-3 py-2 text-base transition-all outline-none" type="text" value="{{ .Symbol }}" required>
+                    </div>
+                    <button type="submit" class="bg-gradient-to-r from-primary-fixed to-blue-500 text-background font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(0,251,251,0.4)] active:scale-[0.98] transition-all text-sm">
+                        <span class="material-symbols-outlined text-[18px]">search</span>
+                        LOAD
+                    </button>
+                </form>
+
+                <!-- Quick Symbols -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                    <span class="text-xs text-text-dimmed font-data-label uppercase hidden md:inline">Quick:</span>
+                    <button onclick="setSymbol('SPY')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">SPY</button>
+                    <button onclick="setSymbol('QQQ')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">QQQ</button>
+                    <button onclick="setSymbol('IWM')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">IWM</button>
+                    <button onclick="setSymbol('NVDA')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">NVDA</button>
+                    <button onclick="setSymbol('TSLA')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">TSLA</button>
+                    <button onclick="setSymbol('AAPL')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">AAPL</button>
+                    <button onclick="setSymbol('MU')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-data-label text-gray-300 hover:text-white transition-all">MU</button>
+                </div>
+            </div>
+
+            <!-- Interactive Filters & Toggles -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Puts / Calls Toggle -->
+                <div class="bg-surface-input/90 border border-white/15 p-1 rounded-xl flex items-center">
+                    <button id="toggle-puts" onclick="setOptionType('PUT')" class="px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition-all bg-primary-fixed text-background shadow-md">
+                        PUTS
+                    </button>
+                    <button id="toggle-calls" onclick="setOptionType('CALL')" class="px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wider text-gray-400 hover:text-white transition-all">
+                        CALLS
+                    </button>
+                </div>
+
+                <!-- Expirations Count Dropdown -->
+                <div class="relative flex items-center bg-surface-input/90 border border-white/15 rounded-xl px-3 py-1.5">
+                    <span class="text-xs text-text-dimmed font-data-label mr-2">Expirations:</span>
+                    <select id="expirations-count" onchange="loadHeatmap()" class="bg-transparent text-white font-data-label text-xs outline-none cursor-pointer pr-4">
+                        <option value="4" class="bg-surface-card">4</option>
+                        <option value="6" selected class="bg-surface-card">6</option>
+                        <option value="8" class="bg-surface-card">8</option>
+                        <option value="10" class="bg-surface-card">10</option>
+                        <option value="12" class="bg-surface-card">12</option>
+                    </select>
+                </div>
+
+                <!-- Daily Metric Toggle: Yield (Premium/DTE) vs Theta ($/Day) -->
+                <div class="bg-surface-input/90 border border-white/15 p-1 rounded-xl flex items-center">
+                    <button id="metric-yield" onclick="setMetricMode('yield')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Yield ($/DTE)
+                    </button>
+                    <button id="metric-theta" onclick="setMetricMode('theta')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all">
+                        Theta ($/Day)
+                    </button>
+                </div>
+
+                <!-- Contracts Multiplier -->
+                <div class="flex items-center gap-1.5 bg-surface-input/90 border border-white/15 px-3 py-1.5 rounded-xl">
+                    <span class="text-xs text-text-dimmed font-data-label">Contracts:</span>
+                    <input id="contract-count" type="number" min="1" max="100" value="1" oninput="updateContractMultiplier()" class="w-12 bg-black/40 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs text-white font-data-value-lg outline-none focus:border-primary-fixed">
+                    <div class="flex items-center gap-1">
+                        <button onclick="setContracts(1)" class="px-1.5 py-0.5 bg-white/5 hover:bg-white/10 rounded text-[10px] font-data-label text-gray-400">1x</button>
+                        <button onclick="setContracts(5)" class="px-1.5 py-0.5 bg-white/5 hover:bg-white/10 rounded text-[10px] font-data-label text-gray-400">5x</button>
+                        <button onclick="setContracts(10)" class="px-1.5 py-0.5 bg-white/5 hover:bg-white/10 rounded text-[10px] font-data-label text-gray-400">10x</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delta Risk Legend -->
+        <div class="mt-5 pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="font-data-label text-text-dimmed uppercase tracking-wider text-[11px]">Delta Risk:</span>
+                <span class="px-2 py-0.5 rounded-md tier-safe text-[11px] font-data-label font-semibold">Safe &lt;0.15</span>
+                <span class="px-2 py-0.5 rounded-md tier-low text-[11px] font-data-label font-semibold">Low 0.15-0.30</span>
+                <span class="px-2 py-0.5 rounded-md tier-moderate text-[11px] font-data-label font-semibold">Moderate 0.30-0.45</span>
+                <span class="px-2 py-0.5 rounded-md tier-risky text-[11px] font-data-label font-semibold">Risky 0.45-0.60</span>
+                <span class="px-2 py-0.5 rounded-md tier-aggressive text-[11px] font-data-label font-semibold">Aggressive &gt;0.60</span>
+            </div>
+            <div id="stats-summary" class="flex items-center gap-4 text-xs font-data-label text-text-dimmed">
+                <!-- Dynamically populated stats -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Workspace: Matrix Grid + Inspector Panel -->
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
+        <!-- The Matrix (Left 3 cols on xl) -->
+        <div class="xl:col-span-3">
+            <div class="glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative">
+                <!-- Loading State -->
+                <div id="matrix-loading" class="flex flex-col items-center justify-center py-24">
+                    <svg class="w-12 h-12 text-primary-fixed animate-spin mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-primary-fixed font-data-label text-sm animate-pulse tracking-wider">Fetching Multi-Expiration Option Chains...</p>
+                    <p class="text-xs text-text-dimmed mt-1">Calculating premiums, daily yields, and Greeks</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="matrix-error" class="hidden flex-col items-center justify-center py-20 px-6 text-center">
+                    <span class="material-symbols-outlined text-red-400 text-5xl mb-3">error_outline</span>
+                    <h3 class="text-lg font-bold text-white mb-1">Failed to load option heatmap</h3>
+                    <p id="error-message" class="text-sm text-text-dimmed max-w-md mb-4"></p>
+                    <button onclick="loadHeatmap()" class="bg-primary-fixed/20 hover:bg-primary-fixed/30 text-primary-fixed border border-primary-fixed/40 px-5 py-2 rounded-xl text-sm font-semibold transition-all">
+                        Try Again
+                    </button>
+                </div>
+
+                <!-- Scrollable Grid Container -->
+                <div id="matrix-scroll-wrapper" class="hidden overflow-x-auto max-h-[820px] relative">
+                    <table id="heatmap-table" class="w-full border-collapse text-center">
+                        <thead class="sticky top-0 z-30 bg-[#0d1117]/95 backdrop-blur-md border-b border-white/15">
+                            <tr id="table-header-row">
+                                <th class="sticky left-0 z-40 bg-[#0d1117] px-4 py-3 text-left font-data-label text-xs text-text-dimmed uppercase tracking-wider border-r border-white/10 w-28">
+                                    Strike
+                                </th>
+                                <!-- Dynamic Expiration Headers -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-white/5">
+                            <!-- Dynamic Matrix Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Inspector Sidebar (Right 1 col on xl) -->
+        <div class="xl:col-span-1">
+            <div id="inspector-card" class="glass-card p-6 rounded-2xl sticky top-28 shadow-2xl border border-white/15">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+                    <div>
+                        <span id="inspect-type-badge" class="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase bg-primary-fixed/20 text-primary-fixed border border-primary-fixed/30 mr-1.5">PUT</span>
+                        <span id="inspect-symbol" class="font-display-lg text-lg text-white font-bold">{{ .Symbol }}</span>
+                    </div>
+                    <span id="inspect-risk-badge" class="px-2.5 py-1 rounded-full text-xs font-data-label font-bold uppercase tier-safe">
+                        SAFE
+                    </span>
+                </div>
+
+                <!-- Strike & Expiry Big Display -->
+                <div class="mb-5">
+                    <div class="text-xs text-text-dimmed font-data-label uppercase">Contract</div>
+                    <div class="flex items-baseline justify-between mt-1">
+                        <span id="inspect-strike" class="font-data-value-lg text-3xl font-extrabold text-white">$0.00</span>
+                        <span id="inspect-expiry" class="font-data-label text-xs text-text-dimmed">YYYY-MM-DD (0d)</span>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <div class="bg-surface-input/60 border border-white/10 rounded-xl p-3">
+                        <span class="text-[10px] text-text-dimmed font-data-label uppercase block mb-1">Delta</span>
+                        <span id="inspect-delta" class="font-data-value-lg text-xl font-bold text-white">0.00</span>
+                    </div>
+                    <div class="bg-surface-input/60 border border-white/10 rounded-xl p-3">
+                        <span class="text-[10px] text-text-dimmed font-data-label uppercase block mb-1">Premium Total</span>
+                        <span id="inspect-premium" class="font-data-value-lg text-xl font-bold text-white">$0</span>
+                    </div>
+                    <div class="bg-surface-input/60 border border-white/10 rounded-xl p-3 col-span-2 bg-gradient-to-r from-emerald-500/10 to-transparent border-emerald-500/20">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] text-emerald-400 font-data-label uppercase font-semibold">Amount Earned / Day</span>
+                            <span id="inspect-metric-label" class="text-[9px] text-text-dimmed font-data-label">Premium ÷ DTE</span>
+                        </div>
+                        <span id="inspect-perday" class="font-data-value-lg text-2xl font-black text-emerald-400">$0.00/d</span>
+                    </div>
+                </div>
+
+                <!-- Greeks & Market Data -->
+                <div class="space-y-2 text-xs font-data-label border-t border-white/10 pt-4 mb-5">
+                    <div class="flex justify-between py-1 text-text-dimmed">
+                        <span>Implied Vol (IV)</span>
+                        <span id="inspect-iv" class="text-white font-semibold">0.0%</span>
+                    </div>
+                    <div class="flex justify-between py-1 text-text-dimmed">
+                        <span>Theta Decay</span>
+                        <span id="inspect-theta" class="text-white font-semibold">0.0000 ($0/d)</span>
+                    </div>
+                    <div class="flex justify-between py-1 text-text-dimmed">
+                        <span>Gamma</span>
+                        <span id="inspect-gamma" class="text-white font-semibold">0.0000</span>
+                    </div>
+                    <div class="flex justify-between py-1 text-text-dimmed">
+                        <span>Vega</span>
+                        <span id="inspect-vega" class="text-white font-semibold">0.0000</span>
+                    </div>
+                    <div class="flex justify-between py-1 text-text-dimmed">
+                        <span>Bid / Ask</span>
+                        <span id="inspect-bidask" class="text-white font-semibold">$0.00 / $0.00</span>
+                    </div>
+                    <div class="flex justify-between py-1 text-text-dimmed">
+                        <span>Breakeven</span>
+                        <span id="inspect-breakeven" class="text-primary-fixed font-bold">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Strategy Context Helper -->
+                <div class="bg-black/30 border border-white/5 rounded-xl p-3 text-[11px] text-text-dimmed leading-relaxed">
+                    <div class="flex items-center gap-1.5 text-white font-semibold mb-1">
+                        <span class="material-symbols-outlined text-[14px] text-primary-fixed">lightbulb</span>
+                        <span>Seller's Take</span>
+                    </div>
+                    <p id="inspect-take">
+                        Click or hover any cell in the matrix to inspect exact contract Greeks, breakeven thresholds, and projected daily decay yields.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="glass-card border-t border-white/5 py-10 px-6 mt-16">
+    <div class="max-w-[1440px] mx-auto flex flex-col items-center gap-4 text-center">
+        <p class="text-xs text-text-dimmed max-w-xl leading-relaxed">
+            Disclaimer: Options trading involves significant risk and is not suitable for all investors. Greeks and yields are theoretical estimates and subject to market movement. Not financial advice.
+        </p>
+        <div class="text-xs text-text-dimmed/50 font-data-label">
+            © 2026 GEX Tracker. All Rights Reserved.
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Application State
+    const state = {
+        symbol: "{{ .Symbol }}",
+        optionType: "PUT",
+        metricMode: "yield", // "yield" (Premium / DTE) or "theta" (Theta * 100)
+        contractMultiplier: 1,
+        data: null,
+        activeCellKey: null,
+    };
+
+    function setSymbol(sym) {
+        document.getElementById("symbol-input").value = sym;
+        loadHeatmap();
+    }
+
+    function setOptionType(type) {
+        if (state.optionType === type) return;
+        state.optionType = type;
+        
+        const putsBtn = document.getElementById("toggle-puts");
+        const callsBtn = document.getElementById("toggle-calls");
+        
+        if (type === "PUT") {
+            putsBtn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition-all bg-primary-fixed text-background shadow-md";
+            callsBtn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wider text-gray-400 hover:text-white transition-all";
+        } else {
+            callsBtn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition-all bg-primary-fixed text-background shadow-md";
+            putsBtn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wider text-gray-400 hover:text-white transition-all";
+        }
+        
+        loadHeatmap();
+    }
+
+    function setMetricMode(mode) {
+        if (state.metricMode === mode) return;
+        state.metricMode = mode;
+        
+        const yieldBtn = document.getElementById("metric-yield");
+        const thetaBtn = document.getElementById("metric-theta");
+        
+        if (mode === "yield") {
+            yieldBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            thetaBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all";
+            document.getElementById("inspect-metric-label").textContent = "Premium ÷ DTE";
+        } else {
+            thetaBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            yieldBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all";
+            document.getElementById("inspect-metric-label").textContent = "Theta × 100";
+        }
+        
+        renderMatrix();
+        if (state.activeCellKey && state.data && state.data.matrix[state.activeCellKey]) {
+            inspectCell(state.data.matrix[state.activeCellKey]);
+        }
+    }
+
+    function setContracts(qty) {
+        document.getElementById("contract-count").value = qty;
+        updateContractMultiplier();
+    }
+
+    function updateContractMultiplier() {
+        const val = parseInt(document.getElementById("contract-count").value, 10);
+        state.contractMultiplier = isNaN(val) || val <= 0 ? 1 : val;
+        renderMatrix();
+        if (state.activeCellKey && state.data && state.data.matrix[state.activeCellKey]) {
+            inspectCell(state.data.matrix[state.activeCellKey]);
+        }
+    }
+
+    async function loadHeatmap() {
+        const symbolInput = document.getElementById("symbol-input").value.trim().toUpperCase();
+        if (!symbolInput) return;
+        state.symbol = symbolInput;
+        
+        // Update URL & cross-links
+        window.history.replaceState(null, "", `/heatmap?symbol=${encodeURIComponent(state.symbol)}`);
+        document.getElementById("gex-tab-link").href = `/gex?symbol=${encodeURIComponent(state.symbol)}`;
+
+        const expCount = document.getElementById("expirations-count").value;
+        
+        // Show loading
+        document.getElementById("matrix-loading").classList.remove("hidden");
+        document.getElementById("matrix-loading").style.display = "flex";
+        document.getElementById("matrix-error").classList.add("hidden");
+        document.getElementById("matrix-scroll-wrapper").classList.add("hidden");
+
+        try {
+            const url = `/api/option-heatmap?symbol=${encodeURIComponent(state.symbol)}&type=${encodeURIComponent(state.optionType)}&expirations=${encodeURIComponent(expCount)}`;
+            const res = await fetch(url);
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || `Server returned ${res.status}`);
+            }
+            const data = await res.parseJson ? await res.parseJson() : await res.json();
+            state.data = data;
+            
+            document.getElementById("matrix-loading").style.display = "none";
+            document.getElementById("matrix-loading").classList.add("hidden");
+            document.getElementById("matrix-scroll-wrapper").classList.remove("hidden");
+            
+            renderStatsSummary();
+            renderMatrix();
+            autoSelectAtmCell();
+        } catch (err) {
+            console.error("Heatmap load error:", err);
+            document.getElementById("matrix-loading").style.display = "none";
+            document.getElementById("matrix-loading").classList.add("hidden");
+            document.getElementById("matrix-error").classList.remove("hidden");
+            document.getElementById("matrix-error").classList.add("flex");
+            document.getElementById("error-message").textContent = err.message || "Failed to load options data";
+        }
+    }
+
+    function renderStatsSummary() {
+        const statsEl = document.getElementById("stats-summary");
+        if (!state.data) {
+            statsEl.innerHTML = "";
+            return;
+        }
+
+        const spot = state.data.spot_price;
+        const atmIv = state.data.atm_iv;
+        const updated = state.data.updated_at;
+
+        statsEl.innerHTML = `
+            <span>SPOT: <strong class="text-primary-fixed">$${spot ? spot.toFixed(2) : "N/A"}</strong></span>
+            <span>ATM IV: <strong class="text-white">${atmIv ? atmIv.toFixed(1) + "%" : "N/A"}</strong></span>
+            <span class="text-text-dimmed/60">${updated || ""}</span>
+        `;
+    }
+
+    function renderMatrix() {
+        if (!state.data) return;
+
+        const headerRow = document.getElementById("table-header-row");
+        const tbody = document.getElementById("table-body");
+        
+        // Build Header
+        headerRow.innerHTML = `
+            <th class="sticky left-0 z-40 bg-[#0d1117] px-4 py-3 text-left font-data-label text-xs text-text-dimmed uppercase tracking-wider border-r border-white/10 w-28">
+                Strike
+            </th>
+        `;
+
+        state.data.expirations.forEach(exp => {
+            const th = document.createElement("th");
+            th.className = "px-3 py-3 font-data-label text-xs text-white uppercase tracking-wider min-w-[130px] border-r border-white/5";
+            th.innerHTML = `
+                <div>${exp.label}</div>
+                <div class="text-[10px] text-primary-fixed/80 font-normal">(${exp.dte}d)</div>
+            `;
+            headerRow.appendChild(th);
+        });
+
+        // Build Rows
+        tbody.innerHTML = "";
+        const strikes = state.data.strikes;
+        const spot = state.data.spot_price;
+        let spotBarInserted = false;
+
+        strikes.forEach((strike, idx) => {
+            // Insert Spot Price Bar between surrounding strikes
+            if (!spotBarInserted && spot > 0 && strike >= spot) {
+                spotBarInserted = true;
+                const spotRow = document.createElement("tr");
+                spotRow.className = "bg-primary-fixed/10 border-y-2 border-primary-fixed/60 relative z-20";
+                
+                const colSpan = state.data.expirations.length + 1;
+                spotRow.innerHTML = `
+                    <td colspan="${colSpan}" class="py-1 px-4 text-left">
+                        <div class="inline-flex items-center gap-2 bg-black/80 border border-primary-fixed/80 rounded-full px-3 py-0.5 shadow-[0_0_12px_rgba(0,251,251,0.5)]">
+                            <span class="w-2 h-2 rounded-full bg-primary-fixed animate-ping"></span>
+                            <span class="text-[11px] font-data-label text-white uppercase tracking-wider">SPOT PRICE:</span>
+                            <span class="text-xs font-data-value-lg text-primary-fixed font-bold">$${spot.toFixed(2)}</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(spotRow);
+            }
+
+            const row = document.createElement("tr");
+            row.className = "hover:bg-white/[0.02] transition-colors group";
+
+            // Sticky Strike Column
+            const strikeTd = document.createElement("td");
+            strikeTd.className = "sticky left-0 z-20 bg-[#0d1117] px-4 py-2.5 text-left font-data-value-lg text-xs font-bold text-white border-r border-white/10 group-hover:bg-[#161b22] transition-colors";
+            strikeTd.textContent = `$${strike.toFixed(1)}`;
+            row.appendChild(strikeTd);
+
+            // Cells for each expiration
+            state.data.expirations.forEach(exp => {
+                const td = document.createElement("td");
+                td.className = "p-1.5 border-r border-white/5";
+
+                const key = `${strike.toFixed(2)}_${exp.date}`;
+                const cell = state.data.matrix[key];
+
+                if (!cell) {
+                    td.innerHTML = `<div class="p-2 text-[10px] text-text-dimmed/40 font-data-label">-</div>`;
+                } else {
+                    const tierClass = `tier-${cell.risk_tier}`;
+                    const isActive = state.activeCellKey === key ? "active-cell ring-2 ring-white" : "";
+
+                    const totalPrem = Math.round(cell.premium * state.contractMultiplier);
+                    const perDayVal = state.metricMode === "yield" 
+                        ? (cell.per_day * state.contractMultiplier)
+                        : (cell.theta_day * state.contractMultiplier);
+
+                    const deltaDisplay = cell.abs_delta.toFixed(2);
+                    const dailyDisplay = `$${perDayVal.toFixed(2)}/d`;
+
+                    td.innerHTML = `
+                        <div class="${tierClass} ${isActive} rounded-xl p-2 cursor-pointer transition-all duration-200 transform hover:scale-[1.04] text-center"
+                             onclick="selectCell('${key}')"
+                             onmouseenter="previewCell('${key}')">
+                            <div class="font-data-value-lg font-bold text-sm tracking-tight">${deltaDisplay}</div>
+                            <div class="text-[10px] text-text-dimmed font-data-label font-medium my-0.5">$${totalPrem}</div>
+                            <div class="font-data-value-lg text-[11px] font-bold text-emerald-400">${dailyDisplay}</div>
+                        </div>
+                    `;
+                }
+                row.appendChild(td);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function selectCell(key) {
+        state.activeCellKey = key;
+        renderMatrix();
+        const cell = state.data.matrix[key];
+        if (cell) inspectCell(cell);
+    }
+
+    function previewCell(key) {
+        const cell = state.data.matrix[key];
+        if (cell) inspectCell(cell);
+    }
+
+    function autoSelectAtmCell() {
+        if (!state.data || !state.data.strikes.length || !state.data.expirations.length) return;
+        const spot = state.data.spot_price;
+        let bestStrike = state.data.strikes[0];
+        let minDiff = Math.abs(bestStrike - spot);
+
+        state.data.strikes.forEach(s => {
+            const diff = Math.abs(s - spot);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestStrike = s;
+            }
+        });
+
+        const firstExp = state.data.expirations[0].date;
+        const key = `${bestStrike.toFixed(2)}_${firstExp}`;
+        if (state.data.matrix[key]) {
+            state.activeCellKey = key;
+            renderMatrix();
+            inspectCell(state.data.matrix[key]);
+        }
+    }
+
+    function inspectCell(cell) {
+        document.getElementById("inspect-symbol").textContent = state.symbol;
+        document.getElementById("inspect-type-badge").textContent = cell.option_type;
+        document.getElementById("inspect-strike").textContent = `$${cell.strike.toFixed(2)}`;
+        document.getElementById("inspect-expiry").textContent = `${cell.expiration} (${cell.dte}d)`;
+        
+        // Risk Badge
+        const riskBadge = document.getElementById("inspect-risk-badge");
+        riskBadge.className = `px-2.5 py-1 rounded-full text-xs font-data-label font-bold uppercase tier-${cell.risk_tier}`;
+        riskBadge.textContent = cell.risk_tier.toUpperCase();
+
+        // Metrics
+        document.getElementById("inspect-delta").textContent = `${cell.delta >= 0 ? "+" : ""}${cell.delta.toFixed(3)}`;
+        
+        const totalPrem = Math.round(cell.premium * state.contractMultiplier);
+        document.getElementById("inspect-premium").textContent = `$${totalPrem.toLocaleString()} (${state.contractMultiplier}x)`;
+
+        const perDayVal = state.metricMode === "yield" 
+            ? (cell.per_day * state.contractMultiplier)
+            : (cell.theta_day * state.contractMultiplier);
+        document.getElementById("inspect-perday").textContent = `$${perDayVal.toFixed(2)}/d`;
+
+        document.getElementById("inspect-iv").textContent = `${cell.iv.toFixed(1)}%`;
+        document.getElementById("inspect-theta").textContent = `${cell.theta.toFixed(4)} ($${(Math.abs(cell.theta) * 100 * state.contractMultiplier).toFixed(2)}/d)`;
+        document.getElementById("inspect-gamma").textContent = cell.gamma.toFixed(4);
+        document.getElementById("inspect-vega").textContent = cell.vega.toFixed(4);
+        document.getElementById("inspect-bidask").textContent = `$${cell.bid.toFixed(2)} / $${cell.ask.toFixed(2)}`;
+
+        // Breakeven
+        let breakeven = cell.strike;
+        if (cell.option_type === "PUT") {
+            breakeven = cell.strike - cell.mark;
+        } else {
+            breakeven = cell.strike + cell.mark;
+        }
+        document.getElementById("inspect-breakeven").textContent = `$${breakeven.toFixed(2)}`;
+
+        // Dynamic Seller's Take advice
+        const takeEl = document.getElementById("inspect-take");
+        const cushion = state.data.spot_price > 0 ? (Math.abs(state.data.spot_price - cell.strike) / state.data.spot_price * 100).toFixed(1) : "0";
+        if (cell.option_type === "PUT") {
+            takeEl.innerHTML = `Selling this cash-secured put earns <strong>$${perDayVal.toFixed(2)}/day</strong> with <strong>${cushion}%</strong> downside cushion to spot. Maximum profit is $${totalPrem} if held to expiry.`;
+        } else {
+            takeEl.innerHTML = `Selling this covered call earns <strong>$${perDayVal.toFixed(2)}/day</strong> with <strong>${cushion}%</strong> upside cushion to spot. Maximum premium is $${totalPrem}.`;
+        }
+    }
+
+    // Auto load on page readiness
+    document.addEventListener("DOMContentLoaded", () => {
+        loadHeatmap();
+    });
+</script>
+
+</body>
+</html>

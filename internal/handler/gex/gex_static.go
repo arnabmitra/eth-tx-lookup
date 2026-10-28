@@ -221,9 +221,16 @@ func GetPublicConfig() (string, string) {
 type Option struct {
 	Strike       float64 `json:"strike"`
 	OptionType   string  `json:"option_type"`
+	Bid          float64 `json:"bid,omitempty"`
+	Ask          float64 `json:"ask,omitempty"`
+	Mark         float64 `json:"mark,omitempty"`
 	OpenInterest int     `json:"open_interest"`
 	Greeks       struct {
+		Delta float64 `json:"delta,omitempty"`
 		Gamma float64 `json:"gamma"`
+		Theta float64 `json:"theta,omitempty"`
+		Vega  float64 `json:"vega,omitempty"`
+		IV    float64 `json:"iv,omitempty"`
 	} `json:"greeks"`
 	ExpirationDate string `json:"expiration_date"`
 	ExpirationType string `json:"expiration_type"`
@@ -314,11 +321,18 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 				opt := Option{
 					Strike:         c.Strike,
 					OptionType:     c.OptionType,
+					Bid:            c.Bid,
+					Ask:            c.Ask,
+					Mark:           c.Mark,
 					OpenInterest:   c.OpenInterest,
 					ExpirationDate: c.ExpirationDate,
 					ExpirationType: c.ExpirationType,
 				}
+				opt.Greeks.Delta = c.Delta
 				opt.Greeks.Gamma = c.Gamma
+				opt.Greeks.Theta = c.Theta
+				opt.Greeks.Vega = c.Vega
+				opt.Greeks.IV = c.IV
 				options = append(options, opt)
 			}
 			resp := Response{}
@@ -356,16 +370,39 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 						for _, c := range contracts {
 							strike, _ := c.OptionDetails.StrikePrice.Float64()
 							oi, _ := c.OpenInterest.Int64()
+							bid, _ := c.Bid.Float64()
+							ask, _ := c.Ask.Float64()
+							mid, _ := c.OptionDetails.MidPrice.Float64()
+							if mid == 0 && bid > 0 && ask > 0 {
+								mid = (bid + ask) / 2.0
+							}
+							if mid == 0 {
+								last, _ := c.Last.Float64()
+								mid = last
+							}
+
 							opt := Option{
 								Strike:         strike,
 								OptionType:     side,
+								Bid:            bid,
+								Ask:            ask,
+								Mark:           mid,
 								OpenInterest:   int(oi),
 								ExpirationDate: expiration,
 								ExpirationType: "AMERICAN",
 							}
 							if c.OptionDetails.Greeks != nil {
 								gamma, _ := c.OptionDetails.Greeks.Gamma.Float64()
+								delta, _ := c.OptionDetails.Greeks.Delta.Float64()
+								theta, _ := c.OptionDetails.Greeks.Theta.Float64()
+								vega, _ := c.OptionDetails.Greeks.Vega.Float64()
+								iv, _ := c.OptionDetails.Greeks.ImpliedVolatility.Float64()
+
 								opt.Greeks.Gamma = gamma
+								opt.Greeks.Delta = delta
+								opt.Greeks.Theta = theta
+								opt.Greeks.Vega = vega
+								opt.Greeks.IV = iv
 							}
 							options = append(options, opt)
 						}
@@ -516,6 +553,19 @@ func FetchOptionsChain(symbol, expiration string, apiKey, apiSecret string) ([]O
 		}
 
 		if snap, ok := chain[c.Symbol]; ok {
+			if snap.LatestQuote != nil {
+				opt.Bid = snap.LatestQuote.BidPrice
+				opt.Ask = snap.LatestQuote.AskPrice
+				if opt.Bid > 0 && opt.Ask > 0 {
+					opt.Mark = (opt.Bid + opt.Ask) / 2.0
+				}
+			}
+			if snap.Greeks != nil {
+				opt.Greeks.Delta = snap.Greeks.Delta
+				opt.Greeks.Theta = snap.Greeks.Theta
+				opt.Greeks.Vega = snap.Greeks.Vega
+			}
+			opt.Greeks.IV = snap.ImpliedVolatility
 			// Re-estimate if Greeks are missing OR if it's from a delayed feed (Paper Fallback)
 			if snap.Greeks != nil && snap.Greeks.Gamma != 0 && !isPaperFallback {
 				opt.Greeks.Gamma = snap.Greeks.Gamma

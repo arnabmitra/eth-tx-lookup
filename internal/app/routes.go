@@ -61,6 +61,11 @@ func (a *App) loadRoutes() (*handler.GEXHandler, *repository.Queries) {
 	a.router.HandleFunc("/gex-history", gexHandler.DisplayGEXHistoryPage)
 	a.router.HandleFunc("/mag7-gex", gexHandler.MAG7GEXHandler)
 
+	// Options Heatmap
+	heatmapHandler := handler.NewHeatmapHandler(a.logger, tmpl)
+	a.router.HandleFunc("/heatmap", heatmapHandler.ServeHTTP)
+	a.router.HandleFunc("/api/option-heatmap", heatmapHandler.GetHeatmapData)
+
 	// GEX Scanner
 	gexScannerHandler := handler.NewGEXScannerHandler(a.logger, tmpl, a.db, worker.SP500Symbols())
 	a.router.HandleFunc("/gex-scanner", gexScannerHandler.HandleGEXScanner)

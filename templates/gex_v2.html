@@ -100,8 +100,10 @@
             window.debouncedFetchExpiryDates = function() {
                 clearTimeout(debounceTimeout);
                 debounceTimeout = setTimeout(() => {
-                    const symbol = document.getElementById("symbol").value;
+                    const symbol = document.getElementById("symbol").value.trim().toUpperCase();
                     if (symbol.length === 0) return;
+                    const crosslink = document.getElementById("heatmap-crosslink");
+                    if (crosslink) crosslink.href = `/heatmap?symbol=${encodeURIComponent(symbol)}`;
 
                     fetch(`/expiry-dates?symbol=${symbol}`)
                         .then(response => response.json())
@@ -165,6 +167,18 @@
             This tool tracks current dealers' notional gamma exposure (GEX). Enter a symbol and an expiration date to generate a GEX chart.
         </p>
     </section>
+
+    <!-- View Switcher -->
+    <div class="flex items-center justify-center gap-3 mb-8">
+        <a href="/gex" class="bg-primary-fixed/20 text-primary-fixed border border-primary-fixed/40 px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-[0_0_15px_rgba(0,251,251,0.2)]">
+            <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+            GEX Chart
+        </a>
+        <a id="heatmap-crosslink" href="/heatmap?symbol=SPY" class="bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all">
+            <span class="material-symbols-outlined text-[18px]">grid_view</span>
+            Options Heatmap
+        </a>
+    </div>
 
     <!-- Input Form -->
     <section class="glass-card p-6 rounded-2xl mb-10 shadow-2xl relative overflow-hidden group">

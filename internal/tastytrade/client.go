@@ -17,6 +17,10 @@ type OptionContract struct {
 	Symbol         string
 	Strike         float64
 	OptionType     string // "CALL" or "PUT"
+	Bid            float64
+	Ask            float64
+	Mark           float64
+	Last           float64
 	OpenInterest   int
 	Gamma          float64
 	Delta          float64
@@ -400,6 +404,39 @@ func (c *Client) FetchOptionChain(symbol, expiration string) ([]OptionContract, 
 		if md, ok := marketDataMap[itm.Symbol]; ok {
 			if oiVal, ok := md["open-interest"].(float64); ok {
 				contract.OpenInterest = int(oiVal)
+			}
+			if bVal, ok := md["bid"].(string); ok {
+				if bFloat, err := strconv.ParseFloat(bVal, 64); err == nil {
+					contract.Bid = bFloat
+				}
+			} else if bFloat, ok := md["bid"].(float64); ok {
+				contract.Bid = bFloat
+			}
+			if aVal, ok := md["ask"].(string); ok {
+				if aFloat, err := strconv.ParseFloat(aVal, 64); err == nil {
+					contract.Ask = aFloat
+				}
+			} else if aFloat, ok := md["ask"].(float64); ok {
+				contract.Ask = aFloat
+			}
+			if mVal, ok := md["mark"].(string); ok {
+				if mFloat, err := strconv.ParseFloat(mVal, 64); err == nil {
+					contract.Mark = mFloat
+				}
+			} else if mFloat, ok := md["mark"].(float64); ok {
+				contract.Mark = mFloat
+			}
+			if lVal, ok := md["last"].(string); ok {
+				if lFloat, err := strconv.ParseFloat(lVal, 64); err == nil {
+					contract.Last = lFloat
+				}
+			} else if lFloat, ok := md["last"].(float64); ok {
+				contract.Last = lFloat
+			}
+			if contract.Mark == 0 && contract.Bid > 0 && contract.Ask > 0 {
+				contract.Mark = (contract.Bid + contract.Ask) / 2.0
+			} else if contract.Mark == 0 && contract.Last > 0 {
+				contract.Mark = contract.Last
 			}
 			if gStr, ok := md["gamma"].(string); ok {
 				if gFloat, err := strconv.ParseFloat(gStr, 64); err == nil {
